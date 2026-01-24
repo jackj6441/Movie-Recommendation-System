@@ -11,6 +11,13 @@ type RecommendationResponse = {
   k: number
   cache_hit: boolean
   items: RecommendationItem[]
+  model_version?: string
+  explain?: {
+    ncf_score: number
+    content_score: number
+    alpha: number
+    similar_movies: RecommendationItem[]
+  }
 }
 
 const apiBase = import.meta.env.VITE_API_BASE || "http://reco-api:8000"
@@ -87,6 +94,22 @@ export default function App() {
               </li>
             ))}
           </ul>
+          {data.explain && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <h2>Explanation</h2>
+              <p>model_version: {data.model_version ?? "unknown"}</p>
+              <p>
+                alpha: {data.explain.alpha} | ncf_score: {data.explain.ncf_score} | content_score: {data.explain.content_score}
+              </p>
+              <ul>
+                {data.explain.similar_movies.map((movie) => (
+                  <li key={movie.movie_id}>
+                    {movie.title} — {movie.score}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
     </main>
