@@ -16,6 +16,10 @@ services:
       - RATINGS_CSV_PATH=/data/ml-latest-small/ratings.csv
       - ONNX_MODEL_PATH=/app/models/ncf.onnx
       - METADATA_PATH=/app/models/metadata.json
+      - CANDIDATE_POOL=500
+      - CACHE_TTL_SECONDS=300
+      - EXPLAIN_TTL_SECONDS=60
+      - ALPHA=0.7
     depends_on:
       - redis
     volumes:

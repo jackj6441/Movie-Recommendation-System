@@ -1,6 +1,5 @@
 fastapi
 numpy
 onnxruntime
-scikit-learn
 uvicorn[standard]
 redis

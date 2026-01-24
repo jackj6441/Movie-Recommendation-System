@@ -26,6 +26,10 @@ movies_csv_path = os.getenv("MOVIES_CSV_PATH", "ml-latest-small/movies.csv")
 ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
 onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
 metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")
+candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
+cache_ttl_seconds = int(os.getenv("CACHE_TTL_SECONDS", "300"))
+explain_ttl_seconds = int(os.getenv("EXPLAIN_TTL_SECONDS", "60"))
+alpha = float(os.getenv("ALPHA", "0.7"))
 try:
     redis_client = redis.Redis.from_url(redis_url, decode_responses=True)
 except redis.RedisError:
@@ -131,6 +135,10 @@ def healthz() -> dict:
         "num_items": num_items,
         "tfidf_ok": content_ok,
         "model_version": model_version,
+        "candidate_pool": candidate_pool,
+        "cache_ttl_seconds": cache_ttl_seconds,
+        "explain_ttl_seconds": explain_ttl_seconds,
+        "alpha": alpha,
     }
 
 
@@ -202,7 +210,7 @@ def recommend(user_id: int, k: int = 20) -> dict:
             payload["model_version"] = model_version
         if redis_client is not None:
             try:
-                redis_client.setex(cache_key, 300, json.dumps(payload))
+                redis_client.setex(cache_key, cache_ttl_seconds, json.dumps(payload))
             except redis.RedisError:
                 pass
         return payload
@@ -211,7 +219,6 @@ def recommend(user_id: int, k: int = 20) -> dict:
     items_needed = max(k, 5)
 
     user_key = str(user_id)
-    alpha = 0.7
     if user_key not in user_id_to_idx:
         items_ids = ranked_ids[:items_needed]
         if len(items_ids) < items_needed:
@@ -244,7 +251,6 @@ def recommend(user_id: int, k: int = 20) -> dict:
         }
         cold_start = True
     elif onnx_session is not None and ranked_ids and movie_id_to_idx:
-        candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
         candidate_ids = [mid for mid in ranked_ids[:candidate_pool] if str(mid) in movie_id_to_idx]
         user_idx = user_id_to_idx[user_key]
         item_indices = np.array([movie_id_to_idx[str(mid)] for mid in candidate_ids], dtype=np.int64)
@@ -343,7 +349,7 @@ def recommend(user_id: int, k: int = 20) -> dict:
 
     if redis_client is not None:
         try:
-            redis_client.setex(cache_key, 300, json.dumps(payload))
+            redis_client.setex(cache_key, cache_ttl_seconds, json.dumps(payload))
         except redis.RedisError:
             pass
 
@@ -366,7 +372,6 @@ def explain(user_id: int, k: int = 10):
 
     ranked_ids = get_ranked_movie_ids()
     top_k = max(k, 1)
-    alpha = 0.7
     content_available = True
 
     user_key = str(user_id)
@@ -386,7 +391,6 @@ def explain(user_id: int, k: int = 10):
         similar_movies = []
         content_available = False
     elif onnx_session is not None and ranked_ids and movie_id_to_idx:
-        candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
         candidate_ids = [mid for mid in ranked_ids[:candidate_pool] if str(mid) in movie_id_to_idx]
         user_idx = user_id_to_idx[user_key]
         item_indices = np.array([movie_id_to_idx[str(mid)] for mid in candidate_ids], dtype=np.int64)
@@ -465,7 +469,7 @@ def explain(user_id: int, k: int = 10):
 
     if redis_client is not None:
         try:
-            redis_client.setex(cache_key, 60, json.dumps(payload))
+            redis_client.setex(cache_key, explain_ttl_seconds, json.dumps(payload))
         except redis.RedisError:
             pass
 
