@@ -64,3 +64,31 @@ def get_similarity_scores(anchor_movie_id: int, candidate_movie_ids: list[int]) 
             continue
         scores.append(float(embeddings[idx] @ anchor_vec))
     return scores
+
+
+def filter_movie_ids(movie_ids: list[int]) -> list[int]:
+    _, _, movie_id_to_row = _load_embeddings()
+    return [mid for mid in movie_ids if mid in movie_id_to_row]
+
+
+def get_embeddings_for_movies(movie_ids: list[int]) -> list[np.ndarray]:
+    embeddings, _, movie_id_to_row = _load_embeddings()
+    vectors: list[np.ndarray] = []
+    for movie_id in movie_ids:
+        idx = movie_id_to_row.get(movie_id)
+        if idx is None:
+            continue
+        vectors.append(embeddings[idx])
+    return vectors
+
+
+def get_similarity_scores_from_vector(anchor_vec: np.ndarray, candidate_movie_ids: list[int]) -> list[float]:
+    embeddings, _, movie_id_to_row = _load_embeddings()
+    scores: list[float] = []
+    for movie_id in candidate_movie_ids:
+        idx = movie_id_to_row.get(movie_id)
+        if idx is None:
+            scores.append(0.0)
+            continue
+        scores.append(float(embeddings[idx] @ anchor_vec))
+    return scores

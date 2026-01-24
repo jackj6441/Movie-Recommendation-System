@@ -8,17 +8,10 @@ type RecommendationItem = {
 }
 
 type RecommendationResponse = {
-  user_id: number
-  k: number
-  cache_hit: boolean
   items: RecommendationItem[]
-  model_version?: string
-  explain?: {
-    ncf_score: number
-    content_score: number
-    alpha: number
-    similar_movies: RecommendationItem[]
-  }
+  seed_movies: { movie_id: number; title: string }[]
+  anchor_source: string
+  model_version: string
 }
 
 type ExplainItem = {
@@ -36,20 +29,32 @@ type SimilarMovie = {
 }
 
 type ExplainResponse = {
-  user_id: number
+  user_id: number | null
   model_version: string
   alpha: number
   anchor_movie: { movie_id: number; title: string } | null
   topk: ExplainItem[]
   similar_movies: SimilarMovie[]
   content_available: boolean
+  seed_movies?: { movie_id: number; title: string }[]
+  anchor_source?: string
+}
+
+type MovieSuggestion = {
+  movie_id: number
+  title: string
 }
 
 const apiBase = import.meta.env.VITE_API_BASE || "http://reco-api:8000"
 
 export default function App() {
-  const [userId, setUserId] = useState(1)
-  const [k, setK] = useState(10)
+  const [step, setStep] = useState(1)
+  const [genres, setGenres] = useState<string[]>([])
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
+  const [genreSeeds, setGenreSeeds] = useState<MovieSuggestion[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [suggestions, setSuggestions] = useState<MovieSuggestion[]>([])
+  const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<RecommendationResponse | null>(null)
@@ -57,13 +62,16 @@ export default function App() {
   const [explainError, setExplainError] = useState<string | null>(null)
   const chartRef = useRef<SVGSVGElement | null>(null)
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (shuffle = false) => {
     setLoading(true)
     setError(null)
     setExplainError(null)
     try {
-      const url = `${apiBase}/recommend?user_id=${userId}&k=${k}`
-      const res = await fetch(url)
+      const res = await fetch(`${apiBase}/recommendations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
+      })
       if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`)
       }
@@ -77,8 +85,11 @@ export default function App() {
     }
 
     try {
-      const explainUrl = `${apiBase}/explain?user_id=${userId}&k=${k}`
-      const explainRes = await fetch(explainUrl)
+      const explainRes = await fetch(`${apiBase}/explanations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
+      })
       if (!explainRes.ok) {
         throw new Error(`Explain failed: ${explainRes.status}`)
       }
@@ -155,97 +166,506 @@ export default function App() {
       .text((d) => d.final.toFixed(3))
   }, [explain])
 
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch(`${apiBase}/genres`)
+        if (!res.ok) {
+          throw new Error("Genres failed")
+        }
+        const json = (await res.json()) as { name: string }[]
+        setGenres(json.map((item) => item.name))
+      } catch {
+        setGenres([])
+      }
+    }
+    run()
+  }, [apiBase])
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const targets = selectedGenres.length ? selectedGenres : ["all"]
+        const responses = await Promise.all(
+          targets.map((genre) =>
+            fetch(`${apiBase}/genres/${encodeURIComponent(genre)}/seeds?limit=20`)
+          )
+        )
+        const payloads = await Promise.all(
+          responses.map((res) => (res.ok ? res.json() : { seeds: [] }))
+        )
+        const merged: MovieSuggestion[] = []
+        const seen = new Set<number>()
+        payloads.forEach((payload: { seeds: MovieSuggestion[] }) => {
+          payload.seeds.forEach((seed) => {
+            if (!seen.has(seed.movie_id)) {
+              seen.add(seed.movie_id)
+              merged.push(seed)
+            }
+          })
+        })
+        setGenreSeeds(merged.slice(0, 20))
+      } catch {
+        setGenreSeeds([])
+      }
+    }
+    run()
+  }, [selectedGenres, apiBase])
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([])
+      return
+    }
+
+    const controller = new AbortController()
+    const run = async () => {
+      try {
+        const res = await fetch(`${apiBase}/movies/search?q=${encodeURIComponent(searchQuery)}`, {
+          signal: controller.signal,
+        })
+        if (!res.ok) {
+          throw new Error("Search failed")
+        }
+        const json = (await res.json()) as MovieSuggestion[]
+        const existing = new Set(seeds.map((seed) => seed.movie_id))
+        setSuggestions(json.filter((item) => !existing.has(item.movie_id)))
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return
+        setSuggestions([])
+      }
+    }
+
+    const timer = setTimeout(run, 200)
+    return () => {
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [searchQuery, apiBase, seeds])
+
   return (
-    <main style={{ fontFamily: "sans-serif", padding: "2rem" }}>
-      <h1>Movie Recommender UI</h1>
+    <main className="page">
+      <style>{`
+        .page {
+          font-family: "Cormorant Garamond", "Georgia", serif;
+          background:
+            radial-gradient(circle at 20% 10%, rgba(255, 240, 214, 0.6), transparent 55%),
+            radial-gradient(circle at 85% 0%, rgba(214, 236, 255, 0.5), transparent 45%),
+            #fbfaf7;
+          min-height: 100vh;
+          padding: 2.75rem 1.5rem 3.5rem;
+          color: #2b2a28;
+        }
+        .header {
+          max-width: 1120px;
+          margin: 0 auto 2rem;
+        }
+        .title {
+          font-size: clamp(2.2rem, 2vw + 1.6rem, 3rem);
+          letter-spacing: -0.02em;
+          margin: 0 0 0.45rem;
+        }
+        .subtle {
+          color: #6a655f;
+          font-size: 0.95rem;
+        }
+        .progress {
+          font-size: 0.95rem;
+          color: #7b746d;
+          margin-top: 0.35rem;
+        }
+        .controls {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem 1.25rem;
+          align-items: center;
+          margin-top: 1.1rem;
+        }
+        .wizard-nav {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 1.2rem;
+          flex-wrap: wrap;
+        }
+        .search {
+          position: relative;
+          min-width: 240px;
+          flex: 1 1 320px;
+        }
+        .search input {
+          width: 100%;
+          padding: 0.55rem 0.75rem;
+          border-radius: 10px;
+          border: 1px solid #d7cfc4;
+          background: #fffdf9;
+          font-size: 0.95rem;
+        }
+        .chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+          margin-top: 1rem;
+        }
+        .chip {
+          border: 1px solid #d7cfc4;
+          border-radius: 999px;
+          padding: 0.35rem 0.85rem;
+          font-size: 0.85rem;
+          cursor: pointer;
+          background: #fffdf9;
+          transition: all 120ms ease;
+        }
+        .chip:hover {
+          border-color: #8aa6c2;
+        }
+        .chip.active {
+          background: #2f855a;
+          color: #fff;
+          border-color: #2f855a;
+        }
+        .suggestions {
+          position: absolute;
+          top: 2.7rem;
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #e7e0d7;
+          border-radius: 12px;
+          box-shadow: 0 16px 36px rgba(30, 24, 12, 0.12);
+          max-height: 240px;
+          overflow: auto;
+          z-index: 5;
+        }
+        .suggestions button {
+          display: block;
+          width: 100%;
+          text-align: left;
+          padding: 0.6rem 0.85rem;
+          border: none;
+          background: none;
+          cursor: pointer;
+        }
+        .suggestions button:hover {
+          background: #f4efe7;
+        }
+        .controls button {
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          border: 1px solid #2f855a;
+          background: linear-gradient(135deg, #2f855a, #3a9b6c);
+          color: #fff;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 6px 16px rgba(47, 133, 90, 0.25);
+        }
+        .ghost {
+          background: transparent;
+          color: #2f855a;
+          border: 1px solid #2f855a;
+          box-shadow: none;
+        }
+        .controls button:disabled {
+          background: #b5c9bd;
+          border-color: #b5c9bd;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+        .layout {
+          max-width: 1120px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.75rem;
+        }
+        @media (min-width: 900px) {
+          .layout {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .card {
+          background: #ffffff;
+          border-radius: 18px;
+          border: 1px solid #efe7db;
+          box-shadow: 0 20px 36px rgba(39, 30, 14, 0.08);
+          padding: 1.75rem;
+        }
+        .card h2 {
+          margin: 0 0 0.3rem;
+          font-size: 1.45rem;
+        }
+        .card .subtitle {
+          color: #6d6963;
+          font-size: 0.92rem;
+          margin-bottom: 1.15rem;
+        }
+        .list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+        }
+        .row {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 1rem;
+          border-bottom: 1px solid #f1ece4;
+          padding-bottom: 0.45rem;
+        }
+        .row:last-child {
+          border-bottom: none;
+        }
+        .score {
+          font-family: "IBM Plex Mono", "Courier New", monospace;
+          font-size: 0.95rem;
+          color: #2d2a26;
+        }
+        .warning {
+          color: #c05621;
+          margin-bottom: 0.75rem;
+        }
+        .seeds {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+          margin-top: 0.85rem;
+        }
+        .seed {
+          background: #f3f5f7;
+          border-radius: 999px;
+          padding: 0.35rem 0.75rem;
+          font-size: 0.85rem;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+        }
+        .seed button {
+          border: none;
+          background: none;
+          cursor: pointer;
+          font-weight: 700;
+        }
+      `}</style>
 
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-        <label>
-          user_id
-          <input
-            type="number"
-            value={userId}
-            onChange={(event) => setUserId(Number(event.target.value))}
-            style={{ marginLeft: "0.5rem", width: "6rem" }}
-          />
-        </label>
-        <label>
-          k
-          <input
-            type="number"
-            value={k}
-            onChange={(event) => setK(Number(event.target.value))}
-            style={{ marginLeft: "0.5rem", width: "6rem" }}
-          />
-        </label>
-        <button onClick={fetchRecommendations} disabled={loading}>
-          {loading ? "Loading..." : "Get Recommendations"}
-        </button>
-      </div>
+      <section className="header">
+        <h1 className="title">Movie Recommender UI</h1>
+        <div className="progress">{step}/3 选择类型 → 选择电影 → 推荐结果</div>
+        <p className="subtle">apiBase: {apiBase}</p>
+        {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
+        {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
+      </section>
 
-      <p style={{ marginTop: "0.5rem", color: "#666", fontSize: "0.9rem" }}>
-        apiBase: {apiBase}
-      </p>
-
-      {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
-
-      {data && (
-        <section style={{ marginTop: "1.5rem" }}>
-          <p>
-            cache_hit: <strong>{String(data.cache_hit)}</strong>
-          </p>
-          <ul>
-            {data.items.map((item) => (
-              <li key={item.movie_id}>
-                {item.title} — {item.score}
-              </li>
-            ))}
-          </ul>
-          {data.explain && (
-            <div style={{ marginTop: "1.5rem" }}>
-              <h2>Explanation</h2>
-              <p>model_version: {data.model_version ?? "unknown"}</p>
-              <p>
-                alpha: {data.explain.alpha} | ncf_score: {data.explain.ncf_score} | content_score: {data.explain.content_score}
-              </p>
-              <ul>
-                {data.explain.similar_movies.map((movie) => (
-                  <li key={movie.movie_id}>
-                    {movie.title} — {movie.score}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-      )}
-
-      {explain && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2>Explain</h2>
-          <p>
-            anchor_movie: {explain.anchor_movie?.title ?? "n/a"} | alpha: {explain.alpha}
-          </p>
-          {!explain.content_available && (
-            <p style={{ color: "#c05621" }}>
-              Content unavailable: falling back to NCF-only scores.
-            </p>
-          )}
-          <svg ref={chartRef} />
-          <div style={{ marginTop: "1rem" }}>
-            <h3>Similar Movies</h3>
-            <ul>
-              {explain.similar_movies.map((movie) => (
-                <li key={movie.movie_id}>
-                  {movie.title} — {movie.similarity.toFixed(3)}
-                </li>
+      <section className="layout">
+        {step === 1 && (
+          <div className="card">
+            <h2>选择类型</h2>
+            <div className="subtitle">建议先选 1–3 个类型</div>
+            <div className="chips">
+              {["Comedy", "Drama", "Action"].map((genre) => (
+                <button
+                  key={genre}
+                  className={`chip ${selectedGenres.includes(genre) ? "active" : ""}`}
+                  onClick={() =>
+                    setSelectedGenres((prev) =>
+                      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+                    )
+                  }
+                >
+                  {genre}
+                </button>
               ))}
-            </ul>
+            </div>
+            <div className="chips">
+              {genres
+                .filter((genre) => !["Comedy", "Drama", "Action"].includes(genre))
+                .map((genre) => (
+                <button
+                  key={genre}
+                  className={`chip ${selectedGenres.includes(genre) ? "active" : ""}`}
+                  onClick={() =>
+                    setSelectedGenres((prev) =>
+                      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+                    )
+                  }
+                >
+                  {genre}
+                </button>
+                ))}
+            </div>
+            <div className="wizard-nav">
+              <button
+                className="ghost"
+                onClick={() => {
+                  setSelectedGenres([])
+                  setStep(2)
+                }}
+              >
+                跳过
+              </button>
+              <button onClick={() => setStep(2)}>下一步</button>
+            </div>
           </div>
-        </section>
-      )}
+        )}
 
-      {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
+        {step === 2 && (
+          <div className="card">
+            <h2>选择电影</h2>
+            <div className="subtitle">选择 1–5 部电影作为种子</div>
+            <div className="controls">
+              <div className="search">
+                <input
+                  type="text"
+                  placeholder="搜索电影..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                />
+                {suggestions.length > 0 && (
+                  <div className="suggestions">
+                    {suggestions.map((movie) => (
+                      <button
+                        key={movie.movie_id}
+                        onClick={() => {
+                          if (seeds.length >= 5) return
+                          setSeeds((prev) => [...prev, movie])
+                          setSearchQuery("")
+                          setSuggestions([])
+                        }}
+                      >
+                        {movie.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={async () => {
+                  await fetchRecommendations(false)
+                  setStep(3)
+                }}
+                disabled={loading || seeds.length === 0 || seeds.length > 5}
+              >
+                {loading ? "Loading..." : "Recommend"}
+              </button>
+            </div>
+            <div className="seeds">
+              <span className="subtle">Selected ({seeds.length}/5):</span>
+              {seeds.map((seed) => (
+                <span className="seed" key={seed.movie_id}>
+                  {seed.title}
+                  <button
+                    onClick={() =>
+                      setSeeds((prev) => prev.filter((item) => item.movie_id !== seed.movie_id))
+                    }
+                    aria-label={`Remove ${seed.title}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div style={{ marginTop: "1rem" }}>
+              <h3>Recommended Seeds</h3>
+              <div className="list">
+                {genreSeeds.map((movie) => (
+                  <div className="row" key={movie.movie_id}>
+                    <span>{movie.title}</span>
+                    <button
+                      className="ghost"
+                      onClick={() => {
+                        if (seeds.length >= 5) return
+                        if (seeds.find((seed) => seed.movie_id === movie.movie_id)) return
+                        setSeeds((prev) => [...prev, movie])
+                      }}
+                    >
+                      选择
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="wizard-nav">
+              <button className="ghost" onClick={() => setStep(1)}>
+                返回
+              </button>
+              <button
+                className="ghost"
+                onClick={() => {
+                  setSeeds([])
+                  setSearchQuery("")
+                  setSuggestions([])
+                }}
+              >
+                重新选择
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <>
+            <div className="card">
+              <h2>推荐结果</h2>
+              <div className="subtitle">
+                anchor_source: {data?.anchor_source ?? "-"} · model_version: {data?.model_version ?? "-"}
+              </div>
+              <p className="subtle">
+                根据你选择的【{selectedGenres.join(", ") || "未选择类型"}】和 {seeds.length} 部种子电影，为你找到了最相似的 10 部。
+              </p>
+              <div className="list">
+                {data?.items.map((item) => (
+                  <div className="row" key={item.movie_id}>
+                    <span>{item.title}</span>
+                    <span className="score">{item.score.toFixed(3)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="wizard-nav">
+                <button onClick={() => fetchRecommendations(true)} disabled={loading}>
+                  {loading ? "Loading..." : "换一批"}
+                </button>
+                <button
+                  className="ghost"
+                  onClick={() => {
+                    setStep(1)
+                    setSeeds([])
+                    setSearchQuery("")
+                    setSuggestions([])
+                  }}
+                >
+                  重新开始
+                </button>
+                <button className="ghost" onClick={() => setStep(2)}>
+                  返回
+                </button>
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>Explain</h2>
+              <div className="subtitle">
+                model_version: {explain?.model_version ?? "-"} · alpha: {explain?.alpha ?? "-"}
+              </div>
+              <p>
+                anchor_movie: {explain?.anchor_movie?.title ?? "n/a"}
+              </p>
+              {!explain?.content_available && (
+                <p className="warning">Content unavailable: falling back to NCF-only scores.</p>
+              )}
+              <svg ref={chartRef} />
+              <div style={{ marginTop: "1rem" }}>
+                <h3>Similar Movies</h3>
+                <div className="list">
+                  {explain?.similar_movies.map((movie) => (
+                    <div className="row" key={movie.movie_id}>
+                      <span>{movie.title}</span>
+                      <span className="score">{movie.similarity.toFixed(3)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
     </main>
   )
 }

@@ -6,6 +6,7 @@ import numpy as np
 import onnxruntime as ort
 import redis
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -67,14 +68,20 @@ except Exception:
 content_ok = False
 
 movie_titles: dict[int, str] = {}
+movie_genres: dict[int, list[str]] = {}
+all_genres: set[str] = set()
 try:
     with open(movies_csv_path, newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             movie_id = int(row.get("movieId", "0"))
             title = row.get("title", "").strip()
+            genres_value = row.get("genres", "")
             if movie_id and title:
                 movie_titles[movie_id] = title
+                genre_list = [g for g in genres_value.split("|") if g and g != "(no genres listed)"]
+                movie_genres[movie_id] = genre_list
+                all_genres.update(genre_list)
 except OSError:
     print(f"Warning: failed to load movies CSV at {movies_csv_path}")
 
@@ -106,6 +113,11 @@ popular_movie_ids = [
 ]
 
 
+def get_popular_movies(movie_ids: list[int], limit: int) -> list[int]:
+    ranked = sorted(movie_ids, key=lambda mid: movie_popularity.get(mid, 0), reverse=True)
+    return ranked[:limit]
+
+
 def get_title(movie_id: int) -> str:
     return movie_titles.get(movie_id, f"Movie {movie_id}")
 
@@ -116,6 +128,13 @@ def get_ranked_movie_ids() -> list[int]:
     if movie_titles:
         return sorted(movie_titles.keys())
     return []
+
+
+def normalize_vector(vec: np.ndarray) -> np.ndarray:
+    norm = np.linalg.norm(vec)
+    if norm == 0:
+        return vec
+    return vec / norm
 
 
 @app.get("/healthz")
@@ -140,6 +159,53 @@ def healthz() -> dict:
         "explain_ttl_seconds": explain_ttl_seconds,
         "alpha": alpha,
     }
+
+
+@app.get("/genres")
+def list_genres():
+    return [{"name": genre} for genre in sorted(all_genres)]
+
+
+@app.get("/genres/{genre}/seeds")
+def genre_seeds(genre: str, limit: int = 20):
+    genre_key = genre.strip().lower()
+    if not genre_key:
+        return {"seeds": []}
+
+    if genre_key == "all":
+        movie_ids = list(movie_titles.keys())
+    else:
+        movie_ids = [
+            movie_id
+            for movie_id, genres in movie_genres.items()
+            if any(g.lower() == genre_key for g in genres)
+        ]
+
+    movie_ids = get_popular_movies(movie_ids, limit)
+    return {
+        "seeds": [
+            {"movie_id": movie_id, "title": get_title(movie_id)} for movie_id in movie_ids
+        ]
+    }
+
+
+@app.get("/movies/search")
+def movie_search(q: str = ""):
+    query = q.strip().lower()
+    if not query:
+        return []
+    results = []
+    for movie_id, title in movie_titles.items():
+        if query in title.lower():
+            results.append({"movie_id": movie_id, "title": title})
+            if len(results) >= 20:
+                break
+    return results
+
+
+class SeedsRequest(BaseModel):
+    seeds: list[int]
+    shuffle: bool = False
 
 
 @app.get("/score")
@@ -354,6 +420,115 @@ def recommend(user_id: int, k: int = 20) -> dict:
             pass
 
     return payload
+
+
+@app.post("/recommendations")
+def recommendations(request: SeedsRequest):
+    seeds = request.seeds
+    shuffle = request.shuffle
+    if not seeds or len(seeds) > 5:
+        return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
+
+    valid_seeds = [mid for mid in seeds if mid in movie_titles]
+    valid_seeds = content.filter_movie_ids(valid_seeds)
+    if not valid_seeds:
+        return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
+
+    seed_vectors = content.get_embeddings_for_movies(valid_seeds)
+    if not seed_vectors:
+        return JSONResponse(status_code=503, content={"content_unavailable": True})
+
+    anchor_vec = normalize_vector(np.mean(seed_vectors, axis=0))
+    ranked_ids = get_ranked_movie_ids()
+    pool_size = min(candidate_pool * 3, len(ranked_ids))
+    candidate_ids = [mid for mid in ranked_ids[:pool_size] if mid not in valid_seeds]
+    candidate_ids = content.filter_movie_ids(candidate_ids)
+    if shuffle:
+        rng = np.random.default_rng()
+        rng.shuffle(candidate_ids)
+        candidate_ids = candidate_ids[:candidate_pool]
+
+    if not candidate_ids:
+        return {"items": [], "seed_movies": [], "anchor_source": "seed", "model_version": model_version}
+
+    scores = np.array(content.get_similarity_scores_from_vector(anchor_vec, candidate_ids), dtype=np.float32)
+    top_indices = np.argsort(scores)[::-1][:10]
+    items = [
+        {
+            "movie_id": int(candidate_ids[idx]),
+            "title": get_title(int(candidate_ids[idx])),
+            "score": float(scores[idx]),
+        }
+        for idx in top_indices
+    ]
+
+    seed_movies = [{"movie_id": mid, "title": get_title(mid)} for mid in valid_seeds]
+    return {
+        "items": items,
+        "seed_movies": seed_movies,
+        "anchor_source": "seed",
+        "model_version": model_version,
+    }
+
+
+@app.post("/explanations")
+def explanations(request: SeedsRequest):
+    seeds = request.seeds
+    shuffle = request.shuffle
+    if not seeds or len(seeds) > 5:
+        return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
+
+    valid_seeds = [mid for mid in seeds if mid in movie_titles]
+    valid_seeds = content.filter_movie_ids(valid_seeds)
+    if not valid_seeds:
+        return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
+
+    seed_vectors = content.get_embeddings_for_movies(valid_seeds)
+    if not seed_vectors:
+        return JSONResponse(status_code=503, content={"content_unavailable": True})
+
+    anchor_vec = normalize_vector(np.mean(seed_vectors, axis=0))
+    ranked_ids = get_ranked_movie_ids()
+    pool_size = min(candidate_pool * 3, len(ranked_ids))
+    candidate_ids = [mid for mid in ranked_ids[:pool_size] if mid not in valid_seeds]
+    candidate_ids = content.filter_movie_ids(candidate_ids)
+    if shuffle:
+        rng = np.random.default_rng()
+        rng.shuffle(candidate_ids)
+        candidate_ids = candidate_ids[:candidate_pool]
+
+    scores = np.array(content.get_similarity_scores_from_vector(anchor_vec, candidate_ids), dtype=np.float32)
+    top_indices = np.argsort(scores)[::-1][:10]
+    topk = [
+        {
+            "movie_id": int(candidate_ids[idx]),
+            "title": get_title(int(candidate_ids[idx])),
+            "ncf": 0.0,
+            "content": float(scores[idx]),
+            "final": float(scores[idx]),
+        }
+        for idx in top_indices
+    ]
+
+    anchor_movie_id = valid_seeds[0]
+    similar = content.get_similar(anchor_movie_id, topn=3)
+    similar_movies = [
+        {"movie_id": mid, "title": get_title(mid), "similarity": sim}
+        for mid, sim in similar
+    ]
+
+    seed_movies = [{"movie_id": mid, "title": get_title(mid)} for mid in valid_seeds]
+    return {
+        "user_id": None,
+        "model_version": model_version,
+        "alpha": alpha,
+        "anchor_movie": {"movie_id": anchor_movie_id, "title": get_title(anchor_movie_id)},
+        "seed_movies": seed_movies,
+        "topk": topk,
+        "similar_movies": similar_movies,
+        "content_available": True,
+        "anchor_source": "seed",
+    }
 
 
 @app.get("/explain")
