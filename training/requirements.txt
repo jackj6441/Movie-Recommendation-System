@@ -1,0 +1,8 @@
+numpy
+onnx
+onnxscript
+onnxruntime
+pandas
+pytorch-lightning
+sentence-transformers
+torch

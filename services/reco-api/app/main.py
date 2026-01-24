@@ -1,9 +1,15 @@
+import csv
 import json
 import os
 
+import numpy as np
+import onnxruntime as ort
 import redis
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+from app import content
 
 app = FastAPI()
 
@@ -16,10 +22,96 @@ app.add_middleware(
 
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 model_version = os.getenv("MODEL_VERSION", "dev")
+movies_csv_path = os.getenv("MOVIES_CSV_PATH", "ml-latest-small/movies.csv")
+ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
+onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
+metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")
 try:
     redis_client = redis.Redis.from_url(redis_url, decode_responses=True)
 except redis.RedisError:
     redis_client = None
+
+num_users = int(os.getenv("NUM_USERS", "10000"))
+num_items = int(os.getenv("NUM_ITEMS", "10000"))
+user_id_to_idx: dict[str, int] = {}
+movie_id_to_idx: dict[str, int] = {}
+metadata_ok = False
+if os.path.exists(metadata_path):
+    try:
+        with open(metadata_path, encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+            num_users = int(metadata.get("num_users", num_users))
+            num_items = int(metadata.get("num_items", num_items))
+            user_id_to_idx = {
+                str(key): int(value)
+                for key, value in metadata.get("user_id_to_idx", {}).items()
+            }
+            movie_id_to_idx = {
+                str(key): int(value)
+                for key, value in metadata.get("movie_id_to_idx", {}).items()
+            }
+            metadata_ok = True
+    except (OSError, ValueError):
+        print(f"Warning: failed to load metadata at {metadata_path}")
+
+try:
+    onnx_session = ort.InferenceSession(onnx_model_path, providers=["CPUExecutionProvider"])
+except Exception:
+    onnx_session = None
+    print(f"Warning: failed to load ONNX model at {onnx_model_path}")
+
+content_ok = False
+
+movie_titles: dict[int, str] = {}
+try:
+    with open(movies_csv_path, newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            movie_id = int(row.get("movieId", "0"))
+            title = row.get("title", "").strip()
+            if movie_id and title:
+                movie_titles[movie_id] = title
+except OSError:
+    print(f"Warning: failed to load movies CSV at {movies_csv_path}")
+
+movie_popularity: dict[int, int] = {}
+ratings_user_ids: set[int] = set()
+ratings_movie_ids: set[int] = set()
+try:
+    with open(ratings_csv_path, newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            user_id = int(row.get("userId", "0"))
+            movie_id = int(row.get("movieId", "0"))
+            if user_id:
+                ratings_user_ids.add(user_id)
+            if movie_id:
+                ratings_movie_ids.add(movie_id)
+                movie_popularity[movie_id] = movie_popularity.get(movie_id, 0) + 1
+except OSError:
+    print(f"Warning: failed to load ratings CSV at {ratings_csv_path}")
+
+if ratings_user_ids:
+    num_users = len(ratings_user_ids)
+if ratings_movie_ids:
+    num_items = len(ratings_movie_ids)
+
+popular_movie_ids = [
+    movie_id
+    for movie_id, _ in sorted(movie_popularity.items(), key=lambda item: item[1], reverse=True)
+]
+
+
+def get_title(movie_id: int) -> str:
+    return movie_titles.get(movie_id, f"Movie {movie_id}")
+
+
+def get_ranked_movie_ids() -> list[int]:
+    if popular_movie_ids:
+        return popular_movie_ids
+    if movie_titles:
+        return sorted(movie_titles.keys())
+    return []
 
 
 @app.get("/healthz")
@@ -30,12 +122,72 @@ def healthz() -> dict:
             redis_ok = bool(redis_client.ping())
         except redis.RedisError:
             redis_ok = False
-    return {"status": "ok", "redis_ok": redis_ok}
+    return {
+        "status": "ok",
+        "redis_ok": redis_ok,
+        "onnx_ok": onnx_session is not None,
+        "metadata_ok": metadata_ok,
+        "num_users": num_users,
+        "num_items": num_items,
+        "tfidf_ok": content_ok,
+        "model_version": model_version,
+    }
+
+
+@app.get("/score")
+def score(user_id: int, movie_id: int):
+    if onnx_session is None:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "onnx_unavailable": True,
+                "model_version": model_version,
+                "runtime": "onnxruntime",
+            },
+        )
+
+    user_key = str(user_id)
+    movie_key = str(movie_id)
+    if user_key not in user_id_to_idx:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "cold_start": True,
+                "reason": "user_not_found",
+                "model_version": model_version,
+                "runtime": "onnxruntime",
+            },
+        )
+    if movie_key not in movie_id_to_idx:
+        return JSONResponse(
+            status_code=404,
+            content={
+                "cold_start": True,
+                "reason": "movie_not_found",
+                "model_version": model_version,
+                "runtime": "onnxruntime",
+            },
+        )
+
+    user_idx = user_id_to_idx[user_key]
+    item_idx = movie_id_to_idx[movie_key]
+    ort_inputs = {
+        "user_idx": np.array([user_idx], dtype=np.int64),
+        "item_idx": np.array([item_idx], dtype=np.int64),
+    }
+    pred = onnx_session.run(["pred_rating"], ort_inputs)[0][0]
+    return {
+        "user_id": user_id,
+        "movie_id": movie_id,
+        "pred_rating": float(pred),
+        "model_version": model_version,
+        "runtime": "onnxruntime",
+    }
 
 
 @app.get("/recommend")
 def recommend(user_id: int, k: int = 20) -> dict:
-    cache_key = f"rec:user:{user_id}:k:{k}"
+    cache_key = f"rec:{model_version}:user:{user_id}:k:{k}"
     cached = None
     if redis_client is not None:
         try:
@@ -43,24 +195,11 @@ def recommend(user_id: int, k: int = 20) -> dict:
         except redis.RedisError:
             cached = None
 
-    explain = {
-        "ncf_score": 4.3,
-        "content_score": 0.82,
-        "alpha": 0.7,
-        "similar_movies": [
-            {"movie_id": 201, "title": "Similar Movie 201", "score": 0.91},
-            {"movie_id": 202, "title": "Similar Movie 202", "score": 0.88},
-            {"movie_id": 203, "title": "Similar Movie 203", "score": 0.86},
-        ],
-    }
-
     if cached:
         payload = json.loads(cached)
         payload["cache_hit"] = True
         if "model_version" not in payload:
             payload["model_version"] = model_version
-        if "explain" not in payload:
-            payload["explain"] = explain
         if redis_client is not None:
             try:
                 redis_client.setex(cache_key, 300, json.dumps(payload))
@@ -68,13 +207,129 @@ def recommend(user_id: int, k: int = 20) -> dict:
                 pass
         return payload
 
-    items = [
-        {"movie_id": 101, "title": "Mock Movie 101", "score": 4.8},
-        {"movie_id": 102, "title": "Mock Movie 102", "score": 4.7},
-        {"movie_id": 103, "title": "Mock Movie 103", "score": 4.6},
-        {"movie_id": 104, "title": "Mock Movie 104", "score": 4.5},
-        {"movie_id": 105, "title": "Mock Movie 105", "score": 4.4},
-    ]
+    ranked_ids = get_ranked_movie_ids()
+    items_needed = max(k, 5)
+
+    user_key = str(user_id)
+    alpha = 0.7
+    if user_key not in user_id_to_idx:
+        items_ids = ranked_ids[:items_needed]
+        if len(items_ids) < items_needed:
+            next_id = 1
+            while len(items_ids) < items_needed:
+                if next_id not in items_ids:
+                    items_ids.append(next_id)
+                next_id += 1
+
+        similar_ids = ranked_ids[items_needed : items_needed + 3]
+        if len(similar_ids) < 3:
+            next_id = 1
+            while len(similar_ids) < 3:
+                if next_id not in items_ids and next_id not in similar_ids:
+                    similar_ids.append(next_id)
+                next_id += 1
+
+        items = [
+            {"movie_id": movie_id, "title": get_title(movie_id), "score": score}
+            for movie_id, score in zip(items_ids, [4.8, 4.7, 4.6, 4.5, 4.4], strict=False)
+        ]
+        explain = {
+            "ncf_score": 4.3,
+            "content_score": 0.0,
+            "alpha": alpha,
+            "similar_movies": [
+                {"movie_id": movie_id, "title": get_title(movie_id), "score": score}
+                for movie_id, score in zip(similar_ids, [0.91, 0.88, 0.86], strict=False)
+            ],
+        }
+        cold_start = True
+    elif onnx_session is not None and ranked_ids and movie_id_to_idx:
+        candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
+        candidate_ids = [mid for mid in ranked_ids[:candidate_pool] if str(mid) in movie_id_to_idx]
+        user_idx = user_id_to_idx[user_key]
+        item_indices = np.array([movie_id_to_idx[str(mid)] for mid in candidate_ids], dtype=np.int64)
+        user_indices = np.full_like(item_indices, user_idx)
+        ort_inputs = {"user_idx": user_indices, "item_idx": item_indices}
+        scores = onnx_session.run(["pred_rating"], ort_inputs)[0]
+
+        top_k = min(k, len(candidate_ids))
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        anchor_movie_id = int(candidate_ids[top_indices[0]]) if len(top_indices) else candidate_ids[0]
+
+        content_scores = scores * 0.0
+        similar_movies: list[dict] = []
+        content_score_value = 0.0
+        try:
+            content_scores = np.array(
+                content.get_similarity_scores(anchor_movie_id, candidate_ids), dtype=np.float32
+            )
+            similar = content.get_similar(anchor_movie_id, topn=3)
+            similar_movies = [
+                {"movie_id": mid, "title": get_title(mid), "score": sim}
+                for mid, sim in similar
+            ]
+            top_similar = content.get_similar(anchor_movie_id, topn=10)
+            if top_similar:
+                content_score_value = float(
+                    sum(sim for _, sim in top_similar) / len(top_similar)
+                )
+            global content_ok
+            content_ok = True
+        except Exception:
+            content_scores = scores * 0.0
+            similar_movies = []
+            content_score_value = 0.0
+
+        final_scores = alpha * scores + (1 - alpha) * content_scores
+        final_top_indices = np.argsort(final_scores)[::-1][:top_k]
+        items = [
+            {
+                "movie_id": int(candidate_ids[idx]),
+                "title": get_title(int(candidate_ids[idx])),
+                "score": float(final_scores[idx]),
+            }
+            for idx in final_top_indices
+        ]
+        if not similar_movies:
+            similar_movies = items[:3]
+        explain = {
+            "ncf_score": float(scores[top_indices[0]]) if len(top_indices) else 0.0,
+            "content_score": content_score_value,
+            "alpha": alpha,
+            "similar_movies": similar_movies,
+        }
+        cold_start = False
+    else:
+        items_ids = ranked_ids[:items_needed]
+        if len(items_ids) < items_needed:
+            next_id = 1
+            while len(items_ids) < items_needed:
+                if next_id not in items_ids:
+                    items_ids.append(next_id)
+                next_id += 1
+
+        similar_ids = ranked_ids[items_needed : items_needed + 3]
+        if len(similar_ids) < 3:
+            next_id = 1
+            while len(similar_ids) < 3:
+                if next_id not in items_ids and next_id not in similar_ids:
+                    similar_ids.append(next_id)
+                next_id += 1
+
+        items = [
+            {"movie_id": movie_id, "title": get_title(movie_id), "score": score}
+            for movie_id, score in zip(items_ids, [4.8, 4.7, 4.6, 4.5, 4.4], strict=False)
+        ]
+        explain = {
+            "ncf_score": 4.3,
+            "content_score": 0.0,
+            "alpha": alpha,
+            "similar_movies": [
+                {"movie_id": movie_id, "title": get_title(movie_id), "score": score}
+                for movie_id, score in zip(similar_ids, [0.91, 0.88, 0.86], strict=False)
+            ],
+        }
+        cold_start = False
 
     payload = {
         "user_id": user_id,
@@ -83,6 +338,7 @@ def recommend(user_id: int, k: int = 20) -> dict:
         "items": items,
         "model_version": model_version,
         "explain": explain,
+        "cold_start": cold_start,
     }
 
     if redis_client is not None:
@@ -92,6 +348,145 @@ def recommend(user_id: int, k: int = 20) -> dict:
             pass
 
     return payload
+
+
+@app.get("/explain")
+def explain(user_id: int, k: int = 10):
+    cache_key = f"explain:{model_version}:user:{user_id}:k:{k}"
+    cached = None
+    if redis_client is not None:
+        try:
+            cached = redis_client.get(cache_key)
+        except redis.RedisError:
+            cached = None
+
+    if cached:
+        payload = json.loads(cached)
+        return payload
+
+    ranked_ids = get_ranked_movie_ids()
+    top_k = max(k, 1)
+    alpha = 0.7
+    content_available = True
+
+    user_key = str(user_id)
+    if user_key not in user_id_to_idx:
+        items_ids = ranked_ids[:top_k]
+        topk_items = [
+            {
+                "movie_id": movie_id,
+                "title": get_title(movie_id),
+                "ncf": score,
+                "content": 0.0,
+                "final": score,
+            }
+            for movie_id, score in zip(items_ids, [4.8, 4.7, 4.6, 4.5, 4.4], strict=False)
+        ]
+        anchor_movie_id = items_ids[0] if items_ids else None
+        similar_movies = []
+        content_available = False
+    elif onnx_session is not None and ranked_ids and movie_id_to_idx:
+        candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
+        candidate_ids = [mid for mid in ranked_ids[:candidate_pool] if str(mid) in movie_id_to_idx]
+        user_idx = user_id_to_idx[user_key]
+        item_indices = np.array([movie_id_to_idx[str(mid)] for mid in candidate_ids], dtype=np.int64)
+        user_indices = np.full_like(item_indices, user_idx)
+        ort_inputs = {"user_idx": user_indices, "item_idx": item_indices}
+        scores = onnx_session.run(["pred_rating"], ort_inputs)[0]
+
+        anchor_movie_id = int(candidate_ids[int(np.argmax(scores))]) if len(scores) else None
+        content_scores = scores * 0.0
+        try:
+            if anchor_movie_id is not None:
+                content_scores = np.array(
+                    content.get_similarity_scores(anchor_movie_id, candidate_ids), dtype=np.float32
+                )
+                global content_ok
+                content_ok = True
+            else:
+                content_available = False
+        except Exception:
+            content_scores = scores * 0.0
+            content_available = False
+
+        final_scores = alpha * scores + (1 - alpha) * content_scores
+        top_indices = np.argsort(final_scores)[::-1][:top_k]
+        topk_items = [
+            {
+                "movie_id": int(candidate_ids[idx]),
+                "title": get_title(int(candidate_ids[idx])),
+                "ncf": float(scores[idx]),
+                "content": float(content_scores[idx]),
+                "final": float(final_scores[idx]),
+            }
+            for idx in top_indices
+        ]
+
+        similar_movies = []
+        if content_available and anchor_movie_id is not None:
+            try:
+                similar = content.get_similar(anchor_movie_id, topn=3)
+                similar_movies = [
+                    {"movie_id": mid, "title": get_title(mid), "similarity": sim}
+                    for mid, sim in similar
+                ]
+            except Exception:
+                content_available = False
+                similar_movies = []
+    else:
+        items_ids = ranked_ids[:top_k]
+        topk_items = [
+            {
+                "movie_id": movie_id,
+                "title": get_title(movie_id),
+                "ncf": score,
+                "content": 0.0,
+                "final": score,
+            }
+            for movie_id, score in zip(items_ids, [4.8, 4.7, 4.6, 4.5, 4.4], strict=False)
+        ]
+        anchor_movie_id = items_ids[0] if items_ids else None
+        similar_movies = []
+        content_available = False
+
+    anchor_movie = None
+    if anchor_movie_id is not None:
+        anchor_movie = {"movie_id": anchor_movie_id, "title": get_title(anchor_movie_id)}
+
+    payload = {
+        "user_id": user_id,
+        "model_version": model_version,
+        "alpha": alpha,
+        "anchor_movie": anchor_movie,
+        "topk": topk_items,
+        "similar_movies": similar_movies,
+        "content_available": content_available,
+    }
+
+    if redis_client is not None:
+        try:
+            redis_client.setex(cache_key, 60, json.dumps(payload))
+        except redis.RedisError:
+            pass
+
+    return payload
+
+
+@app.get("/debug/similar")
+def debug_similar(movie_id: int, topn: int = 5):
+    similar = []
+    try:
+        similar = content.get_similar(movie_id, topn=topn)
+    except Exception:
+        similar = []
+
+    return {
+        "anchor_movie": {"movie_id": movie_id, "title": get_title(movie_id)},
+        "topn": [
+            {"movie_id": mid, "title": get_title(mid), "similarity": sim}
+            for mid, sim in similar
+        ],
+    }
 
 
 @app.get("/model/version")

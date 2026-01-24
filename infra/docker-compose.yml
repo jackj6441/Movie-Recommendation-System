@@ -12,8 +12,14 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - MOVIES_CSV_PATH=/data/ml-latest-small/movies.csv
+      - RATINGS_CSV_PATH=/data/ml-latest-small/ratings.csv
+      - ONNX_MODEL_PATH=/app/models/ncf.onnx
+      - METADATA_PATH=/app/models/metadata.json
     depends_on:
       - redis
+    volumes:
+      - ../ml-latest-small:/data/ml-latest-small:ro
 
   web:
     build: ../web

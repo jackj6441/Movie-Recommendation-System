@@ -10,6 +10,7 @@
 
 ## Change Principles
 
+- form complete todolist after getting prompt and before editing
 - Work on one feature at a time.
 - Bug fixes must be minimal changes.
 - No large-scale refactors.
