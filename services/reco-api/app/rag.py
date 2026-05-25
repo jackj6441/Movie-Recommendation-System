@@ -35,8 +35,32 @@ def build_mock_structured_explanation(
         return build_deterministic_fallback(deterministic, model_version, "invalid_json")
     if provider == "mock_timeout":
         return build_deterministic_fallback(deterministic, model_version, "provider_timeout")
+    if provider == "mock_provider_error":
+        return build_deterministic_fallback(deterministic, model_version, "provider_error")
     if provider == "disabled":
         return build_deterministic_fallback(deterministic, model_version, "disabled")
+
+    provider_payload = build_provider_payload(deterministic, provider)
+    if not is_valid_provider_payload(provider_payload, deterministic):
+        return build_deterministic_fallback(
+            deterministic,
+            model_version,
+            "schema_validation_failed",
+        )
+
+    return {
+        **provider_payload,
+        **response_metadata(deterministic, model_version),
+        "explanation_source": "rag",
+    }
+
+
+def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict[str, Any]:
+    if provider == "mock_invalid_schema":
+        return {
+            "summary": "",
+            "items": [{"movie_id": "not-an-int", "evidence": ["unsupported"]}],
+        }
 
     top_items = deterministic.get("topk", [])[:3]
     seed_movies = deterministic.get("seed_movies", [])
@@ -61,12 +85,38 @@ def build_mock_structured_explanation(
         for item in top_items
     ]
 
-    return {
-        "summary": summary,
-        "items": items,
-        **response_metadata(deterministic, model_version),
-        "explanation_source": "rag",
-    }
+    return {"summary": summary, "items": items}
+
+
+def is_valid_provider_payload(
+    provider_payload: dict[str, Any],
+    deterministic: dict[str, Any],
+) -> bool:
+    if not isinstance(provider_payload.get("summary"), str) or not provider_payload["summary"]:
+        return False
+
+    items = provider_payload.get("items")
+    if not isinstance(items, list):
+        return False
+
+    expected_movie_ids = [item["movie_id"] for item in deterministic.get("topk", [])[:3]]
+    item_movie_ids: list[int] = []
+    for item in items:
+        if not isinstance(item, dict):
+            return False
+        if set(item) != {"movie_id", "reason", "evidence"}:
+            return False
+        if not isinstance(item["movie_id"], int):
+            return False
+        if not isinstance(item["reason"], str) or not item["reason"]:
+            return False
+        if not isinstance(item["evidence"], list) or not item["evidence"]:
+            return False
+        if not set(item["evidence"]).issubset(RAG_EVIDENCE_TYPES):
+            return False
+        item_movie_ids.append(item["movie_id"])
+
+    return item_movie_ids == expected_movie_ids[: len(item_movie_ids)]
 
 
 def build_deterministic_fallback(
