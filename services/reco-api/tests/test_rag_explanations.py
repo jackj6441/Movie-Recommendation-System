@@ -19,6 +19,7 @@ def load_app(monkeypatch):
     sys.path.insert(0, str(api_root))
     sys.modules.pop("app.main", None)
     sys.modules.pop("app.content", None)
+    sys.modules.pop("app.rag", None)
     return importlib.import_module("app.main").app
 
 
@@ -65,3 +66,48 @@ def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
 
     assert response.status_code == 400
     assert response.json() == {"detail": "seeds must be 1 to 5 items"}
+
+
+def test_rag_explanations_falls_back_when_provider_returns_invalid_json(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_json")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "invalid_json"
+    assert payload["summary"]
+    assert payload["items"]
+    assert payload["model_version"] == "dev"
+    assert payload["rag_evidence_version"] == "structured-v1"
+    assert payload["prompt_version"] == "rag-exp-v1"
+    assert payload["request_id"]
+    assert payload["evidence_hash"].startswith("sha256:")
+
+
+def test_rag_explanations_falls_back_when_provider_times_out(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "provider_timeout"
+    assert payload["summary"]
+    assert payload["items"]
+
+
+def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "disabled")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "disabled"
