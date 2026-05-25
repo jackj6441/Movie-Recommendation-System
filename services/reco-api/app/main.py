@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content
+from app import content, rag
 
 app = FastAPI()
 
@@ -529,6 +529,15 @@ def explanations(request: SeedsRequest):
         "content_available": True,
         "anchor_source": "seed",
     }
+
+
+@app.post("/rag/explanations")
+def rag_explanations(request: SeedsRequest):
+    deterministic = explanations(request)
+    if isinstance(deterministic, JSONResponse):
+        return deterministic
+
+    return rag.build_mock_structured_explanation(deterministic, model_version)
 
 
 @app.get("/explain")
