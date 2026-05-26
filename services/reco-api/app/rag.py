@@ -83,10 +83,22 @@ def build_mock_structured_explanation(
 
     provider_payload = build_provider_payload(deterministic, provider)
     if not is_valid_provider_payload(provider_payload, deterministic):
+        log_rag_metadata(
+            metadata=metadata,
+            provider=provider,
+            provider_model=provider_model,
+            explanation_source="deterministic_fallback",
+            cache_hit=False,
+            validation_result="failed",
+            fallback_reason="schema_validation_failed",
+            error_type="schema_validation_failed",
+            started_at=started_at,
+        )
         return build_deterministic_fallback(
             deterministic,
             model_version,
             "schema_validation_failed",
+            metadata=metadata,
         )
 
     response = {
@@ -259,6 +271,7 @@ def build_deterministic_fallback(
     deterministic: dict[str, Any],
     model_version: str,
     fallback_reason: str,
+    metadata: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     top_items = deterministic.get("topk", [])[:3]
     items = [
@@ -272,7 +285,7 @@ def build_deterministic_fallback(
     return {
         "summary": "These Recommendations are based on your Seed Set and existing scoring signals.",
         "items": items,
-        **response_metadata(deterministic, model_version),
+        **(metadata or response_metadata(deterministic, model_version)),
         "explanation_source": "deterministic_fallback",
         "fallback_reason": fallback_reason,
     }

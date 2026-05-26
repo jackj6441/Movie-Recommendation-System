@@ -266,6 +266,34 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(monkey
     assert payload["items"]
 
 
+def test_rag_explanations_logs_safe_metadata_for_schema_fallback(monkeypatch, caplog):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_schema")
+    caplog.set_level(logging.INFO, logger="app.rag")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    assert response.json()["explanation_source"] == "deterministic_fallback"
+    log_payloads = [
+        json.loads(record.message)
+        for record in caplog.records
+        if record.name == "app.rag" and record.message.startswith("{")
+    ]
+    metadata_log = log_payloads[-1]
+    assert metadata_log["event"] == "rag_explanation"
+    assert metadata_log["request_id"] == response.json()["request_id"]
+    assert metadata_log["evidence_hash"] == response.json()["evidence_hash"]
+    assert metadata_log["provider"] == "mock_invalid_schema"
+    assert metadata_log["provider_model"] == "mock"
+    assert metadata_log["explanation_source"] == "deterministic_fallback"
+    assert metadata_log["cache_hit"] is False
+    assert metadata_log["validation_result"] == "failed"
+    assert metadata_log["fallback_reason"] == "schema_validation_failed"
+    assert metadata_log["error_type"] == "schema_validation_failed"
+    assert metadata_log["latency_ms"] >= 0
+
+
 def test_rag_explanations_falls_back_when_provider_adds_extra_item_field(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_extra_item_field")
     client = TestClient(load_app(monkeypatch))
