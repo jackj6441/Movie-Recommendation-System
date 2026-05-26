@@ -7,7 +7,12 @@ from typing import Any
 RAG_EVIDENCE_VERSION = "structured-v1"
 RAG_PROMPT_VERSION = "rag-exp-v1"
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
-SUPPORTED_RAG_PROVIDERS = {"mock", "mock_invalid_schema", "mock_wrong_item_order"}
+SUPPORTED_RAG_PROVIDERS = {
+    "mock",
+    "mock_invalid_schema",
+    "mock_missing_top_three_item",
+    "mock_wrong_item_order",
+}
 
 
 def evidence_hash_for(deterministic: dict[str, Any]) -> str:
@@ -89,6 +94,8 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
     ]
     if provider == "mock_wrong_item_order":
         items = list(reversed(items))
+    if provider == "mock_missing_top_three_item":
+        items = items[:2]
 
     return {"summary": summary, "items": items}
 
@@ -121,7 +128,7 @@ def is_valid_provider_payload(
             return False
         item_movie_ids.append(item["movie_id"])
 
-    return item_movie_ids == expected_movie_ids[: len(item_movie_ids)]
+    return item_movie_ids == expected_movie_ids
 
 
 def build_deterministic_fallback(

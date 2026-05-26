@@ -113,6 +113,18 @@ def test_rag_explanations_falls_back_when_provider_changes_item_order(monkeypatc
     assert payload["fallback_reason"] == "schema_validation_failed"
 
 
+def test_rag_explanations_falls_back_when_provider_omits_top_three_item(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_missing_top_three_item")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "schema_validation_failed"
+
+
 def test_rag_explanations_falls_back_when_provider_times_out(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
     client = TestClient(load_app(monkeypatch))
