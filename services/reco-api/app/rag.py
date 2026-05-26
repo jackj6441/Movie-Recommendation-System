@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import os
 import time
 import uuid
@@ -17,6 +18,7 @@ SUPPORTED_RAG_PROVIDERS = {
     "mock_wrong_item_order",
 }
 RAG_CACHE: dict[str, dict[str, Any]] = {}
+logger = logging.getLogger(__name__)
 
 
 def evidence_hash_for(deterministic: dict[str, Any]) -> str:
@@ -44,6 +46,7 @@ def build_mock_structured_explanation(
     deterministic: dict[str, Any],
     model_version: str,
 ) -> dict[str, Any]:
+    started_at = time.perf_counter()
     provider = os.getenv("RAG_PROVIDER", "mock")
     if provider == "mock_invalid_json":
         return build_deterministic_fallback(deterministic, model_version, "invalid_json")
@@ -82,7 +85,52 @@ def build_mock_structured_explanation(
     }
     if is_rag_cache_enabled():
         RAG_CACHE[cache_key] = {"payload": provider_payload, "stored_at": time.time()}
+    log_rag_metadata(
+        metadata=metadata,
+        provider=provider,
+        provider_model=provider_model,
+        explanation_source="rag",
+        cache_hit=False,
+        validation_result="passed",
+        fallback_reason=None,
+        error_type=None,
+        started_at=started_at,
+    )
     return response
+
+
+def log_rag_metadata(
+    metadata: dict[str, str],
+    provider: str,
+    provider_model: str,
+    explanation_source: str,
+    cache_hit: bool,
+    validation_result: str,
+    fallback_reason: str | None,
+    error_type: str | None,
+    started_at: float,
+) -> None:
+    logger.info(
+        json.dumps(
+            {
+                "event": "rag_explanation",
+                "request_id": metadata["request_id"],
+                "model_version": metadata["model_version"],
+                "rag_evidence_version": metadata["rag_evidence_version"],
+                "prompt_version": metadata["prompt_version"],
+                "evidence_hash": metadata["evidence_hash"],
+                "provider": provider,
+                "provider_model": provider_model,
+                "explanation_source": explanation_source,
+                "cache_hit": cache_hit,
+                "validation_result": validation_result,
+                "fallback_reason": fallback_reason,
+                "error_type": error_type,
+                "latency_ms": int((time.perf_counter() - started_at) * 1000),
+            },
+            sort_keys=True,
+        )
+    )
 
 
 def is_rag_cache_enabled() -> bool:

@@ -1,4 +1,6 @@
 import importlib
+import json
+import logging
 import sys
 from pathlib import Path
 
@@ -160,6 +162,36 @@ def test_rag_explanations_cache_misses_when_prompt_version_changes(monkeypatch):
     assert second_response.json()["prompt_version"] == "rag-exp-test-b"
     assert first_response.json()["explanation_source"] == "rag"
     assert second_response.json()["explanation_source"] == "rag"
+
+
+def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, caplog):
+    caplog.set_level(logging.INFO, logger="app.rag")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    log_payloads = [
+        json.loads(record.message)
+        for record in caplog.records
+        if record.name == "app.rag" and record.message.startswith("{")
+    ]
+    assert log_payloads
+    metadata_log = log_payloads[-1]
+    assert metadata_log["event"] == "rag_explanation"
+    assert metadata_log["request_id"] == response.json()["request_id"]
+    assert metadata_log["model_version"] == "dev"
+    assert metadata_log["rag_evidence_version"] == "structured-v1"
+    assert metadata_log["prompt_version"] == "rag-exp-v1"
+    assert metadata_log["evidence_hash"] == response.json()["evidence_hash"]
+    assert metadata_log["provider"] == "mock"
+    assert metadata_log["provider_model"] == "mock"
+    assert metadata_log["explanation_source"] == "rag"
+    assert metadata_log["cache_hit"] is False
+    assert metadata_log["validation_result"] == "passed"
+    assert metadata_log["fallback_reason"] is None
+    assert metadata_log["error_type"] is None
+    assert metadata_log["latency_ms"] >= 0
 
 
 def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
