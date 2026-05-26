@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import time
 import uuid
 from typing import Any
 
@@ -52,9 +53,10 @@ def build_mock_structured_explanation(
     metadata = response_metadata(deterministic, model_version)
     provider_model = rag_provider_model()
     cache_key = rag_cache_key(metadata, model_version, provider, provider_model)
-    if is_rag_cache_enabled() and cache_key in RAG_CACHE:
+    cached_entry = RAG_CACHE.get(cache_key)
+    if is_rag_cache_enabled() and cached_entry and is_rag_cache_entry_fresh(cached_entry):
         return {
-            **RAG_CACHE[cache_key],
+            **cached_entry["payload"],
             **metadata,
             "explanation_source": "rag_cache",
         }
@@ -73,12 +75,20 @@ def build_mock_structured_explanation(
         "explanation_source": "rag",
     }
     if is_rag_cache_enabled():
-        RAG_CACHE[cache_key] = provider_payload
+        RAG_CACHE[cache_key] = {"payload": provider_payload, "stored_at": time.time()}
     return response
 
 
 def is_rag_cache_enabled() -> bool:
     return os.getenv("RAG_CACHE_ENABLED", "false").lower() == "true"
+
+
+def rag_cache_ttl_seconds() -> int:
+    return int(os.getenv("RAG_CACHE_TTL_SECONDS", "3600"))
+
+
+def is_rag_cache_entry_fresh(cache_entry: dict[str, Any]) -> bool:
+    return time.time() - cache_entry["stored_at"] < rag_cache_ttl_seconds()
 
 
 def rag_provider_model() -> str:
