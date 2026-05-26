@@ -417,6 +417,46 @@ def test_rag_explanations_falls_back_when_external_provider_has_no_api_key(monke
     assert payload["fallback_reason"] == "provider_error"
 
 
+def test_rag_explanations_uses_external_provider_response_from_backend_env(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "external")
+    monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("RAG_PROVIDER_MODEL", "external-test-model")
+    monkeypatch.setenv(
+        "RAG_EXTERNAL_RESPONSE_JSON",
+        json.dumps(
+            {
+                "summary": "External provider summary",
+                "items": [
+                    {
+                        "movie_id": 239,
+                        "reason": "External provider reason for Goofy Movie.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                    {
+                        "movie_id": 39,
+                        "reason": "External provider reason for Clueless.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                    {
+                        "movie_id": 175,
+                        "reason": "External provider reason for Kids.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                ],
+            }
+        ),
+    )
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "rag"
+    assert payload["summary"] == "External provider summary"
+    assert payload["items"][0]["reason"] == "External provider reason for Goofy Movie."
+
+
 def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "disabled")
     client = TestClient(load_app(monkeypatch))

@@ -200,6 +200,8 @@ def rag_cache_key(
 
 
 def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict[str, Any]:
+    if provider == "external":
+        return external_provider_payload()
     if provider == "mock_invalid_schema":
         return {
             "summary": "",
@@ -239,6 +241,16 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
     if provider == "mock_extra_top_level_field":
         payload["debug_notes"] = "provider-only field"
     return payload
+
+
+def external_provider_payload() -> dict[str, Any]:
+    configured_response = os.getenv("RAG_EXTERNAL_RESPONSE_JSON")
+    if configured_response:
+        return json.loads(configured_response)
+    return {
+        "summary": "External provider response is not configured.",
+        "items": [],
+    }
 
 
 def is_valid_provider_payload(
