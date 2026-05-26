@@ -29,9 +29,13 @@ def response_metadata(deterministic: dict[str, Any], model_version: str) -> dict
         "model_version": model_version,
         "rag_evidence_version": RAG_EVIDENCE_VERSION,
         "evidence_hash": evidence_hash_for(deterministic),
-        "prompt_version": RAG_PROMPT_VERSION,
+        "prompt_version": rag_prompt_version(),
         "request_id": str(uuid.uuid4()),
     }
+
+
+def rag_prompt_version() -> str:
+    return os.getenv("RAG_PROMPT_VERSION", RAG_PROMPT_VERSION)
 
 
 def build_mock_structured_explanation(
