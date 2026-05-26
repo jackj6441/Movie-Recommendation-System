@@ -13,6 +13,7 @@ SUPPORTED_RAG_PROVIDERS = {
     "mock_missing_top_three_item",
     "mock_wrong_item_order",
 }
+RAG_CACHE: dict[str, dict[str, Any]] = {}
 
 
 def evidence_hash_for(deterministic: dict[str, Any]) -> str:
@@ -48,6 +49,16 @@ def build_mock_structured_explanation(
     if provider not in SUPPORTED_RAG_PROVIDERS:
         return build_deterministic_fallback(deterministic, model_version, "unknown")
 
+    metadata = response_metadata(deterministic, model_version)
+    provider_model = rag_provider_model()
+    cache_key = rag_cache_key(metadata, model_version, provider, provider_model)
+    if is_rag_cache_enabled() and cache_key in RAG_CACHE:
+        return {
+            **RAG_CACHE[cache_key],
+            **metadata,
+            "explanation_source": "rag_cache",
+        }
+
     provider_payload = build_provider_payload(deterministic, provider)
     if not is_valid_provider_payload(provider_payload, deterministic):
         return build_deterministic_fallback(
@@ -56,11 +67,39 @@ def build_mock_structured_explanation(
             "schema_validation_failed",
         )
 
-    return {
+    response = {
         **provider_payload,
-        **response_metadata(deterministic, model_version),
+        **metadata,
         "explanation_source": "rag",
     }
+    if is_rag_cache_enabled():
+        RAG_CACHE[cache_key] = provider_payload
+    return response
+
+
+def is_rag_cache_enabled() -> bool:
+    return os.getenv("RAG_CACHE_ENABLED", "false").lower() == "true"
+
+
+def rag_provider_model() -> str:
+    return os.getenv("RAG_PROVIDER_MODEL", "mock")
+
+
+def rag_cache_key(
+    metadata: dict[str, str],
+    model_version: str,
+    provider: str,
+    provider_model: str,
+) -> str:
+    return ":".join(
+        [
+            model_version,
+            metadata["evidence_hash"],
+            metadata["prompt_version"],
+            provider,
+            provider_model,
+        ]
+    )
 
 
 def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict[str, Any]:

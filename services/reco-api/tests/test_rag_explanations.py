@@ -59,6 +59,36 @@ def test_rag_explanations_items_match_deterministic_top_three_order(monkeypatch)
     assert rag_items == deterministic_top_three
 
 
+def test_rag_explanations_returns_cached_explanation_for_repeated_seed_set(monkeypatch):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+    second_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json()["explanation_source"] == "rag"
+    assert second_response.json()["explanation_source"] == "rag_cache"
+    assert second_response.json()["items"] == first_response.json()["items"]
+    assert second_response.json()["evidence_hash"] == first_response.json()["evidence_hash"]
+
+
+def test_rag_explanations_cache_misses_when_provider_model_changes(monkeypatch):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    monkeypatch.setenv("RAG_PROVIDER_MODEL", "mock-model-a")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [4, 5, 6], "shuffle": False})
+    monkeypatch.setenv("RAG_PROVIDER_MODEL", "mock-model-b")
+    second_response = client.post("/rag/explanations", json={"seeds": [4, 5, 6], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json()["explanation_source"] == "rag"
+    assert second_response.json()["explanation_source"] == "rag"
+
+
 def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
     client = TestClient(load_app(monkeypatch))
 
