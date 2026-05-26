@@ -103,6 +103,20 @@ def test_rag_explanations_cache_misses_when_ttl_expires(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
+def test_rag_explanations_ignores_cache_when_ttl_is_invalid(monkeypatch):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    monkeypatch.setenv("RAG_CACHE_TTL_SECONDS", "not-a-number")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [13, 14, 15], "shuffle": False})
+    second_response = client.post("/rag/explanations", json={"seeds": [13, 14, 15], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json()["explanation_source"] == "rag"
+    assert second_response.json()["explanation_source"] == "rag"
+
+
 def test_rag_explanations_cache_misses_when_prompt_version_changes(monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_PROMPT_VERSION", "rag-exp-test-a")

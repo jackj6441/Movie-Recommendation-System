@@ -88,7 +88,10 @@ def is_rag_cache_enabled() -> bool:
 
 
 def rag_cache_ttl_seconds() -> int:
-    return int(os.getenv("RAG_CACHE_TTL_SECONDS", "3600"))
+    try:
+        return int(os.getenv("RAG_CACHE_TTL_SECONDS", "3600"))
+    except ValueError:
+        return 0
 
 
 def is_rag_cache_entry_fresh(cache_entry: dict[str, Any]) -> bool:
