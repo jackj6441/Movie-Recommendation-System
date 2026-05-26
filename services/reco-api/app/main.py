@@ -537,7 +537,8 @@ def rag_explanations(request: SeedsRequest):
     if isinstance(deterministic, JSONResponse):
         return deterministic
 
-    return rag.build_mock_structured_explanation(deterministic, model_version)
+    current_model_version = os.getenv("MODEL_VERSION", model_version)
+    return rag.build_mock_structured_explanation(deterministic, current_model_version)
 
 
 @app.get("/explain")
