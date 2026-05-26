@@ -22,6 +22,8 @@ Primary docs:
 - Every service must expose `/healthz`.
 - API responses must include `model_version` when returning model-backed results.
 - After each meaningful checkpoint, remind the user to commit.
+- During TDD work, commit after each completed red-green-refactor step once tests pass.
+- After changing code, explain the change, especially every new or modified function and why it exists.
 
 ## Repo layout
 
