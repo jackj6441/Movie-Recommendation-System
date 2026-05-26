@@ -404,6 +404,19 @@ def test_rag_explanations_falls_back_when_provider_errors(monkeypatch):
     assert payload["items"]
 
 
+def test_rag_explanations_falls_back_when_external_provider_has_no_api_key(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "external")
+    monkeypatch.delenv("RAG_PROVIDER_API_KEY", raising=False)
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "provider_error"
+
+
 def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "disabled")
     client = TestClient(load_app(monkeypatch))

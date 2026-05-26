@@ -10,6 +10,7 @@ RAG_EVIDENCE_VERSION = "structured-v1"
 RAG_PROMPT_VERSION = "rag-exp-v1"
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
 SUPPORTED_RAG_PROVIDERS = {
+    "external",
     "mock",
     "mock_extra_item_field",
     "mock_extra_top_level_field",
@@ -58,6 +59,8 @@ def build_mock_structured_explanation(
         return build_deterministic_fallback(deterministic, model_version, "disabled")
     if provider not in SUPPORTED_RAG_PROVIDERS:
         return build_deterministic_fallback(deterministic, model_version, "unknown")
+    if provider == "external" and not external_provider_api_key():
+        return build_deterministic_fallback(deterministic, model_version, "provider_error")
 
     metadata = response_metadata(deterministic, model_version)
     provider_model = rag_provider_model()
@@ -173,6 +176,10 @@ def is_rag_cache_entry_fresh(cache_entry: dict[str, Any]) -> bool:
 
 def rag_provider_model() -> str:
     return os.getenv("RAG_PROVIDER_MODEL", "mock")
+
+
+def external_provider_api_key() -> str | None:
+    return os.getenv("RAG_PROVIDER_API_KEY")
 
 
 def rag_cache_key(
