@@ -291,7 +291,10 @@ def external_provider_payload() -> dict[str, Any]:
 
 
 def external_provider_simulated_latency_seconds() -> float:
-    return float(os.getenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "0"))
+    try:
+        return float(os.getenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "0"))
+    except ValueError as exc:
+        raise RagProviderError from exc
 
 
 def is_valid_provider_payload(
