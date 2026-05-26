@@ -74,6 +74,20 @@ def test_rag_explanations_returns_cached_explanation_for_repeated_seed_set(monke
     assert second_response.json()["evidence_hash"] == first_response.json()["evidence_hash"]
 
 
+def test_rag_explanations_cache_misses_when_evidence_hash_changes(monkeypatch):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [19, 20, 21], "shuffle": False})
+    second_response = client.post("/rag/explanations", json={"seeds": [22, 23, 24], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json()["explanation_source"] == "rag"
+    assert second_response.json()["explanation_source"] == "rag"
+    assert first_response.json()["evidence_hash"] != second_response.json()["evidence_hash"]
+
+
 def test_rag_explanations_cache_misses_when_provider_model_changes(monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_PROVIDER_MODEL", "mock-model-a")
