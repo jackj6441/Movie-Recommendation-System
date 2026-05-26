@@ -11,6 +11,7 @@ RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
 SUPPORTED_RAG_PROVIDERS = {
     "mock",
     "mock_extra_item_field",
+    "mock_extra_top_level_field",
     "mock_invalid_schema",
     "mock_missing_top_three_item",
     "mock_wrong_item_order",
@@ -156,13 +157,18 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
     if provider == "mock_missing_top_three_item":
         items = items[:2]
 
-    return {"summary": summary, "items": items}
+    payload = {"summary": summary, "items": items}
+    if provider == "mock_extra_top_level_field":
+        payload["debug_notes"] = "provider-only field"
+    return payload
 
 
 def is_valid_provider_payload(
     provider_payload: dict[str, Any],
     deterministic: dict[str, Any],
 ) -> bool:
+    if set(provider_payload) != {"summary", "items"}:
+        return False
     if not isinstance(provider_payload.get("summary"), str) or not provider_payload["summary"]:
         return False
 
