@@ -22,6 +22,10 @@ RAG_CACHE: dict[str, dict[str, Any]] = {}
 logger = logging.getLogger(__name__)
 
 
+class RagProviderTimeoutError(Exception):
+    pass
+
+
 def evidence_hash_for(deterministic: dict[str, Any]) -> str:
     digest = hashlib.sha256(
         json.dumps(deterministic, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -86,6 +90,13 @@ def build_mock_structured_explanation(
 
     try:
         provider_payload = build_provider_payload(deterministic, provider)
+    except RagProviderTimeoutError:
+        return build_deterministic_fallback(
+            deterministic,
+            model_version,
+            "provider_timeout",
+            metadata=metadata,
+        )
     except json.JSONDecodeError:
         return build_deterministic_fallback(
             deterministic,
@@ -252,6 +263,8 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
 
 
 def external_provider_payload() -> dict[str, Any]:
+    if os.getenv("RAG_EXTERNAL_SIMULATE_TIMEOUT", "false").lower() == "true":
+        raise RagProviderTimeoutError
     configured_response = os.getenv("RAG_EXTERNAL_RESPONSE_JSON")
     if configured_response:
         return json.loads(configured_response)
