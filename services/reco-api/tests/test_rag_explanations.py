@@ -194,6 +194,23 @@ def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, cap
     assert metadata_log["latency_ms"] >= 0
 
 
+def test_rag_explanations_metadata_logs_do_not_include_sensitive_payloads(monkeypatch, caplog):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-secret")
+    caplog.set_level(logging.INFO, logger="app.rag")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    logged_text = "\n".join(record.message for record in caplog.records if record.name == "app.rag")
+    assert "sk-test-secret" not in logged_text
+    assert "Toy Story" not in logged_text
+    assert "Based on your Seed Set" not in logged_text
+    assert '"seeds"' not in logged_text
+    assert '"items"' not in logged_text
+    assert '"summary"' not in logged_text
+
+
 def test_rag_explanations_logs_safe_metadata_for_cache_hit(monkeypatch, caplog):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     caplog.set_level(logging.INFO, logger="app.rag")
