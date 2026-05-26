@@ -101,6 +101,18 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(monkey
     assert payload["items"]
 
 
+def test_rag_explanations_falls_back_when_provider_changes_item_order(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_wrong_item_order")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "schema_validation_failed"
+
+
 def test_rag_explanations_falls_back_when_provider_times_out(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
     client = TestClient(load_app(monkeypatch))
@@ -139,3 +151,15 @@ def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
     payload = response.json()
     assert payload["explanation_source"] == "deterministic_fallback"
     assert payload["fallback_reason"] == "disabled"
+
+
+def test_rag_explanations_falls_back_when_provider_is_unknown(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "unknown_provider")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "unknown"

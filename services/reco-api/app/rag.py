@@ -7,6 +7,7 @@ from typing import Any
 RAG_EVIDENCE_VERSION = "structured-v1"
 RAG_PROMPT_VERSION = "rag-exp-v1"
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
+SUPPORTED_RAG_PROVIDERS = {"mock", "mock_invalid_schema", "mock_wrong_item_order"}
 
 
 def evidence_hash_for(deterministic: dict[str, Any]) -> str:
@@ -39,6 +40,8 @@ def build_mock_structured_explanation(
         return build_deterministic_fallback(deterministic, model_version, "provider_error")
     if provider == "disabled":
         return build_deterministic_fallback(deterministic, model_version, "disabled")
+    if provider not in SUPPORTED_RAG_PROVIDERS:
+        return build_deterministic_fallback(deterministic, model_version, "unknown")
 
     provider_payload = build_provider_payload(deterministic, provider)
     if not is_valid_provider_payload(provider_payload, deterministic):
@@ -84,6 +87,8 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
         }
         for item in top_items
     ]
+    if provider == "mock_wrong_item_order":
+        items = list(reversed(items))
 
     return {"summary": summary, "items": items}
 
