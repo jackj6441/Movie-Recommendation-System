@@ -507,3 +507,15 @@ def test_rag_explanations_falls_back_when_provider_is_unknown(monkeypatch):
     payload = response.json()
     assert payload["explanation_source"] == "deterministic_fallback"
     assert payload["fallback_reason"] == "unknown"
+
+
+def test_rag_external_provider_configuration_is_documented_without_real_secrets():
+    repo_root = Path(__file__).resolve().parents[3]
+    readme = (repo_root / "services" / "reco-api" / "README.md").read_text()
+
+    assert "RAG_PROVIDER" in readme
+    assert "RAG_PROVIDER_API_KEY" in readme
+    assert "RAG_PROVIDER_MODEL" in readme
+    assert "RAG_EXTERNAL_RESPONSE_JSON" in readme
+    assert "8-second" in readme
+    assert "sk-" not in readme
