@@ -457,6 +457,20 @@ def test_rag_explanations_uses_external_provider_response_from_backend_env(monke
     assert payload["items"][0]["reason"] == "External provider reason for Goofy Movie."
 
 
+def test_rag_explanations_falls_back_when_external_provider_returns_invalid_json(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "external")
+    monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("RAG_EXTERNAL_RESPONSE_JSON", "{not-json")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "invalid_json"
+
+
 def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "disabled")
     client = TestClient(load_app(monkeypatch))

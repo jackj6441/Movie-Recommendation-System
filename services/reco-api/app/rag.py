@@ -84,7 +84,15 @@ def build_mock_structured_explanation(
             "explanation_source": "rag_cache",
         }
 
-    provider_payload = build_provider_payload(deterministic, provider)
+    try:
+        provider_payload = build_provider_payload(deterministic, provider)
+    except json.JSONDecodeError:
+        return build_deterministic_fallback(
+            deterministic,
+            model_version,
+            "invalid_json",
+            metadata=metadata,
+        )
     if not is_valid_provider_payload(provider_payload, deterministic):
         log_rag_metadata(
             metadata=metadata,
