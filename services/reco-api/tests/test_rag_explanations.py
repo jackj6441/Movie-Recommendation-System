@@ -499,6 +499,45 @@ def test_rag_explanations_falls_back_when_external_latency_exceeds_timeout_polic
     assert payload["fallback_reason"] == "provider_timeout"
 
 
+def test_rag_explanations_allows_external_latency_within_timeout_policy(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "external")
+    monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "7.5")
+    monkeypatch.setenv(
+        "RAG_EXTERNAL_RESPONSE_JSON",
+        json.dumps(
+            {
+                "summary": "External provider summary",
+                "items": [
+                    {
+                        "movie_id": 239,
+                        "reason": "External provider reason for Goofy Movie.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                    {
+                        "movie_id": 39,
+                        "reason": "External provider reason for Clueless.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                    {
+                        "movie_id": 175,
+                        "reason": "External provider reason for Kids.",
+                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                    },
+                ],
+            }
+        ),
+    )
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "rag"
+    assert payload["summary"] == "External provider summary"
+
+
 def test_rag_explanations_falls_back_when_external_provider_errors(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
