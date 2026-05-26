@@ -10,6 +10,7 @@ RAG_PROMPT_VERSION = "rag-exp-v1"
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
 SUPPORTED_RAG_PROVIDERS = {
     "mock",
+    "mock_extra_item_field",
     "mock_invalid_schema",
     "mock_missing_top_three_item",
     "mock_wrong_item_order",
@@ -148,6 +149,8 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
         }
         for item in top_items
     ]
+    if provider == "mock_extra_item_field":
+        items[0]["confidence"] = 0.9
     if provider == "mock_wrong_item_order":
         items = list(reversed(items))
     if provider == "mock_missing_top_three_item":

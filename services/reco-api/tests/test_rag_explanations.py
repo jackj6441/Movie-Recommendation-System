@@ -117,6 +117,20 @@ def test_rag_explanations_ignores_cache_when_ttl_is_invalid(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
+def test_rag_explanations_ignores_cache_when_ttl_is_negative(monkeypatch):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    monkeypatch.setenv("RAG_CACHE_TTL_SECONDS", "-5")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [16, 17, 18], "shuffle": False})
+    second_response = client.post("/rag/explanations", json={"seeds": [16, 17, 18], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert first_response.json()["explanation_source"] == "rag"
+    assert second_response.json()["explanation_source"] == "rag"
+
+
 def test_rag_explanations_cache_misses_when_prompt_version_changes(monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_PROMPT_VERSION", "rag-exp-test-a")
@@ -174,6 +188,18 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(monkey
     assert payload["fallback_reason"] == "schema_validation_failed"
     assert payload["summary"]
     assert payload["items"]
+
+
+def test_rag_explanations_falls_back_when_provider_adds_extra_item_field(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_extra_item_field")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "schema_validation_failed"
 
 
 def test_rag_explanations_falls_back_when_provider_changes_item_order(monkeypatch):
