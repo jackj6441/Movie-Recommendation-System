@@ -485,6 +485,20 @@ def test_rag_explanations_falls_back_when_external_provider_times_out(monkeypatc
     assert payload["fallback_reason"] == "provider_timeout"
 
 
+def test_rag_explanations_falls_back_when_external_latency_exceeds_timeout_policy(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "external")
+    monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
+    monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "9")
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["explanation_source"] == "deterministic_fallback"
+    assert payload["fallback_reason"] == "provider_timeout"
+
+
 def test_rag_explanations_falls_back_when_external_provider_errors(monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")

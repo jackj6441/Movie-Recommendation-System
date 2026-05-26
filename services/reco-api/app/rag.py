@@ -8,6 +8,7 @@ from typing import Any
 
 RAG_EVIDENCE_VERSION = "structured-v1"
 RAG_PROMPT_VERSION = "rag-exp-v1"
+EXTERNAL_PROVIDER_TIMEOUT_SECONDS = 8
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
 SUPPORTED_RAG_PROVIDERS = {
     "external",
@@ -276,6 +277,8 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
 def external_provider_payload() -> dict[str, Any]:
     if os.getenv("RAG_EXTERNAL_SIMULATE_TIMEOUT", "false").lower() == "true":
         raise RagProviderTimeoutError
+    if external_provider_simulated_latency_seconds() > EXTERNAL_PROVIDER_TIMEOUT_SECONDS:
+        raise RagProviderTimeoutError
     if os.getenv("RAG_EXTERNAL_SIMULATE_ERROR", "false").lower() == "true":
         raise RagProviderError
     configured_response = os.getenv("RAG_EXTERNAL_RESPONSE_JSON")
@@ -285,6 +288,10 @@ def external_provider_payload() -> dict[str, Any]:
         "summary": "External provider response is not configured.",
         "items": [],
     }
+
+
+def external_provider_simulated_latency_seconds() -> float:
+    return float(os.getenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "0"))
 
 
 def is_valid_provider_payload(
