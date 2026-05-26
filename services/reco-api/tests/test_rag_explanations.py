@@ -194,6 +194,36 @@ def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, cap
     assert metadata_log["latency_ms"] >= 0
 
 
+def test_rag_explanations_logs_safe_metadata_for_cache_hit(monkeypatch, caplog):
+    monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
+    caplog.set_level(logging.INFO, logger="app.rag")
+    client = TestClient(load_app(monkeypatch))
+
+    first_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+    second_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    assert second_response.json()["explanation_source"] == "rag_cache"
+    log_payloads = [
+        json.loads(record.message)
+        for record in caplog.records
+        if record.name == "app.rag" and record.message.startswith("{")
+    ]
+    metadata_log = log_payloads[-1]
+    assert metadata_log["event"] == "rag_explanation"
+    assert metadata_log["request_id"] == second_response.json()["request_id"]
+    assert metadata_log["evidence_hash"] == second_response.json()["evidence_hash"]
+    assert metadata_log["provider"] == "mock"
+    assert metadata_log["provider_model"] == "mock"
+    assert metadata_log["explanation_source"] == "rag_cache"
+    assert metadata_log["cache_hit"] is True
+    assert metadata_log["validation_result"] == "skipped"
+    assert metadata_log["fallback_reason"] is None
+    assert metadata_log["error_type"] is None
+    assert metadata_log["latency_ms"] >= 0
+
+
 def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
     client = TestClient(load_app(monkeypatch))
 

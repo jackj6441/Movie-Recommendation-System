@@ -64,6 +64,17 @@ def build_mock_structured_explanation(
     cache_key = rag_cache_key(metadata, model_version, provider, provider_model)
     cached_entry = RAG_CACHE.get(cache_key)
     if is_rag_cache_enabled() and cached_entry and is_rag_cache_entry_fresh(cached_entry):
+        log_rag_metadata(
+            metadata=metadata,
+            provider=provider,
+            provider_model=provider_model,
+            explanation_source="rag_cache",
+            cache_hit=True,
+            validation_result="skipped",
+            fallback_reason=None,
+            error_type=None,
+            started_at=started_at,
+        )
         return {
             **cached_entry["payload"],
             **metadata,
