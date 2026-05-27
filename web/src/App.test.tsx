@@ -255,6 +255,60 @@ describe("App RAG explanations", () => {
     expect(within(featured as HTMLElement).queryByText("Top 3")).not.toBeInTheDocument()
   })
 
+  it("does not expose the api base url in the rendered page", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.queryByText(/localhost/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/reco-api/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/apiBase/)).not.toBeInTheDocument()
+
+    await requestRecommendations(user)
+
+    expect(screen.queryByText(/localhost/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/reco-api/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/apiBase/)).not.toBeInTheDocument()
+  })
+
+  it("does not render provider details or secrets even when rag source is rag", async () => {
+    ragExplanationSource = "rag"
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    await screen.findByText("These picks match your seed set through shared tone and genre signals.")
+    expect(screen.queryByText("external")).not.toBeInTheDocument()
+    expect(screen.queryByText("should-not-render")).not.toBeInTheDocument()
+    expect(screen.queryByText("hidden prompt")).not.toBeInTheDocument()
+    expect(screen.queryByText("sk-test-secret")).not.toBeInTheDocument()
+  })
+
+  it("renders featured card without a reason when RAG items are fewer than recommendations", async () => {
+    recommendationItems = [
+      { movie_id: 101, title: "First Movie", score: 0.9 },
+      { movie_id: 102, title: "Second Movie", score: 0.8 },
+      { movie_id: 103, title: "Third Movie", score: 0.7 },
+    ]
+    ragItems = [
+      { movie_id: 101, reason: "First reason", evidence: ["seed_set"] },
+      { movie_id: 102, reason: "Second reason", evidence: ["content_signal"] },
+    ]
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
+    expect(featured).not.toBeNull()
+    expect(within(featured as HTMLElement).getByText("Third Movie")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).queryByText("Third reason")).not.toBeInTheDocument()
+    expect(within(featured as HTMLElement).getByText("First reason")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).getByText("Second reason")).toBeInTheDocument()
+  })
+
   it("does not render the More recommendations section when all results fit in featured cards", async () => {
     recommendationItems = [
       { movie_id: 101, title: "First Movie", score: 0.9 },

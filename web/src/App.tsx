@@ -580,7 +580,6 @@ export default function App() {
       <section className="header">
         <h1 className="title">Movie Recommender UI</h1>
         <div className="progress">{step}/3 选择类型 → 选择电影 → 推荐结果</div>
-        <p className="subtle">apiBase: {apiBase}</p>
         {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
         {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
         {ragExplainError && <p className="warning">AI explanation unavailable. Showing recommendations normally.</p>}
