@@ -579,7 +579,7 @@ export default function App() {
 
       <section className="header">
         <h1 className="title">Movie Recommender UI</h1>
-        <div className="progress">{step}/3 选择类型 → 选择电影 → 推荐结果</div>
+        <div className="progress">{step}/3 Select Genres → Select Movies → Results</div>
         {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
         {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
         {ragExplainError && <p className="warning">AI explanation unavailable. Showing recommendations normally.</p>}
@@ -588,8 +588,8 @@ export default function App() {
       <section className="layout">
         {step === 1 && (
           <div className="card">
-            <h2>选择类型</h2>
-            <div className="subtitle">建议先选 1–3 个类型</div>
+            <h2>Select Genres</h2>
+            <div className="subtitle">Choose 1–3 genres to narrow your seeds</div>
             <div className="chips">
               {["Comedy", "Drama", "Action"].map((genre) => (
                 <button
@@ -630,22 +630,22 @@ export default function App() {
                   setStep(2)
                 }}
               >
-                跳过
+                Skip
               </button>
-              <button onClick={() => setStep(2)}>下一步</button>
+              <button onClick={() => setStep(2)}>Next</button>
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="card">
-            <h2>选择电影</h2>
-            <div className="subtitle">选择 1–5 部电影作为种子</div>
+            <h2>Select Movies</h2>
+            <div className="subtitle">Pick 1–5 seed movies</div>
             <div className="controls">
               <div className="search">
                 <input
                   type="text"
-                  placeholder="搜索电影..."
+                  placeholder="Search movies..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
@@ -707,7 +707,7 @@ export default function App() {
                         setSeeds((prev) => [...prev, movie])
                       }}
                     >
-                      选择
+                      Select
                     </button>
                   </div>
                 ))}
@@ -715,7 +715,7 @@ export default function App() {
             </div>
             <div className="wizard-nav">
               <button className="ghost" onClick={() => setStep(1)}>
-                返回
+                Back
               </button>
               <button
                 className="ghost"
@@ -725,7 +725,7 @@ export default function App() {
                   setSuggestions([])
                 }}
               >
-                重新选择
+                Clear selection
               </button>
             </div>
           </div>
@@ -751,7 +751,7 @@ export default function App() {
                 anchor_source: {data?.anchor_source ?? "-"} · model_version: {data?.model_version ?? "-"}
               </div>
               <p className="subtle">
-                根据你选择的【{selectedGenres.join(", ") || "未选择类型"}】和 {seeds.length} 部种子电影，为你找到了最相似的 10 部。
+                Based on {seeds.length} seed movie{seeds.length !== 1 ? "s" : ""} and genre filter [{selectedGenres.join(", ") || "none"}], here are the closest matches.
               </p>
               <div className="featured-grid">
                 {data?.items.slice(0, 3).map((recommendation, index) => {
@@ -774,7 +774,7 @@ export default function App() {
               </div>
               <div className="wizard-nav">
                 <button onClick={() => fetchRecommendations(true)} disabled={loading}>
-                  {loading ? "Loading..." : "换一批"}
+                  {loading ? "Loading..." : "Shuffle"}
                 </button>
                 <button
                   className="ghost"
@@ -785,10 +785,10 @@ export default function App() {
                     setSuggestions([])
                   }}
                 >
-                  重新开始
+                  Start over
                 </button>
                 <button className="ghost" onClick={() => setStep(2)}>
-                  返回
+                  Back
                 </button>
               </div>
             </div>

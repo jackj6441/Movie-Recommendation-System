@@ -331,7 +331,7 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
 
     const recommendButton = screen.getByRole("button", { name: "Recommend" })
     expect(recommendButton).toBeDisabled()
@@ -355,8 +355,8 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
     expect(await screen.findByRole("button", { name: "Loading..." })).toBeDisabled()
@@ -386,8 +386,8 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    await user.type(screen.getByPlaceholderText("搜索电影..."), "toy")
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    await user.type(screen.getByPlaceholderText("Search movies..."), "toy")
 
     expect(await screen.findByText("Toy Story (1995)")).toBeInTheDocument()
     expect(screen.getByText("Toy Story 2 (1999)")).toBeInTheDocument()
@@ -397,11 +397,11 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    expect(screen.getByText("选择电影")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    expect(screen.getByText("Select Movies")).toBeInTheDocument()
 
-    await user.click(screen.getByRole("button", { name: "返回" }))
-    expect(screen.getByText("选择类型")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Back" }))
+    expect(screen.getByText("Select Genres")).toBeInTheDocument()
   })
 
   it("resets to step one and clears seeds when restart is clicked on results page", async () => {
@@ -410,10 +410,40 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    await user.click(await screen.findByRole("button", { name: "重新开始" }))
-    expect(screen.getByText("选择类型")).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(await screen.findByRole("button", { name: "Start over" }))
+    expect(screen.getByText("Select Genres")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Skip" }))
     expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+  })
+
+  it("shows English labels on step 1: heading, skip, and next buttons", async () => {
+    render(<App />)
+
+    expect(screen.getByRole("heading", { name: "Select Genres" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Skip" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument()
+  })
+
+  it("shows English labels on step 2: heading, search placeholder, select, back, and clear selection", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+
+    expect(screen.getByRole("heading", { name: "Select Movies" })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("Search movies...")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument()
+  })
+
+  it("shows English labels on step 3: shuffle and start over buttons", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(await screen.findByRole("button", { name: "Shuffle" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Start over" })).toBeInTheDocument()
   })
 
   it("updates the step indicator as the user progresses through the wizard", async () => {
@@ -422,10 +452,10 @@ describe("App RAG explanations", () => {
 
     expect(screen.getByText(/^1\/3/)).toBeInTheDocument()
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
     expect(screen.getByText(/^2\/3/)).toBeInTheDocument()
 
-    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
     expect(await screen.findByText(/^3\/3/)).toBeInTheDocument()
@@ -451,37 +481,37 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    await user.click(await screen.findByRole("button", { name: "Select" }))
     expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
 
-    await user.type(screen.getByPlaceholderText("搜索电影..."), "toy")
+    await user.type(screen.getByPlaceholderText("Search movies..."), "toy")
 
     const suggestions = await screen.findByText("Toy Story 2 (1999)")
     expect(suggestions).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Toy Story (1995)" })).not.toBeInTheDocument()
   })
 
-  it("clears all seeds and stays on step 2 when 重新选择 is clicked", async () => {
+  it("clears all seeds and stays on step 2 when Clear selection is clicked", async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    await user.click(await screen.findByRole("button", { name: "Select" }))
     expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
 
-    await user.click(screen.getByRole("button", { name: "重新选择" }))
+    await user.click(screen.getByRole("button", { name: "Clear selection" }))
 
     expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
-    expect(screen.getByText("选择电影")).toBeInTheDocument()
+    expect(screen.getByText("Select Movies")).toBeInTheDocument()
   })
 
   it("removes a seed from the selected list when the × button is clicked", async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
-    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    await user.click(await screen.findByRole("button", { name: "Select" }))
 
     expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Remove Toy Story (1995)" })).toBeInTheDocument()
@@ -500,7 +530,7 @@ describe("App RAG explanations", () => {
 
     await screen.findByText("Some Movie")
 
-    await user.click(screen.getByRole("button", { name: "换一批" }))
+    await user.click(screen.getByRole("button", { name: "Shuffle" }))
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/recommendations"),
@@ -529,7 +559,7 @@ describe("App RAG explanations", () => {
     render(<App />)
 
     await user.click(screen.getByRole("button", { name: "Comedy" }))
-    await user.click(screen.getByRole("button", { name: "下一步" }))
+    await user.click(screen.getByRole("button", { name: "Next" }))
 
     expect(await screen.findByText("Comedy Movie (2000)")).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith(
@@ -560,9 +590,9 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(screen.getByRole("button", { name: "Skip" }))
 
-    const selectButtons = await screen.findAllByRole("button", { name: "选择" })
+    const selectButtons = await screen.findAllByRole("button", { name: "Select" })
     for (const btn of selectButtons.slice(0, 5)) {
       await user.click(btn)
     }
@@ -575,7 +605,7 @@ describe("App RAG explanations", () => {
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "跳过" }))
-  await user.click(await screen.findByRole("button", { name: "选择" }))
+  await user.click(screen.getByRole("button", { name: "Skip" }))
+  await user.click(await screen.findByRole("button", { name: "Select" }))
   await user.click(screen.getByRole("button", { name: "Recommend" }))
 }
