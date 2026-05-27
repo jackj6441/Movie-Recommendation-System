@@ -332,6 +332,11 @@ export default function App() {
           font-size: 1rem;
           line-height: 1.5;
         }
+        *:focus-visible {
+          outline: 2px solid #2f855a;
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
         .header {
           max-width: 1120px;
           margin: 0 auto 2rem;
@@ -378,6 +383,12 @@ export default function App() {
           background: #fffdf9;
           font-size: 1rem;
           font-family: inherit;
+          transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+        .search input:focus {
+          outline: none;
+          border-color: #2f855a;
+          box-shadow: 0 0 0 3px rgba(47, 133, 90, 0.12);
         }
         .chips {
           display: flex;
@@ -441,7 +452,8 @@ export default function App() {
           outline: 2px solid #2f855a;
           outline-offset: -2px;
         }
-        .controls button {
+        .controls button:not(.ghost),
+        .wizard-nav button:not(.ghost) {
           padding: 0.5rem 1rem;
           border-radius: 8px;
           border: 1px solid #2f855a;
@@ -452,19 +464,37 @@ export default function App() {
           font-size: 0.9375rem;
           cursor: pointer;
           box-shadow: 0 6px 16px rgba(47, 133, 90, 0.25);
+          transition: transform 150ms cubic-bezier(0.25, 1, 0.5, 1),
+                      box-shadow 150ms cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .controls button:not(.ghost):not(:disabled):hover,
+        .wizard-nav button:not(.ghost):not(:disabled):hover {
+          box-shadow: 0 8px 20px rgba(47, 133, 90, 0.38);
+          transform: translateY(-1px);
         }
         .ghost {
           background: transparent;
           color: #2f855a;
           border: 1px solid #2f855a;
           box-shadow: none;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-family: inherit;
+          font-size: 0.9375rem;
+          cursor: pointer;
+          transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .ghost:not(:disabled):hover {
+          background: rgba(47, 133, 90, 0.06);
         }
         .controls button:not(:disabled):active,
         .wizard-nav button:not(:disabled):active {
           transform: scale(0.97);
           transition: transform 80ms cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .controls button:disabled {
+        .controls button:not(.ghost):disabled,
+        .wizard-nav button:not(.ghost):disabled {
           background: #b5c9bd;
           border-color: #b5c9bd;
           cursor: not-allowed;
@@ -732,6 +762,11 @@ export default function App() {
         .disclosure summary:hover {
           background: #faf7f3;
         }
+        .disclosure summary:focus-visible {
+          outline: 2px solid #2f855a;
+          outline-offset: -2px;
+          border-radius: 12px;
+        }
         .disclosure-body {
           padding: 0 1.75rem 1.75rem;
           border-top: 1px solid #f1ece4;
@@ -810,9 +845,17 @@ export default function App() {
           font-size: 0.875rem;
           font-family: inherit;
           cursor: pointer;
+          transition: background 150ms ease, transform 100ms ease;
         }
         .retry-btn:hover {
           background: rgba(192, 86, 33, 0.06);
+        }
+        .retry-btn:active {
+          transform: scale(0.97);
+        }
+        .error-text {
+          color: #c53030;
+          margin: 0;
         }
       `}</style>
 
@@ -821,11 +864,11 @@ export default function App() {
         <div className="progress">{step}/3 Select Genres → Select Movies → Results</div>
         {error && (
           <div>
-            <p style={{ color: "crimson" }}>Couldn't load recommendations. Check your connection and try again.</p>
+            <p className="error-text">Couldn't load recommendations. Check your connection and try again.</p>
             <button className="retry-btn" onClick={() => fetchRecommendations(false)}>Try again</button>
           </div>
         )}
-        {explainError && <p style={{ color: "crimson" }}>Score details couldn't load. Your recommendations are still shown above.</p>}
+        {explainError && <p className="error-text">Score details couldn't load. Your recommendations are still shown above.</p>}
         {ragExplainError && <p className="warning">AI explanation unavailable. Your recommendations are still accurate.</p>}
       </section>
 
