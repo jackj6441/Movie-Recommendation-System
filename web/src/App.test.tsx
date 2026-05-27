@@ -359,7 +359,7 @@ describe("App RAG explanations", () => {
     await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
-    expect(await screen.findByRole("button", { name: "Loading..." })).toBeDisabled()
+    expect(await screen.findByRole("button", { name: "Finding your movies…" })).toBeDisabled()
 
     resolveRecommendations({
       ok: false,

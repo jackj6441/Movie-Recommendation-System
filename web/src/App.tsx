@@ -73,6 +73,8 @@ export default function App() {
   const [suggestions, setSuggestions] = useState<MovieSuggestion[]>([])
   const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
   const [suggestionIndex, setSuggestionIndex] = useState(-1)
+  const [noSearchResults, setNoSearchResults] = useState(false)
+  const [resultsJustArrived, setResultsJustArrived] = useState(false)
   const [loading, setLoading] = useState(false)
   const [ragLoading, setRagLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -101,6 +103,8 @@ export default function App() {
       }
       const json = (await res.json()) as RecommendationResponse
       setData(json)
+      setResultsJustArrived(true)
+      setTimeout(() => setResultsJustArrived(false), 1200)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
       setData(null)
@@ -258,6 +262,7 @@ export default function App() {
   }, [selectedGenres, apiBase])
 
   useEffect(() => {
+    setNoSearchResults(false)
     if (!searchQuery.trim()) {
       setSuggestions([])
       return
@@ -274,7 +279,9 @@ export default function App() {
         }
         const json = (await res.json()) as MovieSuggestion[]
         const existing = new Set(seeds.map((seed) => seed.movie_id))
-        setSuggestions(json.filter((item) => !existing.has(item.movie_id)))
+        const filtered = json.filter((item) => !existing.has(item.movie_id))
+        setSuggestions(filtered)
+        if (filtered.length === 0) setNoSearchResults(true)
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return
         setSuggestions([])
@@ -485,6 +492,14 @@ export default function App() {
         @keyframes scale-in {
           from { opacity: 0; transform: scale(0.82); }
           to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes card-arrive {
+          0%   { box-shadow: 0 20px 36px rgba(39, 30, 14, 0.08); }
+          35%  { box-shadow: 0 20px 36px rgba(39, 30, 14, 0.08), 0 0 0 3px rgba(47, 133, 90, 0.28); }
+          100% { box-shadow: 0 20px 36px rgba(39, 30, 14, 0.08); }
+        }
+        .card.arrived {
+          animation: card-arrive 1000ms cubic-bezier(0.25, 1, 0.5, 1) both;
         }
         .card {
           background: #ffffff;
@@ -726,6 +741,26 @@ export default function App() {
           color: #c05621;
           margin-top: 0.5rem;
         }
+        .seeds-empty {
+          color: #9b9590;
+          font-size: 0.875rem;
+          font-style: italic;
+          margin-top: 0.5rem;
+        }
+        .no-results {
+          position: absolute;
+          top: 2.7rem;
+          left: 0;
+          right: 0;
+          background: #fff;
+          border: 1px solid #e7e0d7;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(30, 24, 12, 0.08);
+          padding: 0.75rem 0.85rem;
+          font-size: 0.875rem;
+          color: #9b9590;
+          z-index: 5;
+        }
         .skeleton {
           background: linear-gradient(90deg, #f0ece6 25%, #e8e2da 50%, #f0ece6 75%);
           background-size: 200% 100%;
@@ -752,6 +787,7 @@ export default function App() {
             background: #f0ece6;
           }
           .card,
+          .card.arrived,
           .seed-banner,
           .seed,
           .movie-card,
@@ -887,6 +923,11 @@ export default function App() {
                     ))}
                   </div>
                 )}
+                {noSearchResults && searchQuery.trim() && (
+                  <div className="no-results" role="status" aria-live="polite">
+                    No movies found for "{searchQuery.trim()}"
+                  </div>
+                )}
               </div>
               <button
                 onClick={async () => {
@@ -895,11 +936,14 @@ export default function App() {
                 }}
                 disabled={loading || seeds.length === 0 || seeds.length > 5}
               >
-                {loading ? "Loading..." : "Recommend"}
+                {loading ? "Finding your movies…" : "Recommend"}
               </button>
             </div>
             <div className="seeds">
               <span className="subtle">Selected ({seeds.length}/5):</span>
+              {seeds.length === 0 && (
+                <span className="seeds-empty">Search for a movie above, or select one from the list below.</span>
+              )}
               {seeds.length >= 5 && (
                 <span className="seed-cap-notice">Maximum reached — remove a movie to add another.</span>
               )}
@@ -973,7 +1017,7 @@ export default function App() {
             </div>
 
             {/* Featured — full width, primary content */}
-            <div className="card full-width">
+            <div className={`card full-width${resultsJustArrived ? " arrived" : ""}`}>
               <h2>Featured for you</h2>
               <div className="subtitle">
                 Your top {Math.min(data?.items.length ?? 0, 3)} picks
@@ -1000,7 +1044,7 @@ export default function App() {
               </div>
               <div className="wizard-nav">
                 <button onClick={() => fetchRecommendations(true)} disabled={loading || ragLoading}>
-                  {loading ? "Loading..." : "Shuffle"}
+                  {loading ? "Shuffling…" : "Shuffle"}
                 </button>
                 <button
                   className="ghost"
