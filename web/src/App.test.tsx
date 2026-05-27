@@ -326,6 +326,72 @@ describe("App RAG explanations", () => {
 
     expect(screen.queryByRole("heading", { name: "More recommendations" })).not.toBeInTheDocument()
   })
+
+  it("disables the Recommend button when no seeds are selected", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+
+    const recommendButton = screen.getByRole("button", { name: "Recommend" })
+    expect(recommendButton).toBeDisabled()
+  })
+
+  it("shows Loading text on the Recommend button while fetching recommendations", async () => {
+    let resolveRecommendations!: (value: Response) => void
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({ seeds: [{ movie_id: 1, title: "Toy Story (1995)" }] })
+        if (url.endsWith("/recommendations")) {
+          return new Promise<Response>((resolve) => { resolveRecommendations = resolve })
+        }
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Recommend" }))
+
+    expect(await screen.findByRole("button", { name: "Loading..." })).toBeDisabled()
+
+    resolveRecommendations({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({}),
+    } as Response)
+  })
+
+  it("shows search suggestions when the user types in the search box", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({ seeds: [] })
+        if (url.includes("/movies/search")) return jsonResponse([
+          { movie_id: 1, title: "Toy Story (1995)" },
+          { movie_id: 3114, title: "Toy Story 2 (1999)" },
+        ])
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.type(screen.getByPlaceholderText("搜索电影..."), "toy")
+
+    expect(await screen.findByText("Toy Story (1995)")).toBeInTheDocument()
+    expect(screen.getByText("Toy Story 2 (1999)")).toBeInTheDocument()
+  })
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {
