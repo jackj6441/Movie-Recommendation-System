@@ -416,6 +416,66 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
   })
 
+  it("updates the step indicator as the user progresses through the wizard", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    expect(screen.getByText(/^1\/3/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    expect(screen.getByText(/^2\/3/)).toBeInTheDocument()
+
+    await user.click(await screen.findByRole("button", { name: "选择" }))
+    await user.click(screen.getByRole("button", { name: "Recommend" }))
+
+    expect(await screen.findByText(/^3\/3/)).toBeInTheDocument()
+  })
+
+  it("excludes already-selected seeds from search suggestions", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({
+          seeds: [{ movie_id: 1, title: "Toy Story (1995)" }],
+        })
+        if (url.includes("/movies/search")) return jsonResponse([
+          { movie_id: 1, title: "Toy Story (1995)" },
+          { movie_id: 2, title: "Toy Story 2 (1999)" },
+        ])
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(await screen.findByRole("button", { name: "选择" }))
+    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+
+    await user.type(screen.getByPlaceholderText("搜索电影..."), "toy")
+
+    const suggestions = await screen.findByText("Toy Story 2 (1999)")
+    expect(suggestions).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Toy Story (1995)" })).not.toBeInTheDocument()
+  })
+
+  it("clears all seeds and stays on step 2 when 重新选择 is clicked", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(await screen.findByRole("button", { name: "选择" }))
+    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "重新选择" }))
+
+    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+    expect(screen.getByText("选择电影")).toBeInTheDocument()
+  })
+
   it("removes a seed from the selected list when the × button is clicked", async () => {
     const user = userEvent.setup()
     render(<App />)
