@@ -84,6 +84,18 @@ _Avoid_: Explanations endpoint, ranking endpoint
 A non-generated explanation response used when **RAG Explanation** is unavailable. It keeps the user experience functional without changing the **Recommendation List**.
 _Avoid_: RAG failure, backup ranking, silent failure
 
+**Seed Ranker**:
+The module that owns the shared pipeline for turning a **Seed Set** into a ranked **Recommendation List** using content embeddings. It validates seeds, builds the **Anchor Vector**, scores candidates, and returns a `RankedList` together with **Similar Movies** for the **Anchor Movie**. Both the recommendations endpoint and the explanations endpoint delegate to the Seed Ranker rather than duplicating this logic.
+_Avoid_: Recommendation service, ranking handler, scoring util
+
+**Catalog**:
+An immutable snapshot of the movie catalog data (movie titles, popularity-ordered IDs, and candidate pool size) passed to the **Seed Ranker** at request time. It is built once at startup from the CSV data loaded by the API.
+_Avoid_: Database, data store, global state
+
+**Ranked List**:
+The structured result produced by the **Seed Ranker**: an ordered list of `RankedItem` values plus the validated **Seed Set**, the **Anchor Movie** ID, and **Similar Movies**. Callers format this into endpoint-specific responses.
+_Avoid_: Recommendation List (the domain term for the user-facing ordered output; Ranked List is the internal module output before formatting)
+
 ## Example dialogue
 
 Developer: "The user chose five Seed Movies. Which one should the explanation compare against?"

@@ -22,6 +22,7 @@ def load_app(monkeypatch):
     sys.modules.pop("app.main", None)
     sys.modules.pop("app.content", None)
     sys.modules.pop("app.rag", None)
+    sys.modules.pop("app.seed_ranker", None)
     return importlib.import_module("app.main").app
 
 

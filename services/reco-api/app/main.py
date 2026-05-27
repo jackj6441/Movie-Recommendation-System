@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content, rag
+from app import content, rag, seed_ranker
 
 app = FastAPI()
 
@@ -117,6 +117,12 @@ popular_movie_ids = [
     for movie_id, _ in sorted(movie_popularity.items(), key=lambda item: item[1], reverse=True)
 ]
 
+catalog = seed_ranker.Catalog(
+    movie_titles=movie_titles,
+    popular_movie_ids=popular_movie_ids,
+    candidate_pool=candidate_pool,
+)
+
 
 def get_popular_movies(movie_ids: list[int], limit: int) -> list[int]:
     ranked = sorted(movie_ids, key=lambda mid: movie_popularity.get(mid, 0), reverse=True)
@@ -134,12 +140,6 @@ def get_ranked_movie_ids() -> list[int]:
         return sorted(movie_titles.keys())
     return []
 
-
-def normalize_vector(vec: np.ndarray) -> np.ndarray:
-    norm = np.linalg.norm(vec)
-    if norm == 0:
-        return vec
-    return vec / norm
 
 
 @app.get("/healthz")
@@ -429,48 +429,25 @@ def recommend(user_id: int, k: int = 20) -> dict:
 
 @app.post("/recommendations")
 def recommendations(request: SeedsRequest):
-    seeds = request.seeds
-    shuffle = request.shuffle
-    if not seeds or len(seeds) > 5:
+    if not request.seeds or len(request.seeds) > 5:
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
-    valid_seeds = [mid for mid in seeds if mid in movie_titles]
-    valid_seeds = content.filter_movie_ids(valid_seeds)
-    if not valid_seeds:
+    try:
+        result = seed_ranker.rank(request.seeds, request.shuffle, catalog)
+    except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
-
-    seed_vectors = content.get_embeddings_for_movies(valid_seeds)
-    if not seed_vectors:
+    except seed_ranker.ContentUnavailableError:
         return JSONResponse(status_code=503, content={"content_unavailable": True})
 
-    anchor_vec = normalize_vector(np.mean(seed_vectors, axis=0))
-    ranked_ids = get_ranked_movie_ids()
-    pool_size = min(candidate_pool * 3, len(ranked_ids))
-    candidate_ids = [mid for mid in ranked_ids[:pool_size] if mid not in valid_seeds]
-    candidate_ids = content.filter_movie_ids(candidate_ids)
-    if shuffle:
-        rng = np.random.default_rng()
-        rng.shuffle(candidate_ids)
-        candidate_ids = candidate_ids[:candidate_pool]
-
-    if not candidate_ids:
+    if not result.items:
         return {"items": [], "seed_movies": [], "anchor_source": "seed", "model_version": model_version}
 
-    scores = np.array(content.get_similarity_scores_from_vector(anchor_vec, candidate_ids), dtype=np.float32)
-    top_indices = np.argsort(scores)[::-1][:10]
-    items = [
-        {
-            "movie_id": int(candidate_ids[idx]),
-            "title": get_title(int(candidate_ids[idx])),
-            "score": float(scores[idx]),
-        }
-        for idx in top_indices
-    ]
-
-    seed_movies = [{"movie_id": mid, "title": get_title(mid)} for mid in valid_seeds]
     return {
-        "items": items,
-        "seed_movies": seed_movies,
+        "items": [
+            {"movie_id": item.movie_id, "title": item.title, "score": item.content_score}
+            for item in result.items
+        ],
+        "seed_movies": [{"movie_id": mid, "title": get_title(mid)} for mid in result.seed_movie_ids],
         "anchor_source": "seed",
         "model_version": model_version,
     }
@@ -478,56 +455,39 @@ def recommendations(request: SeedsRequest):
 
 @app.post("/explanations")
 def explanations(request: SeedsRequest):
-    seeds = request.seeds
-    shuffle = request.shuffle
-    if not seeds or len(seeds) > 5:
+    if not request.seeds or len(request.seeds) > 5:
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
-    valid_seeds = [mid for mid in seeds if mid in movie_titles]
-    valid_seeds = content.filter_movie_ids(valid_seeds)
-    if not valid_seeds:
+    try:
+        result = seed_ranker.rank(request.seeds, request.shuffle, catalog)
+    except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
-
-    seed_vectors = content.get_embeddings_for_movies(valid_seeds)
-    if not seed_vectors:
+    except seed_ranker.ContentUnavailableError:
         return JSONResponse(status_code=503, content={"content_unavailable": True})
 
-    anchor_vec = normalize_vector(np.mean(seed_vectors, axis=0))
-    ranked_ids = get_ranked_movie_ids()
-    pool_size = min(candidate_pool * 3, len(ranked_ids))
-    candidate_ids = [mid for mid in ranked_ids[:pool_size] if mid not in valid_seeds]
-    candidate_ids = content.filter_movie_ids(candidate_ids)
-    if shuffle:
-        rng = np.random.default_rng()
-        rng.shuffle(candidate_ids)
-        candidate_ids = candidate_ids[:candidate_pool]
-
-    scores = np.array(content.get_similarity_scores_from_vector(anchor_vec, candidate_ids), dtype=np.float32)
-    top_indices = np.argsort(scores)[::-1][:10]
     topk = [
         {
-            "movie_id": int(candidate_ids[idx]),
-            "title": get_title(int(candidate_ids[idx])),
+            "movie_id": item.movie_id,
+            "title": item.title,
             "ncf": 0.0,
-            "content": float(scores[idx]),
-            "final": float(scores[idx]),
+            "content": item.content_score,
+            "final": item.content_score,
         }
-        for idx in top_indices
+        for item in result.items
     ]
-
-    anchor_movie_id = valid_seeds[0]
-    similar = content.get_similar(anchor_movie_id, topn=3)
     similar_movies = [
         {"movie_id": mid, "title": get_title(mid), "similarity": sim}
-        for mid, sim in similar
+        for mid, sim in result.similar_movies
     ]
-
-    seed_movies = [{"movie_id": mid, "title": get_title(mid)} for mid in valid_seeds]
+    seed_movies = [{"movie_id": mid, "title": get_title(mid)} for mid in result.seed_movie_ids]
     return {
         "user_id": None,
         "model_version": model_version,
         "alpha": alpha,
-        "anchor_movie": {"movie_id": anchor_movie_id, "title": get_title(anchor_movie_id)},
+        "anchor_movie": {
+            "movie_id": result.anchor_movie_id,
+            "title": get_title(result.anchor_movie_id),
+        },
         "seed_movies": seed_movies,
         "topk": topk,
         "similar_movies": similar_movies,
