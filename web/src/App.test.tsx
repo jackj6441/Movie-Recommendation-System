@@ -184,6 +184,36 @@ describe("App RAG explanations", () => {
     expect(screen.queryByText("hidden prompt")).not.toBeInTheDocument()
     expect(screen.queryByText("sk-test-secret")).not.toBeInTheDocument()
   })
+
+  it("shows RAG reasons on top three featured recommendation cards only", async () => {
+    recommendationItems = [
+      { movie_id: 101, title: "First Recommendation", score: 0.91 },
+      { movie_id: 102, title: "Second Recommendation", score: 0.82 },
+      { movie_id: 103, title: "Third Recommendation", score: 0.73 },
+      { movie_id: 104, title: "Fourth Recommendation", score: 0.64 },
+    ]
+    ragItems = [
+      { movie_id: 101, reason: "First AI reason", evidence: ["seed_set"] },
+      { movie_id: 102, reason: "Second AI reason", evidence: ["content_signal"] },
+      { movie_id: 103, reason: "Third AI reason", evidence: ["hybrid_score"] },
+    ]
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
+    expect(featured).not.toBeNull()
+    expect(within(featured as HTMLElement).getByText("First AI reason")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).getByText("Second AI reason")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).getByText("Third AI reason")).toBeInTheDocument()
+
+    const moreRecommendations = screen.getByRole("heading", { name: "More recommendations" }).closest(".card")
+    expect(moreRecommendations).not.toBeNull()
+    expect(within(moreRecommendations as HTMLElement).getByText("Fourth Recommendation")).toBeInTheDocument()
+    expect(within(moreRecommendations as HTMLElement).queryByText(/AI reason/)).not.toBeInTheDocument()
+  })
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {

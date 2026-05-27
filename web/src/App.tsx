@@ -453,6 +453,91 @@ export default function App() {
           font-size: 0.95rem;
           color: #2d2a26;
         }
+        .featured-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+        .movie-card {
+          min-height: 280px;
+          border-radius: 18px;
+          padding: 1rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          overflow: hidden;
+          position: relative;
+          color: #fffaf2;
+          background:
+            linear-gradient(180deg, rgba(20, 18, 16, 0.08), rgba(20, 18, 16, 0.88)),
+            radial-gradient(circle at 25% 15%, rgba(255, 198, 109, 0.78), transparent 32%),
+            radial-gradient(circle at 86% 4%, rgba(111, 155, 202, 0.72), transparent 34%),
+            linear-gradient(135deg, #34291f, #111827);
+          box-shadow: 0 18px 32px rgba(24, 20, 16, 0.24);
+        }
+        .movie-card:nth-child(2) {
+          background:
+            linear-gradient(180deg, rgba(20, 18, 16, 0.08), rgba(20, 18, 16, 0.88)),
+            radial-gradient(circle at 20% 10%, rgba(164, 214, 193, 0.78), transparent 32%),
+            radial-gradient(circle at 88% 0%, rgba(229, 142, 121, 0.68), transparent 34%),
+            linear-gradient(135deg, #24352f, #171b2a);
+        }
+        .movie-card:nth-child(3) {
+          background:
+            linear-gradient(180deg, rgba(20, 18, 16, 0.08), rgba(20, 18, 16, 0.88)),
+            radial-gradient(circle at 24% 12%, rgba(224, 181, 255, 0.62), transparent 34%),
+            radial-gradient(circle at 88% 0%, rgba(250, 214, 122, 0.68), transparent 34%),
+            linear-gradient(135deg, #33243d, #14151d);
+        }
+        .movie-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+          background-size: 18px 18px;
+          opacity: 0.35;
+        }
+        .movie-card > * {
+          position: relative;
+          z-index: 1;
+        }
+        .movie-rank {
+          position: absolute;
+          top: 0.85rem;
+          left: 0.85rem;
+          font-family: "IBM Plex Mono", "Courier New", monospace;
+          font-size: 0.8rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: rgba(255, 250, 242, 0.76);
+        }
+        .movie-card h3 {
+          margin: 0 0 0.45rem;
+          font-size: 1.25rem;
+          line-height: 1.1;
+        }
+        .movie-reason {
+          margin: 0.35rem 0 0;
+          color: rgba(255, 250, 242, 0.84);
+          font-size: 0.92rem;
+        }
+        .signal-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+          margin-top: 0.75rem;
+        }
+        .signal-chip {
+          border: 1px solid rgba(255, 250, 242, 0.35);
+          border-radius: 999px;
+          padding: 0.2rem 0.5rem;
+          font-size: 0.72rem;
+          color: rgba(255, 250, 242, 0.82);
+          background: rgba(255, 255, 255, 0.08);
+        }
         .warning {
           color: #c05621;
           margin-bottom: 0.75rem;
@@ -638,20 +723,31 @@ export default function App() {
         {step === 3 && (
           <>
             <div className="card">
-              <h2>推荐结果</h2>
+              <h2>Featured for you</h2>
               <div className="subtitle">
                 anchor_source: {data?.anchor_source ?? "-"} · model_version: {data?.model_version ?? "-"}
               </div>
               <p className="subtle">
                 根据你选择的【{selectedGenres.join(", ") || "未选择类型"}】和 {seeds.length} 部种子电影，为你找到了最相似的 10 部。
               </p>
-              <div className="list">
-                {data?.items.map((item) => (
-                  <div className="row" key={item.movie_id}>
-                    <span>{item.title}</span>
-                    <span className="score">{item.score.toFixed(3)}</span>
-                  </div>
-                ))}
+              <div className="featured-grid">
+                {data?.items.slice(0, 3).map((recommendation, index) => {
+                  const ragItem = ragExplain?.items.find((item) => item.movie_id === recommendation.movie_id)
+
+                  return (
+                    <article className="movie-card" key={recommendation.movie_id}>
+                      <span className="movie-rank">Top {index + 1}</span>
+                      <h3>{recommendation.title}</h3>
+                      <span className="score">{recommendation.score.toFixed(3)}</span>
+                      {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
+                      <div className="signal-row">
+                        <span className="signal-chip">Seed match</span>
+                        <span className="signal-chip">Content signal</span>
+                        <span className="signal-chip">Hybrid score</span>
+                      </div>
+                    </article>
+                  )
+                })}
               </div>
               <div className="wizard-nav">
                 <button onClick={() => fetchRecommendations(true)} disabled={loading}>
@@ -671,6 +767,19 @@ export default function App() {
                 <button className="ghost" onClick={() => setStep(2)}>
                   返回
                 </button>
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>More recommendations</h2>
+              <div className="subtitle">Additional matches keep score context only.</div>
+              <div className="list">
+                {data?.items.slice(3).map((item) => (
+                  <div className="row" key={item.movie_id}>
+                    <span>{item.title}</span>
+                    <span className="score">{item.score.toFixed(3)}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
