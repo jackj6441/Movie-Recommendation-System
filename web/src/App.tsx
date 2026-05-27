@@ -683,14 +683,16 @@ export default function App() {
                 <>
                   <p>{ragExplain.summary}</p>
                   <div className="list">
-                    {ragExplain.items.map((item, index) => {
-                      const recommendedTitle =
-                        data?.items.find((recommendation) => recommendation.movie_id === item.movie_id)?.title ??
-                        `Recommendation ${index + 1}`
+                    {data?.items.slice(0, 3).map((recommendation) => {
+                      const item = ragExplain.items.find(
+                        (ragItem) => ragItem.movie_id === recommendation.movie_id
+                      )
+
+                      if (!item) return null
 
                       return (
                         <div className="row" key={item.movie_id}>
-                          <span>{recommendedTitle}</span>
+                          <span>{recommendation.title}</span>
                           <span>{item.reason}</span>
                         </div>
                       )
