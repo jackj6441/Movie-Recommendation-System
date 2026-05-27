@@ -16,9 +16,11 @@ describe("App RAG explanations", () => {
   let recommendationItems: { movie_id: number; title: string; score: number }[]
   let ragItems: { movie_id: number; reason: string; evidence: string[] }[]
   let recommendationsOk: boolean
+  let ragOk: boolean
 
   beforeEach(() => {
     recommendationsOk = true
+    ragOk = true
     recommendationItems = [{ movie_id: 239, title: "Some Movie", score: 0.9 }]
     ragItems = [
       {
@@ -59,6 +61,10 @@ describe("App RAG explanations", () => {
         }
 
         if (url.endsWith("/rag/explanations")) {
+          if (!ragOk) {
+            return Promise.reject(new Error("RAG unavailable"))
+          }
+
           return jsonResponse({
             summary: "These picks match your seed set through shared tone and genre signals.",
             items: ragItems,
@@ -142,6 +148,19 @@ describe("App RAG explanations", () => {
       "http://reco-api:8000/rag/explanations",
       expect.anything()
     )
+  })
+
+  it("keeps recommendations usable when the RAG explanation request fails", async () => {
+    ragOk = false
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(await screen.findByText("Some Movie")).toBeInTheDocument()
+    expect(screen.getByText("AI explanation unavailable. Showing recommendations normally.")).toBeInTheDocument()
+    expect(screen.getByText("AI explanation will appear here when available.")).toBeInTheDocument()
   })
 })
 
