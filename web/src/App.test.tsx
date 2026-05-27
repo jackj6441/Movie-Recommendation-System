@@ -108,7 +108,7 @@ describe("App RAG explanations", () => {
 
     expect(await screen.findByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith(
-      "http://reco-api:8000/rag/explanations",
+      expect.stringContaining("/rag/explanations"),
       expect.objectContaining({ method: "POST" })
     )
   })
@@ -414,6 +414,67 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("选择类型")).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "跳过" }))
     expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+  })
+
+  it("removes a seed from the selected list when the × button is clicked", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    await user.click(await screen.findByRole("button", { name: "选择" }))
+
+    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Remove Toy Story (1995)" })).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Remove Toy Story (1995)" }))
+
+    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Remove Toy Story (1995)" })).not.toBeInTheDocument()
+  })
+
+  it("sends shuffle:true when the user clicks the shuffle button on the results page", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    await screen.findByText("Some Movie")
+
+    await user.click(screen.getByRole("button", { name: "换一批" }))
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/recommendations"),
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining('"shuffle":true'),
+      })
+    )
+  })
+
+  it("fetches seeds filtered by genre when the user selects a genre chip", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/Comedy/seeds")) return jsonResponse({
+          seeds: [{ movie_id: 99, title: "Comedy Movie (2000)" }],
+        })
+        if (url.includes("/genres/all/seeds")) return jsonResponse({ seeds: [] })
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "Comedy" }))
+    await user.click(screen.getByRole("button", { name: "下一步" }))
+
+    expect(await screen.findByText("Comedy Movie (2000)")).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/genres/Comedy/seeds")
+    )
   })
 
   it("does not add a sixth seed when the seed limit is already reached", async () => {
