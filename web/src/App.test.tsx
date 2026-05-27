@@ -416,6 +416,67 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
   })
 
+  it("displays movie titles with leading article moved to the front", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({
+          seeds: [
+            { movie_id: 357, title: "Lion King, The (1994)" },
+            { movie_id: 588, title: "Aladdin (1992)" },
+            { movie_id: 3114, title: "Goofy Movie, A (1995)" },
+          ],
+        })
+        if (url.endsWith("/recommendations")) return jsonResponse({
+          items: [
+            { movie_id: 357, title: "Lion King, The (1994)", score: 0.9 },
+            { movie_id: 588, title: "Aladdin (1992)", score: 0.8 },
+            { movie_id: 3114, title: "Goofy Movie, A (1995)", score: 0.7 },
+          ],
+          seed_movies: [{ movie_id: 1, title: "Toy Story (1995)" }],
+          anchor_source: "seed",
+          model_version: "dev",
+        })
+        if (url.endsWith("/rag/explanations")) return jsonResponse({
+          summary: "Great picks.",
+          items: [
+            { movie_id: 357, reason: "Reason 1", evidence: ["seed_set"] },
+            { movie_id: 588, reason: "Reason 2", evidence: ["seed_set"] },
+            { movie_id: 3114, reason: "Reason 3", evidence: ["seed_set"] },
+          ],
+          explanation_source: "rag",
+        })
+        if (url.endsWith("/explanations")) return jsonResponse({
+          user_id: null, model_version: "dev", alpha: 0.5,
+          anchor_movie: null, topk: [], similar_movies: [], content_available: true,
+        })
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+
+    expect(await screen.findByText("The Lion King (1994)")).toBeInTheDocument()
+    expect(screen.queryByText("Lion King, The (1994)")).not.toBeInTheDocument()
+
+    expect(screen.getByText("A Goofy Movie (1995)")).toBeInTheDocument()
+    expect(screen.queryByText("Goofy Movie, A (1995)")).not.toBeInTheDocument()
+
+    expect(screen.getByText("Aladdin (1992)")).toBeInTheDocument()
+
+    await user.click(screen.getAllByRole("button", { name: "Select" })[0])
+    await user.click(screen.getByRole("button", { name: "Recommend" }))
+
+    expect(await screen.findAllByText("The Lion King (1994)")).not.toHaveLength(0)
+    expect(screen.queryByText("Lion King, The (1994)")).not.toBeInTheDocument()
+    expect(screen.getAllByText("A Goofy Movie (1995)")).not.toHaveLength(0)
+  })
+
   it("shows English labels on step 1: heading, skip, and next buttons", async () => {
     render(<App />)
 

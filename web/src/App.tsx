@@ -60,6 +60,10 @@ type MovieSuggestion = {
 
 const apiBase = import.meta.env.VITE_API_BASE || "http://reco-api:8000"
 
+function formatTitle(raw: string): string {
+  return raw.replace(/^(.*),\s+(The|A|An)\s+(\(\d{4}\))$/, "$2 $1 $3")
+}
+
 export default function App() {
   const [step, setStep] = useState(1)
   const [genres, setGenres] = useState<string[]>([])
@@ -174,7 +178,7 @@ export default function App() {
       .attr("x", 0)
       .attr("y", rowHeight - 10)
       .attr("font-size", "12px")
-      .text((d) => (d.title.length > 34 ? `${d.title.slice(0, 34)}...` : d.title))
+      .text((d) => { const t = formatTitle(d.title); return t.length > 34 ? `${t.slice(0, 34)}...` : t })
 
     row
       .append("rect")
@@ -661,7 +665,7 @@ export default function App() {
                           setSuggestions([])
                         }}
                       >
-                        {movie.title}
+                        {formatTitle(movie.title)}
                       </button>
                     ))}
                   </div>
@@ -681,12 +685,12 @@ export default function App() {
               <span className="subtle">Selected ({seeds.length}/5):</span>
               {seeds.map((seed) => (
                 <span className="seed" key={seed.movie_id}>
-                  {seed.title}
+                  {formatTitle(seed.title)}
                   <button
                     onClick={() =>
                       setSeeds((prev) => prev.filter((item) => item.movie_id !== seed.movie_id))
                     }
-                    aria-label={`Remove ${seed.title}`}
+                    aria-label={`Remove ${formatTitle(seed.title)}`}
                   >
                     ×
                   </button>
@@ -698,7 +702,7 @@ export default function App() {
               <div className="list">
                 {genreSeeds.map((movie) => (
                   <div className="row" key={movie.movie_id}>
-                    <span>{movie.title}</span>
+                    <span>{formatTitle(movie.title)}</span>
                     <button
                       className="ghost"
                       onClick={() => {
@@ -739,7 +743,7 @@ export default function App() {
               <div className="journey-flow">
                 {seeds.map((seed) => (
                   <span className="seed" key={seed.movie_id}>
-                    {seed.title}
+                    {formatTitle(seed.title)}
                   </span>
                 ))}
               </div>
@@ -760,7 +764,7 @@ export default function App() {
                   return (
                     <article className="movie-card" key={recommendation.movie_id}>
                       <span className="movie-rank">Top {index + 1}</span>
-                      <h3>{recommendation.title}</h3>
+                      <h3>{formatTitle(recommendation.title)}</h3>
                       <span className="score">{recommendation.score.toFixed(3)}</span>
                       {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
                       <div className="signal-row">
@@ -800,7 +804,7 @@ export default function App() {
               <div className="list">
                 {data?.items.slice(3).map((item) => (
                   <div className="row" key={item.movie_id}>
-                    <span>{item.title}</span>
+                    <span>{formatTitle(item.title)}</span>
                     <span className="score">{item.score.toFixed(3)}</span>
                   </div>
                 ))}
@@ -829,7 +833,7 @@ export default function App() {
                 model_version: {explain?.model_version ?? "-"} · alpha: {explain?.alpha ?? "-"}
               </div>
               <p>
-                anchor_movie: {explain?.anchor_movie?.title ?? "n/a"}
+                anchor_movie: {explain?.anchor_movie ? formatTitle(explain.anchor_movie.title) : "n/a"}
               </p>
               {!explain?.content_available && (
                 <p className="warning">Content unavailable: falling back to NCF-only scores.</p>
@@ -840,7 +844,7 @@ export default function App() {
                 <div className="list">
                   {explain?.similar_movies.map((movie) => (
                     <div className="row" key={movie.movie_id}>
-                      <span>{movie.title}</span>
+                      <span>{formatTitle(movie.title)}</span>
                       <span className="score">{movie.similarity.toFixed(3)}</span>
                     </div>
                   ))}
