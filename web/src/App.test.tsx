@@ -15,12 +15,14 @@ const jsonResponse = (payload: unknown) =>
 describe("App RAG explanations", () => {
   let recommendationItems: { movie_id: number; title: string; score: number }[]
   let ragItems: { movie_id: number; reason: string; evidence: string[] }[]
+  let ragExplanationSource: "rag" | "rag_cache" | "deterministic_fallback"
   let recommendationsOk: boolean
   let ragOk: boolean
 
   beforeEach(() => {
     recommendationsOk = true
     ragOk = true
+    ragExplanationSource = "rag"
     recommendationItems = [{ movie_id: 239, title: "Some Movie", score: 0.9 }]
     ragItems = [
       {
@@ -68,7 +70,11 @@ describe("App RAG explanations", () => {
           return jsonResponse({
             summary: "These picks match your seed set through shared tone and genre signals.",
             items: ragItems,
-            explanation_source: "rag",
+            explanation_source: ragExplanationSource,
+            provider: "external",
+            provider_model: "should-not-render",
+            raw_prompt: "hidden prompt",
+            api_key: "sk-test-secret",
           })
         }
 
@@ -161,6 +167,22 @@ describe("App RAG explanations", () => {
     expect(await screen.findByText("Some Movie")).toBeInTheDocument()
     expect(screen.getByText("AI explanation unavailable. Showing recommendations normally.")).toBeInTheDocument()
     expect(screen.getByText("AI explanation will appear here when available.")).toBeInTheDocument()
+  })
+
+  it("shows restrained fallback copy without exposing provider details", async () => {
+    ragExplanationSource = "deterministic_fallback"
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(await screen.findByText("Generated explanation unavailable; showing a safe fallback.")).toBeInTheDocument()
+    expect(screen.getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
+    expect(screen.queryByText("external")).not.toBeInTheDocument()
+    expect(screen.queryByText("should-not-render")).not.toBeInTheDocument()
+    expect(screen.queryByText("hidden prompt")).not.toBeInTheDocument()
+    expect(screen.queryByText("sk-test-secret")).not.toBeInTheDocument()
   })
 })
 
