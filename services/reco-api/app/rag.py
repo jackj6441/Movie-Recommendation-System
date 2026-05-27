@@ -4,10 +4,24 @@ import logging
 import os
 import time
 import uuid
-from typing import Any
+from typing import Any, Literal
+
+import openai
+from pydantic import BaseModel
 
 RAG_EVIDENCE_VERSION = "structured-v1"
-RAG_PROMPT_VERSION = "rag-exp-v1"
+RAG_PROMPT_VERSION = "rag-chatgpt-v1"
+
+
+class _RagItemSchema(BaseModel):
+    movie_id: int
+    reason: str
+    evidence: list[Literal["seed_set", "content_signal", "hybrid_score"]]
+
+
+class _RagExplanationSchema(BaseModel):
+    summary: str
+    items: list[_RagItemSchema]
 EXTERNAL_PROVIDER_TIMEOUT_SECONDS = 8
 RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
 SUPPORTED_RAG_PROVIDERS = {
@@ -232,7 +246,7 @@ def rag_cache_key(
 
 def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict[str, Any]:
     if provider == "external":
-        return external_provider_payload()
+        return external_provider_payload(deterministic)
     if provider == "mock_invalid_schema":
         return {
             "summary": "",
@@ -274,7 +288,7 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
     return payload
 
 
-def external_provider_payload() -> dict[str, Any]:
+def external_provider_payload(deterministic: dict[str, Any]) -> dict[str, Any]:
     if os.getenv("RAG_EXTERNAL_SIMULATE_TIMEOUT", "false").lower() == "true":
         raise RagProviderTimeoutError
     if external_provider_simulated_latency_seconds() > EXTERNAL_PROVIDER_TIMEOUT_SECONDS:
@@ -284,10 +298,74 @@ def external_provider_payload() -> dict[str, Any]:
     configured_response = os.getenv("RAG_EXTERNAL_RESPONSE_JSON")
     if configured_response:
         return json.loads(configured_response)
-    return {
-        "summary": "External provider response is not configured.",
-        "items": [],
-    }
+    return _call_openai(deterministic)
+
+
+def _reorder_items(payload: dict[str, Any], deterministic: dict[str, Any]) -> dict[str, Any]:
+    expected_ids = [item["movie_id"] for item in deterministic.get("topk", [])[:3]]
+    item_map = {item["movie_id"]: item for item in payload.get("items", [])}
+    reordered = [item_map[mid] for mid in expected_ids if mid in item_map]
+    return {**payload, "items": reordered}
+
+
+def _call_openai(deterministic: dict[str, Any]) -> dict[str, Any]:
+    seed_movies = deterministic.get("seed_movies", [])
+    seed_titles = ", ".join(s["title"] for s in seed_movies) or "none"
+    top_items = deterministic.get("topk", [])[:3]
+
+    recs_text = "\n".join(
+        f"- movie_id={item['movie_id']}, title={item['title']!r}, "
+        f"collaborative_signal={item['ncf']:.3f}, "
+        f"content_signal={item['content']:.3f}, "
+        f"hybrid_score={item['final']:.3f}"
+        for item in top_items
+    )
+
+    system_prompt = (
+        "You are a movie recommendation explainer. Write concise, trustworthy explanations "
+        "grounded only in the provided evidence. Do not invent plot details, cast names, or "
+        "any facts not in the evidence. Use a neutral, informative tone—not promotional."
+    )
+    user_prompt = (
+        f"Seed Set (movies the user selected): {seed_titles}\n\n"
+        f"Top Recommendations (in this exact order):\n{recs_text}\n\n"
+        "Evidence signals available: seed_set, content_signal, hybrid_score\n\n"
+        "Write a summary explaining why these recommendations fit the Seed Set, "
+        "then write an individual reason for each recommendation in the same order listed above."
+    )
+
+    try:
+        client = openai.OpenAI(
+            api_key=external_provider_api_key(),
+            timeout=EXTERNAL_PROVIDER_TIMEOUT_SECONDS,
+        )
+        response = client.beta.chat.completions.parse(
+            model=rag_provider_model(),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format=_RagExplanationSchema,
+        )
+        parsed = response.choices[0].message.parsed
+        if parsed is None:
+            raise RagProviderError("OpenAI returned null parsed response")
+        payload = {
+            "summary": parsed.summary,
+            "items": [
+                {
+                    "movie_id": item.movie_id,
+                    "reason": item.reason,
+                    "evidence": list(item.evidence),
+                }
+                for item in parsed.items
+            ],
+        }
+        return _reorder_items(payload, deterministic)
+    except openai.APITimeoutError:
+        raise RagProviderTimeoutError
+    except openai.APIError:
+        raise RagProviderError
 
 
 def external_provider_simulated_latency_seconds() -> float:

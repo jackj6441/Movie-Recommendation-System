@@ -35,7 +35,7 @@ def test_rag_explanations_returns_mock_structured_explanation_for_seed_set(monke
     assert payload["summary"]
     assert payload["model_version"] == "dev"
     assert payload["rag_evidence_version"] == "structured-v1"
-    assert payload["prompt_version"] == "rag-exp-v1"
+    assert payload["prompt_version"] == "rag-chatgpt-v1"
     assert payload["request_id"]
     assert payload["evidence_hash"].startswith("sha256:")
     assert payload["explanation_source"] == "rag"
@@ -199,7 +199,7 @@ def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, cap
     assert metadata_log["request_id"] == response.json()["request_id"]
     assert metadata_log["model_version"] == "dev"
     assert metadata_log["rag_evidence_version"] == "structured-v1"
-    assert metadata_log["prompt_version"] == "rag-exp-v1"
+    assert metadata_log["prompt_version"] == "rag-chatgpt-v1"
     assert metadata_log["evidence_hash"] == response.json()["evidence_hash"]
     assert metadata_log["provider"] == "mock"
     assert metadata_log["provider_model"] == "mock"
@@ -281,7 +281,7 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_json(monkeypa
     assert payload["items"]
     assert payload["model_version"] == "dev"
     assert payload["rag_evidence_version"] == "structured-v1"
-    assert payload["prompt_version"] == "rag-exp-v1"
+    assert payload["prompt_version"] == "rag-chatgpt-v1"
     assert payload["request_id"]
     assert payload["evidence_hash"].startswith("sha256:")
 

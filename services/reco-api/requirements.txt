@@ -3,3 +3,4 @@ numpy
 onnxruntime
 uvicorn[standard]
 redis
+openai
