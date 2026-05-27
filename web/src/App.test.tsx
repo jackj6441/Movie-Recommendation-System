@@ -221,9 +221,9 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const seedSet = screen.getByRole("heading", { name: "Your seed set" }).closest(".card")
-    expect(seedSet).not.toBeNull()
-    expect(within(seedSet as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
+    const seedBanner = document.querySelector(".seed-banner")
+    expect(seedBanner).not.toBeNull()
+    expect(within(seedBanner as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
   })
 
   it("keeps the AI explanation panel summary-only after item reasons move into cards", async () => {

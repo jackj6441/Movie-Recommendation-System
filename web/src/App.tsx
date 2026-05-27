@@ -427,12 +427,15 @@ export default function App() {
           margin: 0 auto;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 1.75rem;
+          gap: 1.5rem;
         }
         @media (min-width: 900px) {
           .layout {
             grid-template-columns: 1fr 1fr;
           }
+        }
+        .full-width {
+          grid-column: 1 / -1;
         }
         .card {
           background: #ffffff;
@@ -594,17 +597,62 @@ export default function App() {
           cursor: pointer;
           font-weight: 700;
         }
-        .journey-card {
+        .seed-banner {
           grid-column: 1 / -1;
-          background:
-            linear-gradient(135deg, rgba(47, 133, 90, 0.12), rgba(192, 86, 33, 0.08)),
-            #fffdf9;
-        }
-        .journey-flow {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.55rem;
-          margin-top: 1rem;
+          align-items: center;
+          gap: 0.5rem 0.75rem;
+          padding: 0.75rem 1rem;
+          background: rgba(47, 133, 90, 0.07);
+          border: 1px solid rgba(47, 133, 90, 0.15);
+          border-radius: 12px;
+          font-size: 0.875rem;
+          color: #4a5568;
+        }
+        .seed-banner-label {
+          font-weight: 600;
+          color: #2f855a;
+          white-space: nowrap;
+        }
+        .disclosure {
+          grid-column: 1 / -1;
+          border: 1px solid #efe7db;
+          border-radius: 18px;
+          background: #ffffff;
+          box-shadow: 0 2px 8px rgba(39, 30, 14, 0.04);
+          overflow: hidden;
+        }
+        .disclosure summary {
+          list-style: none;
+          padding: 1.1rem 1.75rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-weight: 600;
+          font-size: 0.9375rem;
+          color: #4a5568;
+          user-select: none;
+        }
+        .disclosure summary::-webkit-details-marker { display: none; }
+        .disclosure summary::before {
+          content: "›";
+          font-size: 1.1rem;
+          line-height: 1;
+          transition: transform 150ms ease-out;
+          display: inline-block;
+          color: #2f855a;
+        }
+        .disclosure[open] summary::before {
+          transform: rotate(90deg);
+        }
+        .disclosure summary:hover {
+          background: #faf7f3;
+        }
+        .disclosure-body {
+          padding: 0 1.75rem 1.75rem;
+          border-top: 1px solid #f1ece4;
         }
         .seed-cap-notice {
           font-size: 0.8125rem;
@@ -817,23 +865,26 @@ export default function App() {
 
         {step === 3 && (
           <>
-            <div className="card journey-card">
-              <h2>Your seed set</h2>
-              <div className="subtitle">Recommendations are anchored by the movies you selected.</div>
-              <div className="journey-flow">
-                {seeds.map((seed) => (
-                  <span className="seed" key={seed.movie_id}>
-                    {formatTitle(seed.title)}
-                  </span>
-                ))}
-              </div>
+            {/* Seed banner — lightweight, no card chrome */}
+            <div className="seed-banner">
+              <span className="seed-banner-label">Seeds:</span>
+              {seeds.map((seed) => (
+                <span className="seed" key={seed.movie_id}>
+                  {formatTitle(seed.title)}
+                </span>
+              ))}
+              {selectedGenres.length > 0 && (
+                <span style={{ color: "#6a655f", marginLeft: "0.25rem" }}>
+                  · {selectedGenres.join(", ")}
+                </span>
+              )}
             </div>
 
-            <div className="card">
+            {/* Featured — full width, primary content */}
+            <div className="card full-width">
               <h2>Featured for you</h2>
               <div className="subtitle">
-                {seeds.length} seed movie{seeds.length !== 1 ? "s" : ""}
-                {selectedGenres.length > 0 ? ` · filtered by ${selectedGenres.join(", ")}` : ""}
+                Your top {Math.min(data?.items.length ?? 0, 3)} picks
               </div>
               <div className="featured-grid">
                 {data?.items.slice(0, 3).map((recommendation, index) => {
@@ -876,21 +927,7 @@ export default function App() {
               </div>
             </div>
 
-            {(data?.items.length ?? 0) > 3 && (
-            <div className="card">
-              <h2>More movies you might like</h2>
-              <div className="subtitle">More matches ranked by the same model.</div>
-              <div className="list">
-                {data?.items.slice(3).map((item) => (
-                  <div className="row" key={item.movie_id}>
-                    <span>{formatTitle(item.title)}</span>
-                    <span className="score">{item.score.toFixed(3)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            )}
-
+            {/* Secondary row: AI explanation + more movies side by side */}
             <div className="card">
               <h2>Why these movies?</h2>
               <div className="subtitle">An AI explanation of your top picks.</div>
@@ -910,28 +947,48 @@ export default function App() {
               )}
             </div>
 
-            <div className="card">
-              <h2>Score breakdown</h2>
-              <div className="subtitle">How the hybrid model ranked your recommendations.</div>
-              {explain?.anchor_movie && (
-                <p className="subtle">Anchored on <strong>{formatTitle(explain.anchor_movie.title)}</strong></p>
-              )}
-              {!explain?.content_available && (
-                <p className="warning">Content embeddings unavailable — scores are based on collaborative filtering only.</p>
-              )}
-              <svg ref={chartRef} />
-              <div style={{ marginTop: "1rem" }}>
-                <h3>Similar movies to your seeds</h3>
+            {(data?.items.length ?? 0) > 3 && (
+              <div className="card">
+                <h2>More movies you might like</h2>
+                <div className="subtitle">More matches ranked by the same model.</div>
                 <div className="list">
-                  {explain?.similar_movies.map((movie) => (
-                    <div className="row" key={movie.movie_id}>
-                      <span>{formatTitle(movie.title)}</span>
-                      <span className="score">{movie.similarity.toFixed(3)}</span>
+                  {data?.items.slice(3).map((item) => (
+                    <div className="row" key={item.movie_id}>
+                      <span>{formatTitle(item.title)}</span>
+                      <span className="score">{item.score.toFixed(3)}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Score breakdown — collapsed by default, power-user content */}
+            <details className="disclosure">
+              <summary>Score breakdown</summary>
+              <div className="disclosure-body">
+                <p className="subtle" style={{ marginBottom: "1rem" }}>How the hybrid model ranked your recommendations.</p>
+                {explain?.anchor_movie && (
+                  <p className="subtle" style={{ marginBottom: "0.75rem" }}>
+                    Anchored on <strong>{formatTitle(explain.anchor_movie.title)}</strong>
+                  </p>
+                )}
+                {!explain?.content_available && (
+                  <p className="warning">Content embeddings unavailable — scores are based on collaborative filtering only.</p>
+                )}
+                <svg ref={chartRef} />
+                <div style={{ marginTop: "1.25rem" }}>
+                  <h3>Similar movies to your seeds</h3>
+                  <div className="list" style={{ marginTop: "0.75rem" }}>
+                    {explain?.similar_movies.map((movie) => (
+                      <div className="row" key={movie.movie_id}>
+                        <span>{formatTitle(movie.title)}</span>
+                        <span className="score">{movie.similarity.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </details>
           </>
         )}
       </section>
