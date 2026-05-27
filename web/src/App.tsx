@@ -72,6 +72,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState<MovieSuggestion[]>([])
   const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
+  const [suggestionIndex, setSuggestionIndex] = useState(-1)
   const [loading, setLoading] = useState(false)
   const [ragLoading, setRagLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -165,6 +166,7 @@ export default function App() {
     const svg = d3.select(chartRef.current)
     svg.attr("width", width).attr("height", height)
     svg.selectAll("*").remove()
+    svg.append("title").text("Hybrid score breakdown — green: collaborative filtering, orange: content signal")
 
     const maxFinal = d3.max(stackedItems, (d) => d.final) || 1
     const xScale = d3.scaleLinear().domain([0, maxFinal]).range([0, barWidth])
@@ -286,6 +288,28 @@ export default function App() {
     }
   }, [searchQuery, apiBase, seeds])
 
+  useEffect(() => { setSuggestionIndex(-1) }, [suggestions])
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!suggestions.length) return
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setSuggestionIndex(prev => (prev + 1) % suggestions.length)
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setSuggestionIndex(prev => (prev <= 0 ? suggestions.length - 1 : prev - 1))
+    } else if (e.key === "Enter" && suggestionIndex >= 0) {
+      e.preventDefault()
+      const movie = suggestions[suggestionIndex]
+      if (seeds.length >= 5) return
+      setSeeds(prev => [...prev, movie])
+      setSearchQuery("")
+      setSuggestions([])
+    } else if (e.key === "Escape") {
+      setSuggestions([])
+    }
+  }
+
   return (
     <main className="page">
       <style>{`
@@ -395,8 +419,13 @@ export default function App() {
           font-family: inherit;
           font-size: 0.9375rem;
         }
-        .suggestions button:hover {
+        .suggestions button:hover,
+        .suggestions button.focused {
           background: #f4efe7;
+        }
+        .suggestions button.focused {
+          outline: 2px solid #2f855a;
+          outline-offset: -2px;
         }
         .controls button {
           padding: 0.5rem 1rem;
@@ -596,6 +625,17 @@ export default function App() {
           background: none;
           cursor: pointer;
           font-weight: 700;
+          padding: 0.4rem 0.35rem;
+          margin: -0.4rem -0.25rem -0.4rem 0;
+          min-width: 28px;
+          min-height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+        }
+        .seed button:hover {
+          background: rgba(0, 0, 0, 0.07);
         }
         .seed-banner {
           grid-column: 1 / -1;
@@ -719,11 +759,12 @@ export default function App() {
           <div className="card">
             <h2>Select Genres</h2>
             <div className="subtitle">Choose 1–3 genres to narrow your seeds</div>
-            <div className="chips">
+            <div className="chips" role="group" aria-label="Common genres">
               {["Comedy", "Drama", "Action"].map((genre) => (
                 <button
                   key={genre}
                   className={`chip ${selectedGenres.includes(genre) ? "active" : ""}`}
+                  aria-pressed={selectedGenres.includes(genre)}
                   onClick={() =>
                     setSelectedGenres((prev) =>
                       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
@@ -734,13 +775,14 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div className="chips">
+            <div className="chips" role="group" aria-label="More genres">
               {genres
                 .filter((genre) => !["Comedy", "Drama", "Action"].includes(genre))
                 .map((genre) => (
                 <button
                   key={genre}
                   className={`chip ${selectedGenres.includes(genre) ? "active" : ""}`}
+                  aria-pressed={selectedGenres.includes(genre)}
                   onClick={() =>
                     setSelectedGenres((prev) =>
                       prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
@@ -777,12 +819,23 @@ export default function App() {
                   placeholder="Search movies..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  role="combobox"
+                  aria-expanded={suggestions.length > 0}
+                  aria-autocomplete="list"
+                  aria-controls="search-suggestions"
+                  aria-activedescendant={suggestionIndex >= 0 ? `suggestion-${suggestions[suggestionIndex]?.movie_id}` : undefined}
+                  autoComplete="off"
                 />
                 {suggestions.length > 0 && (
-                  <div className="suggestions">
-                    {suggestions.map((movie) => (
+                  <div className="suggestions" id="search-suggestions" role="listbox">
+                    {suggestions.map((movie, idx) => (
                       <button
                         key={movie.movie_id}
+                        id={`suggestion-${movie.movie_id}`}
+                        role="option"
+                        aria-selected={idx === suggestionIndex}
+                        className={idx === suggestionIndex ? "focused" : ""}
                         onClick={() => {
                           if (seeds.length >= 5) return
                           setSeeds((prev) => [...prev, movie])
@@ -975,7 +1028,7 @@ export default function App() {
                 {!explain?.content_available && (
                   <p className="warning">Content embeddings unavailable — scores are based on collaborative filtering only.</p>
                 )}
-                <svg ref={chartRef} />
+                <svg ref={chartRef} role="img" aria-label="Hybrid score breakdown: green bars show collaborative filtering contribution, orange bars show content signal contribution" />
                 <div style={{ marginTop: "1.25rem" }}>
                   <h3>Similar movies to your seeds</h3>
                   <div className="list" style={{ marginTop: "0.75rem" }}>
