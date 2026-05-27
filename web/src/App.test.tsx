@@ -214,6 +214,17 @@ describe("App RAG explanations", () => {
     expect(within(moreRecommendations as HTMLElement).getByText("Fourth Recommendation")).toBeInTheDocument()
     expect(within(moreRecommendations as HTMLElement).queryByText(/AI reason/)).not.toBeInTheDocument()
   })
+
+  it("keeps the selected seed set visible on the recommendation results page", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    const seedSet = screen.getByRole("heading", { name: "Your seed set" }).closest(".card")
+    expect(seedSet).not.toBeNull()
+    expect(within(seedSet as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
+  })
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {

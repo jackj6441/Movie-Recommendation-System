@@ -563,6 +563,18 @@ export default function App() {
           cursor: pointer;
           font-weight: 700;
         }
+        .journey-card {
+          grid-column: 1 / -1;
+          background:
+            linear-gradient(135deg, rgba(47, 133, 90, 0.12), rgba(192, 86, 33, 0.08)),
+            #fffdf9;
+        }
+        .journey-flow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+          margin-top: 1rem;
+        }
       `}</style>
 
       <section className="header">
@@ -722,6 +734,18 @@ export default function App() {
 
         {step === 3 && (
           <>
+            <div className="card journey-card">
+              <h2>Your seed set</h2>
+              <div className="subtitle">Recommendations are anchored by the movies you selected.</div>
+              <div className="journey-flow">
+                {seeds.map((seed) => (
+                  <span className="seed" key={seed.movie_id}>
+                    {seed.title}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <div className="card">
               <h2>Featured for you</h2>
               <div className="subtitle">
