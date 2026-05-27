@@ -130,12 +130,12 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const aiExplanation = screen.getByRole("heading", { name: "AI Explanation" }).closest(".card")
-    expect(aiExplanation).not.toBeNull()
+    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
+    expect(featured).not.toBeNull()
 
-    const first = within(aiExplanation as HTMLElement).getByText("First Recommendation")
-    const second = within(aiExplanation as HTMLElement).getByText("Second Recommendation")
-    const third = within(aiExplanation as HTMLElement).getByText("Third Recommendation")
+    const first = within(featured as HTMLElement).getByText("First Recommendation")
+    const second = within(featured as HTMLElement).getByText("Second Recommendation")
+    const third = within(featured as HTMLElement).getByText("Third Recommendation")
 
     expect(first.compareDocumentPosition(second)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(second.compareDocumentPosition(third)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
@@ -224,6 +224,18 @@ describe("App RAG explanations", () => {
     const seedSet = screen.getByRole("heading", { name: "Your seed set" }).closest(".card")
     expect(seedSet).not.toBeNull()
     expect(within(seedSet as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
+  })
+
+  it("keeps the AI explanation panel summary-only after item reasons move into cards", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    const aiExplanation = screen.getByRole("heading", { name: "AI Explanation" }).closest(".card")
+    expect(aiExplanation).not.toBeNull()
+    expect(within(aiExplanation as HTMLElement).getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
+    expect(within(aiExplanation as HTMLElement).queryByText("It keeps the same light adventure pattern.")).not.toBeInTheDocument()
   })
 })
 

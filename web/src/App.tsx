@@ -816,22 +816,6 @@ export default function App() {
               {ragExplain ? (
                 <>
                   <p>{ragExplain.summary}</p>
-                  <div className="list">
-                    {data?.items.slice(0, 3).map((recommendation) => {
-                      const item = ragExplain.items.find(
-                        (ragItem) => ragItem.movie_id === recommendation.movie_id
-                      )
-
-                      if (!item) return null
-
-                      return (
-                        <div className="row" key={item.movie_id}>
-                          <span>{recommendation.title}</span>
-                          <span>{item.reason}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
                 </>
               ) : (
                 <p className="subtle">AI explanation will appear here when available.</p>
