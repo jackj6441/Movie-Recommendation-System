@@ -40,6 +40,19 @@ type ExplainResponse = {
   anchor_source?: string
 }
 
+type RagExplanationItem = {
+  movie_id: number
+  reason: string
+  evidence: string[]
+}
+
+type RagExplanationResponse = {
+  summary: string
+  items: RagExplanationItem[]
+  explanation_source: "rag" | "rag_cache" | "deterministic_fallback"
+  fallback_reason?: string | null
+}
+
 type MovieSuggestion = {
   movie_id: number
   title: string
@@ -60,12 +73,16 @@ export default function App() {
   const [data, setData] = useState<RecommendationResponse | null>(null)
   const [explain, setExplain] = useState<ExplainResponse | null>(null)
   const [explainError, setExplainError] = useState<string | null>(null)
+  const [ragExplain, setRagExplain] = useState<RagExplanationResponse | null>(null)
+  const [ragExplainError, setRagExplainError] = useState<string | null>(null)
   const chartRef = useRef<SVGSVGElement | null>(null)
 
   const fetchRecommendations = async (shuffle = false) => {
     setLoading(true)
     setError(null)
     setExplainError(null)
+    setRagExplainError(null)
+    setRagExplain(null)
     try {
       const res = await fetch(`${apiBase}/recommendations`, {
         method: "POST",
@@ -98,6 +115,22 @@ export default function App() {
     } catch (err) {
       setExplainError(err instanceof Error ? err.message : "Unknown error")
       setExplain(null)
+    }
+
+    try {
+      const ragExplainRes = await fetch(`${apiBase}/rag/explanations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
+      })
+      if (!ragExplainRes.ok) {
+        throw new Error(`RAG explain failed: ${ragExplainRes.status}`)
+      }
+      const ragExplainJson = (await ragExplainRes.json()) as RagExplanationResponse
+      setRagExplain(ragExplainJson)
+    } catch (err) {
+      setRagExplainError(err instanceof Error ? err.message : "Unknown error")
+      setRagExplain(null)
     }
   }
 
@@ -452,6 +485,7 @@ export default function App() {
         <p className="subtle">apiBase: {apiBase}</p>
         {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
         {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
+        {ragExplainError && <p className="warning">AI explanation unavailable. Showing recommendations normally.</p>}
       </section>
 
       <section className="layout">
@@ -637,6 +671,35 @@ export default function App() {
                   返回
                 </button>
               </div>
+            </div>
+
+            <div className="card">
+              <h2>AI Explanation</h2>
+              <div className="subtitle">Grounded summary for the top recommendations.</div>
+              {ragExplain?.explanation_source === "deterministic_fallback" && (
+                <p className="warning">Generated explanation unavailable; showing a safe fallback.</p>
+              )}
+              {ragExplain ? (
+                <>
+                  <p>{ragExplain.summary}</p>
+                  <div className="list">
+                    {ragExplain.items.map((item, index) => {
+                      const recommendedTitle =
+                        data?.items.find((recommendation) => recommendation.movie_id === item.movie_id)?.title ??
+                        `Recommendation ${index + 1}`
+
+                      return (
+                        <div className="row" key={item.movie_id}>
+                          <span>{recommendedTitle}</span>
+                          <span>{item.reason}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p className="subtle">AI explanation will appear here when available.</p>
+              )}
             </div>
 
             <div className="card">
