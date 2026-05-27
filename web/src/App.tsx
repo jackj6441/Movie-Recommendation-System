@@ -812,6 +812,30 @@ export default function App() {
           width: 60%;
           margin-bottom: 0;
         }
+        .skeleton-dark {
+          background: linear-gradient(90deg,
+            rgba(255,255,255,0.06) 25%,
+            rgba(255,255,255,0.14) 50%,
+            rgba(255,255,255,0.06) 75%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 1.4s ease-in-out infinite;
+          border-radius: 6px;
+        }
+        .skeleton-movie-title {
+          height: 1.4rem;
+          width: 75%;
+          margin-bottom: 0.85rem;
+        }
+        .skeleton-text-dark {
+          height: 0.875rem;
+          margin-bottom: 0.5rem;
+          border-radius: 4px;
+        }
+        .skeleton-card {
+          opacity: 0.75;
+          pointer-events: none;
+        }
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -820,6 +844,10 @@ export default function App() {
           .skeleton {
             animation: none;
             background: #f0ece6;
+          }
+          .skeleton-dark {
+            animation: none;
+            background: rgba(255,255,255,0.07);
           }
           .card,
           .card.arrived,
@@ -973,13 +1001,13 @@ export default function App() {
                 )}
               </div>
               <button
-                onClick={async () => {
-                  await fetchRecommendations(false)
+                onClick={() => {
                   setStep(3)
+                  fetchRecommendations(false)
                 }}
                 disabled={loading || seeds.length === 0 || seeds.length > 5}
               >
-                {loading ? "Finding your movies…" : "Recommend"}
+                Recommend
               </button>
             </div>
             <div className="seeds">
@@ -1063,27 +1091,35 @@ export default function App() {
             <div className={`card full-width${resultsJustArrived ? " arrived" : ""}`}>
               <h2>Featured for you</h2>
               <div className="subtitle">
-                Your top {Math.min(data?.items.length ?? 0, 3)} picks
+                {loading && !data ? "Finding your movies…" : `Your top ${Math.min(data?.items.length ?? 0, 3)} picks`}
               </div>
               <div className="featured-grid">
-                {data?.items.slice(0, 3).map((recommendation, index) => {
-                  const ragItem = ragExplain?.items.find((item) => item.movie_id === recommendation.movie_id)
-
-                  return (
-                    <article className="movie-card" key={recommendation.movie_id}>
-                      <span className="movie-rank">#{index + 1}</span>
-                      <h3>{formatTitle(recommendation.title)}</h3>
-                      {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
-                      {ragItem && ragItem.evidence.length > 0 && (
-                        <div className="signal-row">
-                          {ragItem.evidence.slice(0, 3).map((ev, i) => (
-                            <span className="signal-chip" key={i}>{ev}</span>
-                          ))}
-                        </div>
-                      )}
-                    </article>
-                  )
-                })}
+                {loading && !data
+                  ? [0, 1, 2].map((i) => (
+                      <div className="movie-card skeleton-card" key={i} aria-hidden="true">
+                        <div className="skeleton-dark skeleton-movie-title" />
+                        <div className="skeleton-dark skeleton-text-dark" style={{ width: "85%" }} />
+                        <div className="skeleton-dark skeleton-text-dark" style={{ width: "60%" }} />
+                      </div>
+                    ))
+                  : data?.items.slice(0, 3).map((recommendation, index) => {
+                      const ragItem = ragExplain?.items.find((item) => item.movie_id === recommendation.movie_id)
+                      return (
+                        <article className="movie-card" key={recommendation.movie_id}>
+                          <span className="movie-rank">#{index + 1}</span>
+                          <h3>{formatTitle(recommendation.title)}</h3>
+                          {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
+                          {ragItem && ragItem.evidence.length > 0 && (
+                            <div className="signal-row">
+                              {ragItem.evidence.slice(0, 3).map((ev, i) => (
+                                <span className="signal-chip" key={i}>{ev}</span>
+                              ))}
+                            </div>
+                          )}
+                        </article>
+                      )
+                    })
+                }
               </div>
               <div className="wizard-nav">
                 <button onClick={() => fetchRecommendations(true)} disabled={loading || ragLoading}>

@@ -164,7 +164,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    expect(await screen.findByText("Some Movie")).toBeInTheDocument()
+    expect((await screen.findAllByText("Some Movie")).length).toBeGreaterThan(0)
     expect(screen.getByText("AI explanation unavailable. Your recommendations are still accurate.")).toBeInTheDocument()
     expect(screen.getByText("No explanation available for this set of recommendations.")).toBeInTheDocument()
   })
@@ -337,7 +337,7 @@ describe("App RAG explanations", () => {
     expect(recommendButton).toBeDisabled()
   })
 
-  it("shows Loading text on the Recommend button while fetching recommendations", async () => {
+  it("navigates to step 3 immediately and shows loading state while fetching recommendations", async () => {
     let resolveRecommendations!: (value: Response) => void
     vi.stubGlobal(
       "fetch",
@@ -359,7 +359,10 @@ describe("App RAG explanations", () => {
     await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
-    expect(await screen.findByRole("button", { name: "Finding your movies…" })).toBeDisabled()
+    // Step 3 appears immediately — loading subtitle shown before data arrives
+    expect(await screen.findByText("Finding your movies…")).toBeInTheDocument()
+    // No real movie articles yet — skeleton divs stand in
+    expect(screen.queryAllByRole("article")).toHaveLength(0)
 
     resolveRecommendations({
       ok: false,
@@ -589,7 +592,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    await screen.findByText("Some Movie")
+    expect((await screen.findAllByText("Some Movie")).length).toBeGreaterThan(0)
 
     await user.click(screen.getByRole("button", { name: "Shuffle" }))
 
