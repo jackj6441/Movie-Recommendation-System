@@ -97,6 +97,7 @@ export default function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
       setData(null)
+      return
     } finally {
       setLoading(false)
     }

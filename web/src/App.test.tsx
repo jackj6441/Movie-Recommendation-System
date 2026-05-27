@@ -15,8 +15,10 @@ const jsonResponse = (payload: unknown) =>
 describe("App RAG explanations", () => {
   let recommendationItems: { movie_id: number; title: string; score: number }[]
   let ragItems: { movie_id: number; reason: string; evidence: string[] }[]
+  let recommendationsOk: boolean
 
   beforeEach(() => {
+    recommendationsOk = true
     recommendationItems = [{ movie_id: 239, title: "Some Movie", score: 0.9 }]
     ragItems = [
       {
@@ -40,6 +42,14 @@ describe("App RAG explanations", () => {
         }
 
         if (url.endsWith("/recommendations")) {
+          if (!recommendationsOk) {
+            return Promise.resolve({
+              ok: false,
+              status: 500,
+              json: () => Promise.resolve({ detail: "boom" }),
+            } as Response)
+          }
+
           return jsonResponse({
             items: recommendationItems,
             seed_movies: [{ movie_id: 1, title: "Toy Story (1995)" }],
@@ -117,6 +127,21 @@ describe("App RAG explanations", () => {
 
     expect(first.compareDocumentPosition(second)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(second.compareDocumentPosition(third)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
+  it("does not request RAG explanations when recommendation generation fails", async () => {
+    recommendationsOk = false
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(await screen.findByText("Error: Request failed: 500")).toBeInTheDocument()
+    expect(fetch).not.toHaveBeenCalledWith(
+      "http://reco-api:8000/rag/explanations",
+      expect.anything()
+    )
   })
 })
 
