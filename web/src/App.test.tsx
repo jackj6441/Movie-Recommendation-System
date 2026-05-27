@@ -237,6 +237,41 @@ describe("App RAG explanations", () => {
     expect(within(aiExplanation as HTMLElement).getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
     expect(within(aiExplanation as HTMLElement).queryByText("It keeps the same light adventure pattern.")).not.toBeInTheDocument()
   })
+
+  it("renders featured cards without crashing when fewer than three recommendations exist", async () => {
+    recommendationItems = [{ movie_id: 239, title: "Only Movie", score: 0.9 }]
+    ragItems = [{ movie_id: 239, reason: "Only reason", evidence: ["seed_set"] }]
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
+    expect(featured).not.toBeNull()
+    expect(within(featured as HTMLElement).getByText("Only Movie")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).getByText("Only reason")).toBeInTheDocument()
+    expect(within(featured as HTMLElement).queryByText("Top 2")).not.toBeInTheDocument()
+    expect(within(featured as HTMLElement).queryByText("Top 3")).not.toBeInTheDocument()
+  })
+
+  it("does not render the More recommendations section when all results fit in featured cards", async () => {
+    recommendationItems = [
+      { movie_id: 101, title: "First Movie", score: 0.9 },
+      { movie_id: 102, title: "Second Movie", score: 0.8 },
+    ]
+    ragItems = [
+      { movie_id: 101, reason: "First reason", evidence: ["seed_set"] },
+      { movie_id: 102, reason: "Second reason", evidence: ["content_signal"] },
+    ]
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(screen.queryByRole("heading", { name: "More recommendations" })).not.toBeInTheDocument()
+  })
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {

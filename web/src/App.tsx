@@ -794,6 +794,7 @@ export default function App() {
               </div>
             </div>
 
+            {(data?.items.length ?? 0) > 3 && (
             <div className="card">
               <h2>More recommendations</h2>
               <div className="subtitle">Additional matches keep score context only.</div>
@@ -806,6 +807,7 @@ export default function App() {
                 ))}
               </div>
             </div>
+            )}
 
             <div className="card">
               <h2>AI Explanation</h2>
