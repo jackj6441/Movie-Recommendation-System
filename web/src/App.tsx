@@ -385,10 +385,16 @@ export default function App() {
           font-size: 0.875rem;
           cursor: pointer;
           background: #fffdf9;
-          transition: all 120ms ease;
+          transition: background 140ms cubic-bezier(0.25, 1, 0.5, 1),
+                      border-color 140ms cubic-bezier(0.25, 1, 0.5, 1),
+                      color 140ms cubic-bezier(0.25, 1, 0.5, 1),
+                      transform 100ms cubic-bezier(0.25, 1, 0.5, 1);
         }
         .chip:hover {
           border-color: #8aa6c2;
+        }
+        .chip:active {
+          transform: scale(0.94);
         }
         .chip.active {
           background: #2f855a;
@@ -407,6 +413,7 @@ export default function App() {
           max-height: 240px;
           overflow: auto;
           z-index: 5;
+          animation: fade-in-up 150ms cubic-bezier(0.25, 1, 0.5, 1) both;
         }
         .suggestions button {
           display: block;
@@ -445,6 +452,11 @@ export default function App() {
           border: 1px solid #2f855a;
           box-shadow: none;
         }
+        .controls button:not(:disabled):active,
+        .wizard-nav button:not(:disabled):active {
+          transform: scale(0.97);
+          transition: transform 80ms cubic-bezier(0.25, 1, 0.5, 1);
+        }
         .controls button:disabled {
           background: #b5c9bd;
           border-color: #b5c9bd;
@@ -466,12 +478,21 @@ export default function App() {
         .full-width {
           grid-column: 1 / -1;
         }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.82); }
+          to   { opacity: 1; transform: scale(1); }
+        }
         .card {
           background: #ffffff;
           border-radius: 18px;
           border: 1px solid #efe7db;
           box-shadow: 0 20px 36px rgba(39, 30, 14, 0.08);
           padding: 1.75rem;
+          animation: fade-in-up 220ms cubic-bezier(0.25, 1, 0.5, 1) both;
         }
         .card h2 {
           font-family: "Cormorant Garamond", "Georgia", serif;
@@ -528,6 +549,7 @@ export default function App() {
           justify-content: flex-end;
           overflow: hidden;
           position: relative;
+          animation: fade-in-up 260ms cubic-bezier(0.25, 1, 0.5, 1) both;
           color: #fffaf2;
           background:
             linear-gradient(180deg, rgba(20, 18, 16, 0.08), rgba(20, 18, 16, 0.88)),
@@ -550,6 +572,9 @@ export default function App() {
             radial-gradient(circle at 88% 0%, rgba(250, 214, 122, 0.68), transparent 34%),
             linear-gradient(135deg, #33243d, #14151d);
         }
+        .movie-card:nth-child(1) { animation-delay: 0ms; }
+        .movie-card:nth-child(2) { animation-delay: 65ms; }
+        .movie-card:nth-child(3) { animation-delay: 130ms; }
         .movie-card::before {
           content: "";
           position: absolute;
@@ -619,6 +644,7 @@ export default function App() {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
+          animation: scale-in 180ms cubic-bezier(0.25, 1, 0.5, 1) both;
         }
         .seed button {
           border: none;
@@ -639,6 +665,7 @@ export default function App() {
         }
         .seed-banner {
           grid-column: 1 / -1;
+          animation: fade-in-up 180ms cubic-bezier(0.25, 1, 0.5, 1) both;
           display: flex;
           flex-wrap: wrap;
           align-items: center;
@@ -723,6 +750,18 @@ export default function App() {
           .skeleton {
             animation: none;
             background: #f0ece6;
+          }
+          .card,
+          .seed-banner,
+          .seed,
+          .movie-card,
+          .suggestions {
+            animation: none;
+          }
+          .chip,
+          .controls button,
+          .wizard-nav button {
+            transition-duration: 0.01ms !important;
           }
         }
         .retry-btn {
