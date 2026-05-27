@@ -392,6 +392,65 @@ describe("App RAG explanations", () => {
     expect(await screen.findByText("Toy Story (1995)")).toBeInTheDocument()
     expect(screen.getByText("Toy Story 2 (1999)")).toBeInTheDocument()
   })
+
+  it("returns to the previous step when the back button is clicked", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    expect(screen.getByText("选择电影")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "返回" }))
+    expect(screen.getByText("选择类型")).toBeInTheDocument()
+  })
+
+  it("resets to step one and clears seeds when restart is clicked on results page", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    await user.click(await screen.findByRole("button", { name: "重新开始" }))
+    expect(screen.getByText("选择类型")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+  })
+
+  it("does not add a sixth seed when the seed limit is already reached", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({
+          seeds: [
+            { movie_id: 1, title: "Movie 1" },
+            { movie_id: 2, title: "Movie 2" },
+            { movie_id: 3, title: "Movie 3" },
+            { movie_id: 4, title: "Movie 4" },
+            { movie_id: 5, title: "Movie 5" },
+            { movie_id: 6, title: "Movie 6" },
+          ],
+        })
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "跳过" }))
+
+    const selectButtons = await screen.findAllByRole("button", { name: "选择" })
+    for (const btn of selectButtons.slice(0, 5)) {
+      await user.click(btn)
+    }
+
+    expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
+
+    await user.click(selectButtons[5])
+    expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
+  })
 })
 
 async function requestRecommendations(user: ReturnType<typeof userEvent.setup>) {
