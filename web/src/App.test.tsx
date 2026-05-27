@@ -149,7 +149,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    expect(await screen.findByText("Error: Request failed: 500")).toBeInTheDocument()
+    expect(await screen.findByText("Couldn't load recommendations. Check your connection and try again.")).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalledWith(
       "http://reco-api:8000/rag/explanations",
       expect.anything()
@@ -165,8 +165,8 @@ describe("App RAG explanations", () => {
     await requestRecommendations(user)
 
     expect(await screen.findByText("Some Movie")).toBeInTheDocument()
-    expect(screen.getByText("AI explanation unavailable. Showing recommendations normally.")).toBeInTheDocument()
-    expect(screen.getByText("AI explanation will appear here when available.")).toBeInTheDocument()
+    expect(screen.getByText("AI explanation unavailable. Your recommendations are still accurate.")).toBeInTheDocument()
+    expect(screen.getByText("No explanation available for this set of recommendations.")).toBeInTheDocument()
   })
 
   it("shows restrained fallback copy without exposing provider details", async () => {
@@ -177,7 +177,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    expect(await screen.findByText("Generated explanation unavailable; showing a safe fallback.")).toBeInTheDocument()
+    expect(await screen.findByText("Personalized explanation unavailable — showing a general summary instead.")).toBeInTheDocument()
     expect(screen.getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
     expect(screen.queryByText("external")).not.toBeInTheDocument()
     expect(screen.queryByText("should-not-render")).not.toBeInTheDocument()
@@ -209,7 +209,7 @@ describe("App RAG explanations", () => {
     expect(within(featured as HTMLElement).getByText("Second AI reason")).toBeInTheDocument()
     expect(within(featured as HTMLElement).getByText("Third AI reason")).toBeInTheDocument()
 
-    const moreRecommendations = screen.getByRole("heading", { name: "More recommendations" }).closest(".card")
+    const moreRecommendations = screen.getByRole("heading", { name: "More movies you might like" }).closest(".card")
     expect(moreRecommendations).not.toBeNull()
     expect(within(moreRecommendations as HTMLElement).getByText("Fourth Recommendation")).toBeInTheDocument()
     expect(within(moreRecommendations as HTMLElement).queryByText(/AI reason/)).not.toBeInTheDocument()
@@ -232,7 +232,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const aiExplanation = screen.getByRole("heading", { name: "AI Explanation" }).closest(".card")
+    const aiExplanation = screen.getByRole("heading", { name: "Why these movies?" }).closest(".card")
     expect(aiExplanation).not.toBeNull()
     expect(within(aiExplanation as HTMLElement).getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
     expect(within(aiExplanation as HTMLElement).queryByText("It keeps the same light adventure pattern.")).not.toBeInTheDocument()
@@ -251,8 +251,8 @@ describe("App RAG explanations", () => {
     expect(featured).not.toBeNull()
     expect(within(featured as HTMLElement).getByText("Only Movie")).toBeInTheDocument()
     expect(within(featured as HTMLElement).getByText("Only reason")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).queryByText("Top 2")).not.toBeInTheDocument()
-    expect(within(featured as HTMLElement).queryByText("Top 3")).not.toBeInTheDocument()
+    expect(within(featured as HTMLElement).queryByText("#2")).not.toBeInTheDocument()
+    expect(within(featured as HTMLElement).queryByText("#3")).not.toBeInTheDocument()
   })
 
   it("does not expose the api base url in the rendered page", async () => {

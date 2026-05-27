@@ -73,6 +73,7 @@ export default function App() {
   const [suggestions, setSuggestions] = useState<MovieSuggestion[]>([])
   const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
   const [loading, setLoading] = useState(false)
+  const [ragLoading, setRagLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<RecommendationResponse | null>(null)
   const [explain, setExplain] = useState<ExplainResponse | null>(null)
@@ -83,6 +84,7 @@ export default function App() {
 
   const fetchRecommendations = async (shuffle = false) => {
     setLoading(true)
+    setRagLoading(true)
     setError(null)
     setExplainError(null)
     setRagExplainError(null)
@@ -101,6 +103,7 @@ export default function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
       setData(null)
+      setRagLoading(false)
       return
     } finally {
       setLoading(false)
@@ -136,6 +139,8 @@ export default function App() {
     } catch (err) {
       setRagExplainError(err instanceof Error ? err.message : "Unknown error")
       setRagExplain(null)
+    } finally {
+      setRagLoading(false)
     }
   }
 
@@ -285,7 +290,7 @@ export default function App() {
     <main className="page">
       <style>{`
         .page {
-          font-family: "Cormorant Garamond", "Georgia", serif;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
           background:
             radial-gradient(circle at 20% 10%, rgba(255, 240, 214, 0.6), transparent 55%),
             radial-gradient(circle at 85% 0%, rgba(214, 236, 255, 0.5), transparent 45%),
@@ -293,22 +298,26 @@ export default function App() {
           min-height: 100vh;
           padding: 2.75rem 1.5rem 3.5rem;
           color: #2b2a28;
+          font-size: 1rem;
+          line-height: 1.5;
         }
         .header {
           max-width: 1120px;
           margin: 0 auto 2rem;
         }
         .title {
+          font-family: "Cormorant Garamond", "Georgia", serif;
           font-size: clamp(2.2rem, 2vw + 1.6rem, 3rem);
           letter-spacing: -0.02em;
+          line-height: 1.1;
           margin: 0 0 0.45rem;
         }
         .subtle {
           color: #6a655f;
-          font-size: 0.95rem;
+          font-size: 0.875rem;
         }
         .progress {
-          font-size: 0.95rem;
+          font-size: 0.875rem;
           color: #7b746d;
           margin-top: 0.35rem;
         }
@@ -336,7 +345,8 @@ export default function App() {
           border-radius: 10px;
           border: 1px solid #d7cfc4;
           background: #fffdf9;
-          font-size: 0.95rem;
+          font-size: 1rem;
+          font-family: inherit;
         }
         .chips {
           display: flex;
@@ -348,7 +358,7 @@ export default function App() {
           border: 1px solid #d7cfc4;
           border-radius: 999px;
           padding: 0.35rem 0.85rem;
-          font-size: 0.85rem;
+          font-size: 0.875rem;
           cursor: pointer;
           background: #fffdf9;
           transition: all 120ms ease;
@@ -382,6 +392,8 @@ export default function App() {
           border: none;
           background: none;
           cursor: pointer;
+          font-family: inherit;
+          font-size: 0.9375rem;
         }
         .suggestions button:hover {
           background: #f4efe7;
@@ -393,6 +405,8 @@ export default function App() {
           background: linear-gradient(135deg, #2f855a, #3a9b6c);
           color: #fff;
           font-weight: 600;
+          font-family: inherit;
+          font-size: 0.9375rem;
           cursor: pointer;
           box-shadow: 0 6px 16px rgba(47, 133, 90, 0.25);
         }
@@ -428,12 +442,21 @@ export default function App() {
           padding: 1.75rem;
         }
         .card h2 {
+          font-family: "Cormorant Garamond", "Georgia", serif;
           margin: 0 0 0.3rem;
-          font-size: 1.45rem;
+          font-size: 1.5rem;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+        }
+        .card h3 {
+          font-family: "Cormorant Garamond", "Georgia", serif;
+          font-size: 1.15rem;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
         }
         .card .subtitle {
           color: #6d6963;
-          font-size: 0.92rem;
+          font-size: 0.875rem;
           margin-bottom: 1.15rem;
         }
         .list {
@@ -454,8 +477,9 @@ export default function App() {
         }
         .score {
           font-family: "IBM Plex Mono", "Courier New", monospace;
-          font-size: 0.95rem;
+          font-size: 0.8125rem;
           color: #2d2a26;
+          font-variant-numeric: tabular-nums;
         }
         .featured-grid {
           display: grid;
@@ -513,20 +537,22 @@ export default function App() {
           top: 0.85rem;
           left: 0.85rem;
           font-family: "IBM Plex Mono", "Courier New", monospace;
-          font-size: 0.8rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: rgba(255, 250, 242, 0.76);
+          font-size: 0.75rem;
+          letter-spacing: 0.06em;
+          color: rgba(255, 250, 242, 0.6);
         }
         .movie-card h3 {
+          font-family: "Cormorant Garamond", "Georgia", serif;
           margin: 0 0 0.45rem;
-          font-size: 1.25rem;
-          line-height: 1.1;
+          font-size: 1.3rem;
+          line-height: 1.15;
+          letter-spacing: -0.01em;
         }
         .movie-reason {
           margin: 0.35rem 0 0;
           color: rgba(255, 250, 242, 0.84);
-          font-size: 0.92rem;
+          font-size: 0.875rem;
+          line-height: 1.45;
         }
         .signal-row {
           display: flex;
@@ -535,12 +561,13 @@ export default function App() {
           margin-top: 0.75rem;
         }
         .signal-chip {
-          border: 1px solid rgba(255, 250, 242, 0.35);
+          border: 1px solid rgba(255, 250, 242, 0.3);
           border-radius: 999px;
-          padding: 0.2rem 0.5rem;
-          font-size: 0.72rem;
-          color: rgba(255, 250, 242, 0.82);
+          padding: 0.2rem 0.55rem;
+          font-size: 0.75rem;
+          color: rgba(255, 250, 242, 0.78);
           background: rgba(255, 255, 255, 0.08);
+          line-height: 1.4;
         }
         .warning {
           color: #c05621;
@@ -556,7 +583,7 @@ export default function App() {
           background: #f3f5f7;
           border-radius: 999px;
           padding: 0.35rem 0.75rem;
-          font-size: 0.85rem;
+          font-size: 0.875rem;
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
@@ -579,14 +606,64 @@ export default function App() {
           gap: 0.55rem;
           margin-top: 1rem;
         }
+        .seed-cap-notice {
+          font-size: 0.8125rem;
+          color: #c05621;
+          margin-top: 0.5rem;
+        }
+        .skeleton {
+          background: linear-gradient(90deg, #f0ece6 25%, #e8e2da 50%, #f0ece6 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.4s ease-in-out infinite;
+          border-radius: 6px;
+          height: 1rem;
+        }
+        .skeleton-text {
+          height: 0.875rem;
+          margin-bottom: 0.5rem;
+          border-radius: 4px;
+        }
+        .skeleton-text:last-child {
+          width: 60%;
+          margin-bottom: 0;
+        }
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .skeleton {
+            animation: none;
+            background: #f0ece6;
+          }
+        }
+        .retry-btn {
+          margin-top: 0.75rem;
+          padding: 0.4rem 0.9rem;
+          border-radius: 8px;
+          border: 1px solid #c05621;
+          background: transparent;
+          color: #c05621;
+          font-size: 0.875rem;
+          font-family: inherit;
+          cursor: pointer;
+        }
+        .retry-btn:hover {
+          background: rgba(192, 86, 33, 0.06);
+        }
       `}</style>
 
       <section className="header">
         <h1 className="title">Movie Recommender UI</h1>
         <div className="progress">{step}/3 Select Genres → Select Movies → Results</div>
-        {error && <p style={{ color: "crimson" }}>Error: {error}</p>}
-        {explainError && <p style={{ color: "crimson" }}>Explain error: {explainError}</p>}
-        {ragExplainError && <p className="warning">AI explanation unavailable. Showing recommendations normally.</p>}
+        {error && (
+          <div>
+            <p style={{ color: "crimson" }}>Couldn't load recommendations. Check your connection and try again.</p>
+            <button className="retry-btn" onClick={() => fetchRecommendations(false)}>Try again</button>
+          </div>
+        )}
+        {explainError && <p style={{ color: "crimson" }}>Score details couldn't load. Your recommendations are still shown above.</p>}
+        {ragExplainError && <p className="warning">AI explanation unavailable. Your recommendations are still accurate.</p>}
       </section>
 
       <section className="layout">
@@ -683,6 +760,9 @@ export default function App() {
             </div>
             <div className="seeds">
               <span className="subtle">Selected ({seeds.length}/5):</span>
+              {seeds.length >= 5 && (
+                <span className="seed-cap-notice">Maximum reached — remove a movie to add another.</span>
+              )}
               {seeds.map((seed) => (
                 <span className="seed" key={seed.movie_id}>
                   {formatTitle(seed.title)}
@@ -752,32 +832,31 @@ export default function App() {
             <div className="card">
               <h2>Featured for you</h2>
               <div className="subtitle">
-                anchor_source: {data?.anchor_source ?? "-"} · model_version: {data?.model_version ?? "-"}
+                {seeds.length} seed movie{seeds.length !== 1 ? "s" : ""}
+                {selectedGenres.length > 0 ? ` · filtered by ${selectedGenres.join(", ")}` : ""}
               </div>
-              <p className="subtle">
-                Based on {seeds.length} seed movie{seeds.length !== 1 ? "s" : ""} and genre filter [{selectedGenres.join(", ") || "none"}], here are the closest matches.
-              </p>
               <div className="featured-grid">
                 {data?.items.slice(0, 3).map((recommendation, index) => {
                   const ragItem = ragExplain?.items.find((item) => item.movie_id === recommendation.movie_id)
 
                   return (
                     <article className="movie-card" key={recommendation.movie_id}>
-                      <span className="movie-rank">Top {index + 1}</span>
+                      <span className="movie-rank">#{index + 1}</span>
                       <h3>{formatTitle(recommendation.title)}</h3>
-                      <span className="score">{recommendation.score.toFixed(3)}</span>
                       {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
-                      <div className="signal-row">
-                        <span className="signal-chip">Seed match</span>
-                        <span className="signal-chip">Content signal</span>
-                        <span className="signal-chip">Hybrid score</span>
-                      </div>
+                      {ragItem && ragItem.evidence.length > 0 && (
+                        <div className="signal-row">
+                          {ragItem.evidence.slice(0, 3).map((ev, i) => (
+                            <span className="signal-chip" key={i}>{ev}</span>
+                          ))}
+                        </div>
+                      )}
                     </article>
                   )
                 })}
               </div>
               <div className="wizard-nav">
-                <button onClick={() => fetchRecommendations(true)} disabled={loading}>
+                <button onClick={() => fetchRecommendations(true)} disabled={loading || ragLoading}>
                   {loading ? "Loading..." : "Shuffle"}
                 </button>
                 <button
@@ -799,8 +878,8 @@ export default function App() {
 
             {(data?.items.length ?? 0) > 3 && (
             <div className="card">
-              <h2>More recommendations</h2>
-              <div className="subtitle">Additional matches keep score context only.</div>
+              <h2>More movies you might like</h2>
+              <div className="subtitle">More matches ranked by the same model.</div>
               <div className="list">
                 {data?.items.slice(3).map((item) => (
                   <div className="row" key={item.movie_id}>
@@ -813,34 +892,36 @@ export default function App() {
             )}
 
             <div className="card">
-              <h2>AI Explanation</h2>
-              <div className="subtitle">Grounded summary for the top recommendations.</div>
+              <h2>Why these movies?</h2>
+              <div className="subtitle">An AI explanation of your top picks.</div>
               {ragExplain?.explanation_source === "deterministic_fallback" && (
-                <p className="warning">Generated explanation unavailable; showing a safe fallback.</p>
+                <p className="warning">Personalized explanation unavailable — showing a general summary instead.</p>
               )}
               {ragExplain ? (
-                <>
-                  <p>{ragExplain.summary}</p>
-                </>
+                <p>{ragExplain.summary}</p>
+              ) : ragLoading ? (
+                <div aria-live="polite" aria-label="Generating explanation">
+                  <div className="skeleton skeleton-text" />
+                  <div className="skeleton skeleton-text" />
+                  <div className="skeleton skeleton-text" />
+                </div>
               ) : (
-                <p className="subtle">AI explanation will appear here when available.</p>
+                <p className="subtle">No explanation available for this set of recommendations.</p>
               )}
             </div>
 
             <div className="card">
-              <h2>Explain</h2>
-              <div className="subtitle">
-                model_version: {explain?.model_version ?? "-"} · alpha: {explain?.alpha ?? "-"}
-              </div>
-              <p>
-                anchor_movie: {explain?.anchor_movie ? formatTitle(explain.anchor_movie.title) : "n/a"}
-              </p>
+              <h2>Score breakdown</h2>
+              <div className="subtitle">How the hybrid model ranked your recommendations.</div>
+              {explain?.anchor_movie && (
+                <p className="subtle">Anchored on <strong>{formatTitle(explain.anchor_movie.title)}</strong></p>
+              )}
               {!explain?.content_available && (
-                <p className="warning">Content unavailable: falling back to NCF-only scores.</p>
+                <p className="warning">Content embeddings unavailable — scores are based on collaborative filtering only.</p>
               )}
               <svg ref={chartRef} />
               <div style={{ marginTop: "1rem" }}>
-                <h3>Similar Movies</h3>
+                <h3>Similar movies to your seeds</h3>
                 <div className="list">
                   {explain?.similar_movies.map((movie) => (
                     <div className="row" key={movie.movie_id}>
