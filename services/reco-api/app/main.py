@@ -13,14 +13,27 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import content, metrics, rag, seed_ranker
 
-app = FastAPI()
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
+
+def cors_allowed_origins() -> list[str]:
+    configured = os.getenv("CORS_ALLOW_ORIGINS", "")
+    origins = [*DEFAULT_CORS_ORIGINS]
+    origins.extend(
+        origin.strip().rstrip("/")
+        for origin in configured.split(",")
+        if origin.strip()
+    )
+    return list(dict.fromkeys(origins))
+
+
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=cors_allowed_origins(),
     # Covers any Vite dev port (5173 default + 5174-5179 fallbacks)
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):517[0-9]",
     allow_methods=["*"],

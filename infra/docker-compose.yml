@@ -12,6 +12,7 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       - RAG_PROVIDER=${RAG_PROVIDER:-mock}
       - MOVIES_CSV_PATH=/data/ml-latest-small/movies.csv
       - RATINGS_CSV_PATH=/data/ml-latest-small/ratings.csv

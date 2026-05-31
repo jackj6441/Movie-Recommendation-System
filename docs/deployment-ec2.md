@@ -68,6 +68,7 @@ Create a local `.env` file for the EC2 shell session or export variables directl
 
 ```bash
 export PUBLIC_API_BASE=http://<ec2-public-ip>:8000
+export CORS_ALLOW_ORIGINS=http://<ec2-public-ip>:3000
 export RAG_PROVIDER=mock
 ```
 
@@ -164,6 +165,7 @@ docker compose -f infra/docker-compose.yml logs -f redis
 - `GET /metrics` shows Prometheus-style observability metrics.
 - Public RAG uses `RAG_PROVIDER=mock`.
 - The UI talks to `PUBLIC_API_BASE`, not browser-local `localhost`.
+- The API allows the public UI origin through `CORS_ALLOW_ORIGINS`.
 - Real provider API keys are not required for the public demo.
 
 ## Known Limits
