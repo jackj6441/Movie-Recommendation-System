@@ -69,3 +69,20 @@ def test_benchmark_docs_explain_command_and_artifacts():
     assert "p50" in content
     assert "p95" in content
     assert "p99" in content
+
+
+def test_local_benchmark_report_artifact_is_published():
+    report_path = Path("benchmarks/results/benchmark_report.json")
+    markdown_path = Path("benchmarks/results/benchmark_report.md")
+    assert report_path.exists()
+    assert markdown_path.exists()
+
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["environment"] == "local"
+    assert report["request_count_per_endpoint"] > 0
+    assert {endpoint["name"] for endpoint in report["endpoints"]} == {
+        "GET /healthz",
+        "POST /recommendations",
+        "POST /explanations",
+        "POST /rag/explanations",
+    }

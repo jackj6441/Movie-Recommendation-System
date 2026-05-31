@@ -1,0 +1,56 @@
+{
+  "base_url": "http://127.0.0.1:18000",
+  "endpoints": [
+    {
+      "mean_ms": 11.02804159745574,
+      "method": "GET",
+      "name": "GET /healthz",
+      "p50_ms": 3.6319999489933252,
+      "p95_ms": 34.46085839532315,
+      "p99_ms": 40.56957167573273,
+      "path": "/healthz",
+      "request_count": 5,
+      "success_count": 5,
+      "success_rate": 1.0
+    },
+    {
+      "mean_ms": 20.16188323032111,
+      "method": "POST",
+      "name": "POST /recommendations",
+      "p50_ms": 5.3140000673010945,
+      "p95_ms": 65.4588744509965,
+      "p99_ms": 77.37880772911012,
+      "path": "/recommendations",
+      "request_count": 5,
+      "success_count": 5,
+      "success_rate": 1.0
+    },
+    {
+      "mean_ms": 5.117549956776202,
+      "method": "POST",
+      "name": "POST /explanations",
+      "p50_ms": 4.976041964255273,
+      "p95_ms": 5.786900199018419,
+      "p99_ms": 5.907213645987213,
+      "path": "/explanations",
+      "request_count": 5,
+      "success_count": 5,
+      "success_rate": 1.0
+    },
+    {
+      "mean_ms": 4.904366610571742,
+      "method": "POST",
+      "name": "POST /rag/explanations",
+      "p50_ms": 4.983457969501615,
+      "p95_ms": 5.087966239079833,
+      "p99_ms": 5.092526068910956,
+      "path": "/rag/explanations",
+      "request_count": 5,
+      "success_count": 5,
+      "success_rate": 1.0
+    }
+  ],
+  "environment": "local",
+  "request_count_per_endpoint": 5,
+  "timestamp": "2026-05-31T21:37:06.556726+00:00"
+}
