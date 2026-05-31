@@ -9,6 +9,8 @@ from typing import Any, Literal
 import openai
 from pydantic import BaseModel
 
+from app import metrics
+
 RAG_EVIDENCE_VERSION = "structured-v1"
 RAG_PROMPT_VERSION = "rag-chatgpt-v1"
 
@@ -73,16 +75,22 @@ def build_mock_structured_explanation(
     started_at = time.perf_counter()
     provider = os.getenv("RAG_PROVIDER", "mock")
     if provider == "mock_invalid_json":
+        metrics.record_rag_outcome("deterministic_fallback", "invalid_json")
         return build_deterministic_fallback(deterministic, model_version, "invalid_json")
     if provider == "mock_timeout":
+        metrics.record_rag_outcome("deterministic_fallback", "provider_timeout")
         return build_deterministic_fallback(deterministic, model_version, "provider_timeout")
     if provider == "mock_provider_error":
+        metrics.record_rag_outcome("deterministic_fallback", "provider_error")
         return build_deterministic_fallback(deterministic, model_version, "provider_error")
     if provider == "disabled":
+        metrics.record_rag_outcome("deterministic_fallback", "disabled")
         return build_deterministic_fallback(deterministic, model_version, "disabled")
     if provider not in SUPPORTED_RAG_PROVIDERS:
+        metrics.record_rag_outcome("deterministic_fallback", "unknown")
         return build_deterministic_fallback(deterministic, model_version, "unknown")
     if provider == "external" and not external_provider_api_key():
+        metrics.record_rag_outcome("deterministic_fallback", "provider_error")
         return build_deterministic_fallback(deterministic, model_version, "provider_error")
 
     metadata = response_metadata(deterministic, model_version)
@@ -101,6 +109,7 @@ def build_mock_structured_explanation(
             error_type=None,
             started_at=started_at,
         )
+        metrics.record_rag_outcome("rag_cache")
         return {
             **cached_entry["payload"],
             **metadata,
@@ -110,6 +119,7 @@ def build_mock_structured_explanation(
     try:
         provider_payload = build_provider_payload(deterministic, provider)
     except RagProviderError:
+        metrics.record_rag_outcome("deterministic_fallback", "provider_error")
         return build_deterministic_fallback(
             deterministic,
             model_version,
@@ -117,6 +127,7 @@ def build_mock_structured_explanation(
             metadata=metadata,
         )
     except RagProviderTimeoutError:
+        metrics.record_rag_outcome("deterministic_fallback", "provider_timeout")
         return build_deterministic_fallback(
             deterministic,
             model_version,
@@ -124,6 +135,7 @@ def build_mock_structured_explanation(
             metadata=metadata,
         )
     except json.JSONDecodeError:
+        metrics.record_rag_outcome("deterministic_fallback", "invalid_json")
         return build_deterministic_fallback(
             deterministic,
             model_version,
@@ -142,6 +154,7 @@ def build_mock_structured_explanation(
             error_type="schema_validation_failed",
             started_at=started_at,
         )
+        metrics.record_rag_outcome("deterministic_fallback", "schema_validation_failed")
         return build_deterministic_fallback(
             deterministic,
             model_version,
@@ -156,6 +169,7 @@ def build_mock_structured_explanation(
     }
     if is_rag_cache_enabled():
         RAG_CACHE[cache_key] = {"payload": provider_payload, "stored_at": time.time()}
+    metrics.record_rag_outcome("rag")
     log_rag_metadata(
         metadata=metadata,
         provider=provider,

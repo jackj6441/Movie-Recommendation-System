@@ -5,6 +5,8 @@ _request_counts: dict[tuple[str, str], int] = defaultdict(int)
 _latency_counts: dict[tuple[str, str], int] = defaultdict(int)
 _latency_sums: dict[tuple[str, str], float] = defaultdict(float)
 _cache_events: dict[tuple[str, str], int] = defaultdict(int)
+_rag_sources: dict[str, int] = defaultdict(int)
+_rag_fallback_reasons: dict[str, int] = defaultdict(int)
 
 
 def record_request(endpoint: str, status: int, latency_ms: float) -> None:
@@ -16,6 +18,12 @@ def record_request(endpoint: str, status: int, latency_ms: float) -> None:
 
 def record_cache_event(cache: str, event: str) -> None:
     _cache_events[(cache, event)] += 1
+
+
+def record_rag_outcome(source: str, fallback_reason: str | None = None) -> None:
+    _rag_sources[source] += 1
+    if fallback_reason:
+        _rag_fallback_reasons[fallback_reason] += 1
 
 
 def _label_text(endpoint: str, status: str) -> str:
@@ -53,7 +61,16 @@ def prometheus_text() -> str:
         ],
         "# HELP movie_reco_rag_explanations_total RAG explanation outcomes by source.",
         "# TYPE movie_reco_rag_explanations_total counter",
-        "movie_reco_rag_explanations_total 0",
+        *[
+            f'movie_reco_rag_explanations_total{{source="{source}"}} {count}'
+            for source, count in sorted(_rag_sources.items())
+        ],
+        "# HELP movie_reco_rag_fallback_reasons_total RAG fallback reasons.",
+        "# TYPE movie_reco_rag_fallback_reasons_total counter",
+        *[
+            f'movie_reco_rag_fallback_reasons_total{{reason="{reason}"}} {count}'
+            for reason, count in sorted(_rag_fallback_reasons.items())
+        ],
         "# HELP movie_reco_rag_provider_mode Current configured RAG provider mode.",
         "# TYPE movie_reco_rag_provider_mode gauge",
         f'movie_reco_rag_provider_mode{{provider="{provider}"}} 1',

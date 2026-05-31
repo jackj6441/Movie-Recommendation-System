@@ -80,3 +80,17 @@ def test_metrics_record_redis_cache_hit_and_miss(monkeypatch):
     body = metrics_response.text
     assert 'movie_reco_cache_events_total{cache="redis",event="miss"} 1' in body
     assert 'movie_reco_cache_events_total{cache="redis",event="hit"} 1' in body
+
+
+def test_metrics_record_rag_source_and_fallback_reason(monkeypatch):
+    monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_json")
+    client = TestClient(load_app(monkeypatch))
+
+    rag_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
+    metrics_response = client.get("/metrics")
+
+    assert rag_response.status_code == 200
+    assert rag_response.json()["explanation_source"] == "deterministic_fallback"
+    body = metrics_response.text
+    assert 'movie_reco_rag_explanations_total{source="deterministic_fallback"} 1' in body
+    assert 'movie_reco_rag_fallback_reasons_total{reason="invalid_json"} 1' in body
