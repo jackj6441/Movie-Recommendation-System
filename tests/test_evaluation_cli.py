@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 
 def test_build_report_writes_json_and_markdown(tmp_path):
@@ -123,3 +124,19 @@ def test_eval_retrieval_writes_ranking_and_baseline_metrics(tmp_path):
     assert "topk_diversity" in metrics
     assert "popularity_baseline_recall_at_k" in metrics
     assert "content_baseline_recall_at_k" in metrics
+
+
+def test_model_card_documents_evaluation_context():
+    model_card = Path("docs/model-card.md")
+    assert model_card.exists()
+
+    content = model_card.read_text(encoding="utf-8").lower()
+    for section in [
+        "dataset",
+        "split",
+        "metrics",
+        "artifacts",
+        "limitations",
+        "risks",
+    ]:
+        assert section in content
