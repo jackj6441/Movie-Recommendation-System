@@ -4,10 +4,34 @@ import sys
 
 
 def test_build_report_writes_json_and_markdown(tmp_path):
+    model_metrics = tmp_path / "model_metrics.json"
+    model_metrics.write_text(
+        json.dumps({"rmse": 0.91, "sample_count": 25}),
+        encoding="utf-8",
+    )
+    retrieval_metrics = tmp_path / "retrieval_metrics.json"
+    retrieval_metrics.write_text(
+        json.dumps(
+            {
+                "recall_at_k": 0.2,
+                "ndcg_at_k": 0.1,
+                "recommendation_coverage": 0.3,
+                "topk_diversity": 0.4,
+                "popularity_baseline_recall_at_k": 0.05,
+                "content_baseline_recall_at_k": 0.2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
     result = subprocess.run(
         [
             sys.executable,
             "evaluation/build_report.py",
+            "--model-metrics",
+            str(model_metrics),
+            "--retrieval-metrics",
+            str(retrieval_metrics),
             "--output-dir",
             str(tmp_path),
         ],
@@ -26,9 +50,13 @@ def test_build_report_writes_json_and_markdown(tmp_path):
     report = json.loads(json_path.read_text(encoding="utf-8"))
     assert report["project"] == "movie-recommendation-system"
     assert "generated_at" in report
+    assert report["model_metrics"]["rmse"] == 0.91
+    assert report["retrieval_metrics"]["recall_at_k"] == 0.2
 
     markdown = markdown_path.read_text(encoding="utf-8")
     assert "# Evaluation Report" in markdown
+    assert "RMSE" in markdown
+    assert "Recall@K" in markdown
 
 
 def test_eval_model_writes_rmse_metrics(tmp_path):
