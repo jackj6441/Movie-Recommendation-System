@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 
 def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
@@ -54,3 +55,17 @@ def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
     assert "# API Benchmark Report" in markdown
     assert "GET /healthz" in markdown
     assert "POST /rag/explanations" in markdown
+
+
+def test_benchmark_docs_explain_command_and_artifacts():
+    docs = Path("docs/benchmarking.md")
+    assert docs.exists()
+
+    content = docs.read_text(encoding="utf-8")
+    assert "python benchmarks/benchmark_api.py" in content
+    assert "--base-url" in content
+    assert "benchmark_report.json" in content
+    assert "benchmark_report.md" in content
+    assert "p50" in content
+    assert "p95" in content
+    assert "p99" in content
