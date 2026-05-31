@@ -35,3 +35,17 @@ def test_metrics_endpoint_returns_prometheus_text(monkeypatch):
     assert "movie_reco_rag_explanations_total" in body
     assert "movie_reco_cache_events_total" in body
     assert "movie_reco_rag_provider_mode" in body
+
+
+def test_metrics_record_request_count_and_latency(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    health_response = client.get("/healthz")
+    metrics_response = client.get("/metrics")
+
+    assert health_response.status_code == 200
+    assert metrics_response.status_code == 200
+    body = metrics_response.text
+    assert 'movie_reco_requests_total{endpoint="/healthz",status="200"} 1' in body
+    assert 'movie_reco_request_latency_ms_count{endpoint="/healthz",status="200"} 1' in body
+    assert 'movie_reco_request_latency_ms_sum{endpoint="/healthz",status="200"}' in body

@@ -1,4 +1,20 @@
 import os
+from collections import defaultdict
+
+_request_counts: dict[tuple[str, str], int] = defaultdict(int)
+_latency_counts: dict[tuple[str, str], int] = defaultdict(int)
+_latency_sums: dict[tuple[str, str], float] = defaultdict(float)
+
+
+def record_request(endpoint: str, status: int, latency_ms: float) -> None:
+    labels = (endpoint, str(status))
+    _request_counts[labels] += 1
+    _latency_counts[labels] += 1
+    _latency_sums[labels] += latency_ms
+
+
+def _label_text(endpoint: str, status: str) -> str:
+    return f'{{endpoint="{endpoint}",status="{status}"}}'
 
 
 def prometheus_text() -> str:
@@ -6,10 +22,20 @@ def prometheus_text() -> str:
     lines = [
         "# HELP movie_reco_requests_total Total HTTP requests observed by the API.",
         "# TYPE movie_reco_requests_total counter",
-        "movie_reco_requests_total 0",
+        *[
+            f"movie_reco_requests_total{_label_text(endpoint, status)} {count}"
+            for (endpoint, status), count in sorted(_request_counts.items())
+        ],
         "# HELP movie_reco_request_latency_ms HTTP request latency in milliseconds.",
         "# TYPE movie_reco_request_latency_ms summary",
-        "movie_reco_request_latency_ms 0",
+        *[
+            f"movie_reco_request_latency_ms_count{_label_text(endpoint, status)} {count}"
+            for (endpoint, status), count in sorted(_latency_counts.items())
+        ],
+        *[
+            f"movie_reco_request_latency_ms_sum{_label_text(endpoint, status)} {total:.3f}"
+            for (endpoint, status), total in sorted(_latency_sums.items())
+        ],
         "# HELP movie_reco_cache_events_total Cache hit and miss events.",
         "# TYPE movie_reco_cache_events_total counter",
         "movie_reco_cache_events_total 0",

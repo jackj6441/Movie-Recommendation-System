@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import time
 
 import numpy as np
 import onnxruntime as ort
@@ -25,6 +26,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def record_http_metrics(request, call_next):
+    started_at = time.perf_counter()
+    response = await call_next(request)
+    latency_ms = (time.perf_counter() - started_at) * 1000
+    metrics.record_request(request.url.path, response.status_code, latency_ms)
+    return response
 
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 model_version = os.getenv("MODEL_VERSION", "dev")
