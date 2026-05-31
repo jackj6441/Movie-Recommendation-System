@@ -5,6 +5,20 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 
+class FakeRedis:
+    def __init__(self):
+        self.values: dict[str, str] = {}
+
+    def ping(self) -> bool:
+        return True
+
+    def get(self, key: str) -> str | None:
+        return self.values.get(key)
+
+    def setex(self, key: str, ttl: int, value: str) -> None:
+        self.values[key] = value
+
+
 def load_app(monkeypatch):
     repo_root = Path(__file__).resolve().parents[3]
     api_root = repo_root / "services" / "reco-api"
@@ -49,3 +63,20 @@ def test_metrics_record_request_count_and_latency(monkeypatch):
     assert 'movie_reco_requests_total{endpoint="/healthz",status="200"} 1' in body
     assert 'movie_reco_request_latency_ms_count{endpoint="/healthz",status="200"} 1' in body
     assert 'movie_reco_request_latency_ms_sum{endpoint="/healthz",status="200"}' in body
+
+
+def test_metrics_record_redis_cache_hit_and_miss(monkeypatch):
+    app = load_app(monkeypatch)
+    main_module = sys.modules["app.main"]
+    main_module.redis_client = FakeRedis()
+    client = TestClient(app)
+
+    first_response = client.get("/recommend", params={"user_id": 1, "k": 5})
+    second_response = client.get("/recommend", params={"user_id": 1, "k": 5})
+    metrics_response = client.get("/metrics")
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+    body = metrics_response.text
+    assert 'movie_reco_cache_events_total{cache="redis",event="miss"} 1' in body
+    assert 'movie_reco_cache_events_total{cache="redis",event="hit"} 1' in body

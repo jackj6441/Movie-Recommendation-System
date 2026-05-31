@@ -290,6 +290,7 @@ def recommend(user_id: int, k: int = 20) -> dict:
             cached = None
 
     if cached:
+        metrics.record_cache_event("redis", "hit")
         payload = json.loads(cached)
         payload["cache_hit"] = True
         if "model_version" not in payload:
@@ -300,6 +301,8 @@ def recommend(user_id: int, k: int = 20) -> dict:
             except redis.RedisError:
                 pass
         return payload
+    if redis_client is not None:
+        metrics.record_cache_event("redis", "miss")
 
     ranked_ids = get_ranked_movie_ids()
     items_needed = max(k, 5)
@@ -532,8 +535,11 @@ def explain(user_id: int, k: int = 10):
             cached = None
 
     if cached:
+        metrics.record_cache_event("redis", "hit")
         payload = json.loads(cached)
         return payload
+    if redis_client is not None:
+        metrics.record_cache_event("redis", "miss")
 
     ranked_ids = get_ranked_movie_ids()
     top_k = max(k, 1)
