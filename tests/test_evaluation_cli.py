@@ -58,3 +58,40 @@ def test_eval_model_writes_rmse_metrics(tmp_path):
     assert metrics["artifact"] == "services/reco-api/models/ncf.onnx"
     assert metrics["sample_count"] == 25
     assert metrics["rmse"] > 0
+
+
+def test_eval_retrieval_writes_ranking_and_baseline_metrics(tmp_path):
+    output_path = tmp_path / "retrieval_metrics.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "evaluation/eval_retrieval.py",
+            "--ratings",
+            "ml-latest-small/ratings.csv",
+            "--movies",
+            "ml-latest-small/movies.csv",
+            "--content-embeddings",
+            "services/reco-api/models/content_embeddings.npz",
+            "--content-index",
+            "services/reco-api/models/content_index.json",
+            "--max-users",
+            "5",
+            "--k",
+            "10",
+            "--output",
+            str(output_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    metrics = json.loads(output_path.read_text(encoding="utf-8"))
+    assert metrics["user_count"] == 5
+    assert 0 <= metrics["recall_at_k"] <= 1
+    assert 0 <= metrics["ndcg_at_k"] <= 1
+    assert 0 <= metrics["recommendation_coverage"] <= 1
+    assert "topk_diversity" in metrics
+    assert "popularity_baseline_recall_at_k" in metrics
+    assert "content_baseline_recall_at_k" in metrics
