@@ -12,6 +12,7 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - RAG_PROVIDER=${RAG_PROVIDER:-mock}
       - MOVIES_CSV_PATH=/data/ml-latest-small/movies.csv
       - RATINGS_CSV_PATH=/data/ml-latest-small/ratings.csv
       - ONNX_MODEL_PATH=/app/models/ncf.onnx
@@ -30,7 +31,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_BASE=http://localhost:8000
+      - VITE_API_BASE=${PUBLIC_API_BASE:-http://localhost:8000}
 
 volumes:
   redis_data:
