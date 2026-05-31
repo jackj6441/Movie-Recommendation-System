@@ -6,14 +6,16 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build evaluation report artifacts")
-    parser.add_argument("--model-metrics", default=None)
-    parser.add_argument("--retrieval-metrics", default=None)
+    parser.add_argument("--model-metrics", default="evaluation/results/model_metrics.json")
+    parser.add_argument("--retrieval-metrics", default="evaluation/results/retrieval_metrics.json")
     parser.add_argument("--output-dir", default="evaluation/results")
     return parser.parse_args()
 
 
 def load_json(path: str | None) -> dict:
     if not path:
+        return {}
+    if not Path(path).exists():
         return {}
     with open(path, encoding="utf-8") as metrics_file:
         return json.load(metrics_file)

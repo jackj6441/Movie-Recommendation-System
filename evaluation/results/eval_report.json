@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-05-31T20:27:41.046574+00:00",
+  "model_metrics": {
+    "artifact": "services/reco-api/models/ncf.onnx",
+    "metadata": "services/reco-api/models/metadata.json",
+    "ratings": "ml-latest-small/ratings.csv",
+    "rmse": 3.143829381103598,
+    "sample_count": 610,
+    "split_strategy": "per-user last interaction"
+  },
+  "project": "movie-recommendation-system",
+  "retrieval_metrics": {
+    "content_baseline_recall_at_k": 0.05,
+    "content_embeddings": "services/reco-api/models/content_embeddings.npz",
+    "content_index": "services/reco-api/models/content_index.json",
+    "k": 10,
+    "movies": "ml-latest-small/movies.csv",
+    "ndcg_at_k": 0.025772317626613486,
+    "popularity_baseline_recall_at_k": 0.02,
+    "ratings": "ml-latest-small/ratings.csv",
+    "recall_at_k": 0.05,
+    "recommendation_coverage": 0.028741531513036336,
+    "topk_diversity": 0.599652990219657,
+    "user_count": 100
+  }
+}
