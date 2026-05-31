@@ -94,3 +94,13 @@ def test_metrics_record_rag_source_and_fallback_reason(monkeypatch):
     body = metrics_response.text
     assert 'movie_reco_rag_explanations_total{source="deterministic_fallback"} 1' in body
     assert 'movie_reco_rag_fallback_reasons_total{reason="invalid_json"} 1' in body
+
+
+def test_api_docs_explain_healthz_and_metrics_roles():
+    docs = Path("docs/api.md").read_text(encoding="utf-8").lower()
+
+    assert "/healthz" in docs
+    assert "/metrics" in docs
+    assert "readiness" in docs
+    assert "observability" in docs
+    assert "movie_reco_requests_total" in docs

@@ -6,7 +6,7 @@ Base URL: `http://localhost:8000`
 
 ### GET /healthz
 
-Returns service health and config.
+Returns service readiness health and config. Use this endpoint to decide whether the API process can serve traffic and whether required runtime dependencies are available.
 
 Response:
 ```json
@@ -24,6 +24,26 @@ Response:
   "explain_ttl_seconds": 60,
   "alpha": 0.7
 }
+```
+
+## Observability
+
+### GET /metrics
+
+Returns Prometheus-style `text/plain` metrics for runtime observability. Use this endpoint to inspect request volume, latency, cache behavior, and RAG explanation outcomes over time.
+
+`/healthz` answers "is the service ready right now?" while `/metrics` answers "what has the service been doing?"
+
+Example metrics:
+
+```text
+movie_reco_requests_total{endpoint="/healthz",status="200"} 1
+movie_reco_request_latency_ms_count{endpoint="/healthz",status="200"} 1
+movie_reco_request_latency_ms_sum{endpoint="/healthz",status="200"} 2.341
+movie_reco_cache_events_total{cache="redis",event="hit"} 1
+movie_reco_rag_explanations_total{source="rag"} 1
+movie_reco_rag_fallback_reasons_total{reason="invalid_json"} 1
+movie_reco_rag_provider_mode{provider="mock"} 1
 ```
 
 ## Movie Search
