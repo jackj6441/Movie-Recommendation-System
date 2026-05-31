@@ -7,10 +7,10 @@ import onnxruntime as ort
 import redis
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content, rag, seed_ranker
+from app import content, metrics, rag, seed_ranker
 
 app = FastAPI()
 
@@ -164,6 +164,11 @@ def healthz() -> dict:
         "explain_ttl_seconds": explain_ttl_seconds,
         "alpha": alpha,
     }
+
+
+@app.get("/metrics")
+def metrics_endpoint() -> Response:
+    return Response(content=metrics.prometheus_text(), media_type="text/plain")
 
 
 @app.get("/genres")
