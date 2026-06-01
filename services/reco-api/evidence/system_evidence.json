@@ -1,0 +1,30 @@
+{
+  "benchmark": {
+    "rag_explanations_p95_ms": 5.088,
+    "recommendations_p95_ms": 65.459
+  },
+  "deployment": {
+    "api_url": "http://34.228.75.214:8000",
+    "platform": "AWS EC2",
+    "runtime": "Docker Compose",
+    "ui_url": "http://34.228.75.214:3000"
+  },
+  "evaluation": {
+    "ndcg_at_k": 0.0258,
+    "popularity_baseline_recall_at_k": 0.02,
+    "recall_at_k": 0.05,
+    "recommendation_coverage": 0.0287,
+    "rmse": 3.1438,
+    "topk_diversity": 0.5997
+  },
+  "generated_at": "2026-05-31T21:37:06.556726+00:00",
+  "model_truth": {
+    "ncf_onnx_status": "legacy/debug/evaluation path unless later wired into product ranking",
+    "product_ranking_path": "Seed Set recommendations driven by Content Signal"
+  },
+  "rag": {
+    "public_provider": "mock",
+    "secret_policy": "real provider keys stay backend-only and are not committed"
+  },
+  "system_name": "movie-recommendation-system"
+}

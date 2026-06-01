@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import time
+from pathlib import Path
 
 import numpy as np
 import onnxruntime as ort
@@ -55,6 +56,8 @@ movies_csv_path = os.getenv("MOVIES_CSV_PATH", "ml-latest-small/movies.csv")
 ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
 onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
 metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")
+default_system_evidence_path = Path(__file__).resolve().parents[1] / "evidence" / "system_evidence.json"
+system_evidence_path = os.getenv("SYSTEM_EVIDENCE_PATH", str(default_system_evidence_path))
 candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
 cache_ttl_seconds = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 explain_ttl_seconds = int(os.getenv("EXPLAIN_TTL_SECONDS", "60"))
@@ -164,9 +167,7 @@ def get_ranked_movie_ids() -> list[int]:
     return []
 
 
-
-@app.get("/healthz")
-def healthz() -> dict:
+def serving_status() -> dict:
     redis_ok = False
     if redis_client is not None:
         try:
@@ -187,6 +188,50 @@ def healthz() -> dict:
         "explain_ttl_seconds": explain_ttl_seconds,
         "alpha": alpha,
     }
+
+
+def load_system_evidence() -> dict:
+    with open(system_evidence_path, encoding="utf-8") as evidence_file:
+        return json.load(evidence_file)
+
+
+def system_evidence_fallback(reason: str) -> dict:
+    return {
+        "system_name": "movie-recommendation-system",
+        "evidence_available": False,
+        "evidence_error": reason,
+        "serving": serving_status(),
+        "model_truth": {
+            "product_ranking_path": "Seed Set recommendations driven by Content Signal",
+            "ncf_onnx_status": "legacy/debug/evaluation path unless later wired into product ranking",
+        },
+        "rag": {
+            "public_provider": os.getenv("RAG_PROVIDER", "mock"),
+            "secret_policy": "real provider keys stay backend-only and are not committed",
+        },
+    }
+
+
+
+@app.get("/healthz")
+def healthz() -> dict:
+    return serving_status()
+
+
+@app.get("/system/evidence")
+def system_evidence() -> dict:
+    try:
+        evidence = load_system_evidence()
+    except FileNotFoundError:
+        return system_evidence_fallback("system evidence artifact not found")
+    except (OSError, json.JSONDecodeError):
+        return system_evidence_fallback("system evidence artifact unreadable")
+
+    payload = {"evidence_available": True, **evidence}
+    payload["serving"] = serving_status()
+    payload.setdefault("rag", {})
+    payload["rag"]["public_provider"] = os.getenv("RAG_PROVIDER", payload["rag"].get("public_provider", "mock"))
+    return payload
 
 
 @app.get("/metrics")

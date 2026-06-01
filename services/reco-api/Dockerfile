@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
 COPY models /app/models
+COPY evidence /app/evidence
 
 EXPOSE 8000
 
