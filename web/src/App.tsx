@@ -58,13 +58,59 @@ type MovieSuggestion = {
   title: string
 }
 
+type SystemEvidence = {
+  system_name: string
+  deployment: {
+    platform: string
+    runtime: string
+    ui_url: string
+    api_url: string
+  }
+  serving: {
+    status: string
+    redis_ok: boolean
+    onnx_ok: boolean
+    metadata_ok: boolean
+    model_version: string
+  }
+  model_truth: {
+    product_ranking_path: string
+    ncf_onnx_status: string
+  }
+  evaluation: {
+    rmse: number
+    recall_at_k: number
+    ndcg_at_k: number
+    recommendation_coverage: number
+    topk_diversity: number
+    popularity_baseline_recall_at_k: number
+  }
+  benchmark: {
+    recommendations_p95_ms: number
+    rag_explanations_p95_ms: number
+  }
+  rag: {
+    public_provider: string
+    secret_policy: string
+  }
+}
+
 const apiBase = import.meta.env.VITE_API_BASE || "http://reco-api:8000"
 
 function formatTitle(raw: string): string {
   return raw.replace(/^(.*),\s+(The|A|An)\s+(\(\d{4}\))$/, "$2 $1 $3")
 }
 
+function formatMetric(value: number): string {
+  return value.toFixed(3)
+}
+
+function formatLatency(value: number): string {
+  return `${value.toFixed(1)} ms`
+}
+
 export default function App() {
+  const [view, setView] = useState<"recommender" | "evidence">("recommender")
   const [step, setStep] = useState(1)
   const [genres, setGenres] = useState<string[]>([])
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
@@ -83,6 +129,9 @@ export default function App() {
   const [explainError, setExplainError] = useState<string | null>(null)
   const [ragExplain, setRagExplain] = useState<RagExplanationResponse | null>(null)
   const [ragExplainError, setRagExplainError] = useState<string | null>(null)
+  const [systemEvidence, setSystemEvidence] = useState<SystemEvidence | null>(null)
+  const [systemEvidenceLoading, setSystemEvidenceLoading] = useState(false)
+  const [systemEvidenceError, setSystemEvidenceError] = useState<string | null>(null)
   const chartRef = useRef<SVGSVGElement | null>(null)
 
   const fetchRecommendations = async (shuffle = false) => {
@@ -146,6 +195,24 @@ export default function App() {
       setRagExplain(null)
     } finally {
       setRagLoading(false)
+    }
+  }
+
+  const fetchSystemEvidence = async () => {
+    setSystemEvidenceLoading(true)
+    setSystemEvidenceError(null)
+    try {
+      const res = await fetch(`${apiBase}/system/evidence`)
+      if (!res.ok) {
+        throw new Error(`Evidence failed: ${res.status}`)
+      }
+      const json = (await res.json()) as SystemEvidence
+      setSystemEvidence(json)
+    } catch (err) {
+      setSystemEvidenceError(err instanceof Error ? err.message : "Unknown error")
+      setSystemEvidence(null)
+    } finally {
+      setSystemEvidenceLoading(false)
     }
   }
 
@@ -297,6 +364,11 @@ export default function App() {
 
   useEffect(() => { setSuggestionIndex(-1) }, [suggestions])
 
+  useEffect(() => {
+    if (view !== "evidence" || systemEvidence || systemEvidenceLoading) return
+    fetchSystemEvidence()
+  }, [view, systemEvidence, systemEvidenceLoading])
+
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!suggestions.length) return
     if (e.key === "ArrowDown") {
@@ -315,6 +387,108 @@ export default function App() {
     } else if (e.key === "Escape") {
       setSuggestions([])
     }
+  }
+
+  const renderSystemEvidence = () => {
+    const maxRecall = Math.max(
+      systemEvidence?.evaluation.recall_at_k ?? 0,
+      systemEvidence?.evaluation.popularity_baseline_recall_at_k ?? 0,
+      0.01,
+    )
+
+    return (
+      <section className="layout evidence-layout">
+        <div className="card full-width">
+          <h2>System Evidence</h2>
+          <div className="subtitle">Current system vs baseline plus production readiness evidence.</div>
+          {systemEvidenceLoading && <p className="subtle">Loading system evidence…</p>}
+          {systemEvidenceError && <p className="error-text">System evidence unavailable. Check the API and try again.</p>}
+          {systemEvidence && (
+            <div className="evidence-summary">
+              <span className="evidence-pill">System: {systemEvidence.system_name}</span>
+              <span className="evidence-pill">Model version: {systemEvidence.serving.model_version}</span>
+              <span className="evidence-pill">RAG: {systemEvidence.rag.public_provider}</span>
+            </div>
+          )}
+        </div>
+
+        {systemEvidence && (
+          <>
+            <div className="card evidence-card">
+              <h2>Serving Health</h2>
+              <div className="subtitle">Live readiness signal from the serving API.</div>
+              <div className="metric-grid">
+                <div><span>Status</span><strong>{systemEvidence.serving.status}</strong></div>
+                <div><span>Redis</span><strong>{systemEvidence.serving.redis_ok ? "ok" : "degraded"}</strong></div>
+                <div><span>ONNX</span><strong>{systemEvidence.serving.onnx_ok ? "ok" : "missing"}</strong></div>
+                <div><span>Metadata</span><strong>{systemEvidence.serving.metadata_ok ? "ok" : "missing"}</strong></div>
+              </div>
+            </div>
+
+            <div className="card evidence-card">
+              <h2>Evaluation Quality</h2>
+              <div className="subtitle">Offline quality and catalog behavior from the evaluation harness.</div>
+              <div className="metric-grid">
+                <div><span>RMSE</span><strong>{systemEvidence.evaluation.rmse.toFixed(4)}</strong></div>
+                <div><span>NDCG@K</span><strong>{formatMetric(systemEvidence.evaluation.ndcg_at_k)}</strong></div>
+                <div><span>Coverage</span><strong>{formatMetric(systemEvidence.evaluation.recommendation_coverage)}</strong></div>
+                <div><span>Diversity</span><strong>{formatMetric(systemEvidence.evaluation.topk_diversity)}</strong></div>
+              </div>
+            </div>
+
+            <div className="card evidence-card">
+              <h2>Current vs Popularity Baseline</h2>
+              <div className="subtitle">Baseline comparison, not a multi-model comparison.</div>
+              <div className="baseline-bars" aria-label="Recall@K baseline comparison">
+                <div className="baseline-row">
+                  <span>Current Recall@K</span>
+                  <div className="baseline-track">
+                    <div className="baseline-fill current" style={{ width: `${(systemEvidence.evaluation.recall_at_k / maxRecall) * 100}%` }} />
+                  </div>
+                  <strong>{formatMetric(systemEvidence.evaluation.recall_at_k)}</strong>
+                </div>
+                <div className="baseline-row">
+                  <span>Popularity Baseline Recall@K</span>
+                  <div className="baseline-track">
+                    <div className="baseline-fill baseline" style={{ width: `${(systemEvidence.evaluation.popularity_baseline_recall_at_k / maxRecall) * 100}%` }} />
+                  </div>
+                  <strong>{formatMetric(systemEvidence.evaluation.popularity_baseline_recall_at_k)}</strong>
+                </div>
+              </div>
+              <p className="subtle">{systemEvidence.model_truth.product_ranking_path}</p>
+              <p className="subtle">{systemEvidence.model_truth.ncf_onnx_status}</p>
+            </div>
+
+            <div className="card evidence-card">
+              <h2>Latency Benchmark</h2>
+              <div className="subtitle">Committed benchmark artifact p95 latency.</div>
+              <div className="metric-grid">
+                <div><span>Recommendations p95</span><strong>{formatLatency(systemEvidence.benchmark.recommendations_p95_ms)}</strong></div>
+                <div><span>RAG explanations p95</span><strong>{formatLatency(systemEvidence.benchmark.rag_explanations_p95_ms)}</strong></div>
+              </div>
+            </div>
+
+            <div className="card evidence-card">
+              <h2>RAG & Safety</h2>
+              <div className="subtitle">Public demo provider and secret handling policy.</div>
+              <div className="metric-grid">
+                <div><span>Provider</span><strong>{systemEvidence.rag.public_provider}</strong></div>
+              </div>
+              <p className="subtle">{systemEvidence.rag.secret_policy}</p>
+            </div>
+
+            <div className="card evidence-card">
+              <h2>AWS EC2 Deployment</h2>
+              <div className="subtitle">Live deployment target for portfolio review.</div>
+              <div className="metric-grid">
+                <div><span>Platform</span><strong>{systemEvidence.deployment.platform}</strong></div>
+                <div><span>Runtime</span><strong>{systemEvidence.deployment.runtime}</strong></div>
+              </div>
+            </div>
+          </>
+        )}
+      </section>
+    )
   }
 
   return (
@@ -356,6 +530,29 @@ export default function App() {
           font-size: 0.875rem;
           color: #7b746d;
           margin-top: 0.35rem;
+        }
+        .view-tabs {
+          display: inline-flex;
+          gap: 0.35rem;
+          margin-top: 1rem;
+          padding: 0.25rem;
+          border: 1px solid #e3d9cc;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.72);
+        }
+        .view-tab {
+          border: none;
+          border-radius: 8px;
+          background: transparent;
+          color: #4a5568;
+          padding: 0.45rem 0.8rem;
+          font-family: inherit;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .view-tab.active {
+          background: #2f855a;
+          color: #fff;
         }
         .controls {
           display: flex;
@@ -885,11 +1082,105 @@ export default function App() {
           color: #c53030;
           margin: 0;
         }
+        .evidence-layout {
+          align-items: stretch;
+        }
+        .evidence-card {
+          min-height: 220px;
+        }
+        .evidence-summary {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+          margin-top: 1rem;
+        }
+        .evidence-pill {
+          border: 1px solid #d7cfc4;
+          border-radius: 999px;
+          padding: 0.35rem 0.75rem;
+          background: #fffdf9;
+          font-size: 0.875rem;
+          color: #4a5568;
+        }
+        .metric-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          gap: 0.85rem;
+          margin-top: 1rem;
+        }
+        .metric-grid div {
+          border: 1px solid #f1ece4;
+          border-radius: 10px;
+          padding: 0.75rem;
+          background: #fffdf9;
+        }
+        .metric-grid span {
+          display: block;
+          color: #6a655f;
+          font-size: 0.75rem;
+          margin-bottom: 0.25rem;
+        }
+        .metric-grid strong {
+          display: block;
+          font-size: 1rem;
+          color: #2b2a28;
+        }
+        .baseline-bars {
+          display: flex;
+          flex-direction: column;
+          gap: 0.8rem;
+          margin: 1rem 0;
+        }
+        .baseline-row {
+          display: grid;
+          grid-template-columns: minmax(150px, 1fr) minmax(160px, 2fr) 64px;
+          gap: 0.75rem;
+          align-items: center;
+          font-size: 0.875rem;
+        }
+        .baseline-track {
+          height: 14px;
+          border-radius: 999px;
+          background: #f1ece4;
+          overflow: hidden;
+        }
+        .baseline-fill {
+          height: 100%;
+          border-radius: 999px;
+        }
+        .baseline-fill.current {
+          background: #2f855a;
+        }
+        .baseline-fill.baseline {
+          background: #8aa6c2;
+        }
+        @media (max-width: 680px) {
+          .baseline-row {
+            grid-template-columns: 1fr;
+            gap: 0.35rem;
+          }
+        }
       `}</style>
 
       <section className="header">
         <h1 className="title">Movie Recommender UI</h1>
-        <div className="progress">{step}/3 Select Genres → Select Movies → Results</div>
+        <div className="view-tabs" role="group" aria-label="Primary views">
+          <button
+            className={`view-tab ${view === "recommender" ? "active" : ""}`}
+            onClick={() => setView("recommender")}
+          >
+            Recommender
+          </button>
+          <button
+            className={`view-tab ${view === "evidence" ? "active" : ""}`}
+            onClick={() => setView("evidence")}
+          >
+            System Evidence
+          </button>
+        </div>
+        {view === "recommender" && (
+          <div className="progress">{step}/3 Select Genres → Select Movies → Results</div>
+        )}
         {error && (
           <div>
             <p className="error-text">Couldn't load recommendations. Check your connection and try again.</p>
@@ -900,6 +1191,7 @@ export default function App() {
         {ragExplainError && <p className="warning">AI explanation unavailable. Your recommendations are still accurate.</p>}
       </section>
 
+      {view === "evidence" ? renderSystemEvidence() : (
       <section className="layout">
         {step === 1 && (
           <div className="card">
@@ -1207,6 +1499,7 @@ export default function App() {
           </>
         )}
       </section>
+      )}
     </main>
   )
 }

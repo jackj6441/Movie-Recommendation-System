@@ -45,6 +45,45 @@ describe("App RAG explanations", () => {
           return jsonResponse({ seeds: [{ movie_id: 1, title: "Toy Story (1995)" }] })
         }
 
+        if (url.endsWith("/system/evidence")) {
+          return jsonResponse({
+            system_name: "movie-recommendation-system",
+            deployment: {
+              platform: "AWS EC2",
+              runtime: "Docker Compose",
+              ui_url: "http://34.228.75.214:3000",
+              api_url: "http://34.228.75.214:8000",
+            },
+            serving: {
+              status: "ok",
+              redis_ok: true,
+              onnx_ok: true,
+              metadata_ok: true,
+              model_version: "dev",
+            },
+            model_truth: {
+              product_ranking_path: "Seed Set recommendations driven by Content Signal",
+              ncf_onnx_status: "legacy/debug/evaluation path unless later wired into product ranking",
+            },
+            evaluation: {
+              rmse: 3.1438,
+              recall_at_k: 0.05,
+              ndcg_at_k: 0.0258,
+              recommendation_coverage: 0.0287,
+              topk_diversity: 0.5997,
+              popularity_baseline_recall_at_k: 0.02,
+            },
+            benchmark: {
+              recommendations_p95_ms: 65.459,
+              rag_explanations_p95_ms: 5.088,
+            },
+            rag: {
+              public_provider: "mock",
+              secret_policy: "real provider keys stay backend-only and are not committed",
+            },
+          })
+        }
+
         if (url.endsWith("/recommendations")) {
           if (!recommendationsOk) {
             return Promise.resolve({
@@ -665,6 +704,29 @@ describe("App RAG explanations", () => {
 
     await user.click(selectButtons[5])
     expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
+  })
+
+  it("renders the System Evidence dashboard without claiming model comparison", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "System Evidence" }))
+
+    expect(await screen.findByRole("heading", { name: "System Evidence" })).toBeInTheDocument()
+    expect(screen.getByText("Serving Health")).toBeInTheDocument()
+    expect(screen.getByText("Evaluation Quality")).toBeInTheDocument()
+    expect(screen.getByText("Current vs Popularity Baseline")).toBeInTheDocument()
+    expect(screen.getByText("Latency Benchmark")).toBeInTheDocument()
+    expect(screen.getByText("RAG & Safety")).toBeInTheDocument()
+    expect(screen.getByText("AWS EC2 Deployment")).toBeInTheDocument()
+    expect(screen.getByText("Seed Set recommendations driven by Content Signal")).toBeInTheDocument()
+    expect(screen.getByText("Current Recall@K")).toBeInTheDocument()
+    expect(screen.getByText("Popularity Baseline Recall@K")).toBeInTheDocument()
+    expect(screen.getByText("0.050")).toBeInTheDocument()
+    expect(screen.getByText("0.020")).toBeInTheDocument()
+    expect(screen.getByText("Docker Compose")).toBeInTheDocument()
+    expect(screen.getByText("mock")).toBeInTheDocument()
+    expect(screen.queryByText("Model Comparison")).not.toBeInTheDocument()
   })
 })
 
