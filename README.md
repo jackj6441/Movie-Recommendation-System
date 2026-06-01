@@ -15,6 +15,7 @@ It packages a movie recommender as an operational ML system: PyTorch Lightning t
 - UI: http://34.228.75.214:3000
 - API readiness: http://34.228.75.214:8000/healthz
 - Runtime metrics: http://34.228.75.214:8000/metrics
+- System evidence: http://34.228.75.214:8000/system/evidence
 - Public demo RAG mode: mock provider by default, no public API key required.
 
 ## Project Evidence
@@ -27,9 +28,12 @@ It packages a movie recommender as an operational ML system: PyTorch Lightning t
   - Top-K diversity: `0.5997`
 - Benchmark report: `benchmarks/results/benchmark_report.md`
   - `GET /healthz`
+  - `GET /metrics`
+  - `GET /system/evidence`
   - `POST /recommendations`
   - `POST /explanations`
   - `POST /rag/explanations`
+- System Evidence Dashboard: available from the UI tab, showing serving health, evaluation quality, current vs popularity baseline, latency benchmark, RAG safety, and AWS EC2 deployment proof.
 - Model documentation: `docs/model-card.md`
 - EC2 deployment guide: `docs/deployment-ec2.md`
 - API contract: `docs/api.md`
@@ -64,6 +68,7 @@ Important model truth: the current UI uses Seed Set recommendations driven by Co
 - Frontend: React, TypeScript, D3, Vite.
 - Infra: Docker Compose, GitHub Actions CI, AWS EC2.
 - Observability: `GET /healthz`, `GET /metrics`, benchmark artifacts.
+- Portfolio evidence: `GET /system/evidence` and the System Evidence Dashboard.
 
 ## Repository Structure
 

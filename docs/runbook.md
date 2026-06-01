@@ -55,6 +55,15 @@ curl http://<ec2-public-ip>:8000/metrics
 
 Expected metrics include request counts, latency sums, cache events, RAG outcomes, fallback reasons, and provider mode.
 
+Use `GET /system/evidence` for portfolio evidence:
+
+```bash
+curl http://localhost:8000/system/evidence
+curl http://<ec2-public-ip>:8000/system/evidence
+```
+
+Expected output includes serving health, evaluation metrics, current vs popularity baseline, benchmark p95 latency, RAG public provider mode, deployment URLs, and the current model truth.
+
 ## Logs
 
 ```bash
@@ -69,6 +78,7 @@ Useful targeted checks:
 docker compose -f infra/docker-compose.yml logs --tail=120 reco-api
 docker compose -f infra/docker-compose.yml exec -T web printenv VITE_API_BASE
 docker compose -f infra/docker-compose.yml exec -T reco-api printenv CORS_ALLOW_ORIGINS
+curl http://<ec2-public-ip>:8000/system/evidence
 ```
 
 ## Restart

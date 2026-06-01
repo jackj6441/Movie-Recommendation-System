@@ -16,6 +16,8 @@ def test_readme_presents_ml_infra_portfolio_story():
         "benchmarks/results/benchmark_report.md",
         "GET /healthz",
         "GET /metrics",
+        "GET /system/evidence",
+        "System Evidence Dashboard",
     ]:
         assert expected in content
 
@@ -34,6 +36,7 @@ def test_runbook_covers_operational_workflows():
         "docker compose -f infra/docker-compose.yml up --build -d",
         "GET /healthz",
         "GET /metrics",
+        "GET /system/evidence",
         "RAG_PROVIDER=mock",
         "CORS_ALLOW_ORIGINS",
     ]:
@@ -56,6 +59,7 @@ def test_resume_bullets_are_ml_infra_focused_and_copy_ready():
         "Prometheus-style",
         "AWS EC2",
         "mock RAG",
+        "System Evidence Dashboard",
     ]:
         assert expected in content
 

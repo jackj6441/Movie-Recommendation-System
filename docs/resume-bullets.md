@@ -4,7 +4,7 @@ Use these as source bullets, then tune numbers and wording for the target role.
 
 - Built and deployed an end-to-end recommendation platform with PyTorch Lightning training, ONNX Runtime serving, Redis caching, FastAPI APIs, React/D3 UI, Docker Compose, and an AWS EC2 live demo.
 - Implemented reproducible ML evaluation with ONNX RMSE, Recall@K, NDCG@K, recommendation coverage, diversity metrics, baseline comparisons, and committed JSON/Markdown evaluation reports.
-- Added production-style observability with `GET /healthz`, `GET /metrics`, Prometheus-style request/cache/RAG metrics, API latency benchmarks, and CI checks for backend tests, frontend tests, frontend build, and Docker builds.
+- Added production-style observability with `GET /healthz`, `GET /metrics`, the System Evidence Dashboard, Prometheus-style request/cache/RAG metrics, API latency benchmarks, and CI checks for backend tests, frontend tests, frontend build, and Docker builds.
 - Designed safe RAG explanation serving with schema validation, deterministic fallback behavior, request IDs, cache-aware evidence hashing, mock RAG public demo mode, and secret-safe external provider configuration.
 
 ## Interview Positioning
