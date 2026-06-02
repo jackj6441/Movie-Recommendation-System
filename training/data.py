@@ -19,18 +19,26 @@ def resolve_ratings_path() -> str:
 
 
 class NCFDataset(Dataset):
-    def __init__(self, samples: list[tuple[int, int, float]]):
-        self.samples = samples
+    """Array-backed dataset.
+
+    Stores interactions as three parallel numpy arrays rather than a Python list
+    of tuples so that tens of millions of rows fit in memory without per-row
+    Python object overhead.
+    """
+
+    def __init__(self, users: np.ndarray, items: np.ndarray, ratings: np.ndarray):
+        self.users = np.ascontiguousarray(users, dtype=np.int64)
+        self.items = np.ascontiguousarray(items, dtype=np.int64)
+        self.ratings = np.ascontiguousarray(ratings, dtype=np.float32)
 
     def __len__(self) -> int:
-        return len(self.samples)
+        return int(self.users.shape[0])
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        user_idx, item_idx, rating = self.samples[index]
         return (
-            torch.tensor(user_idx, dtype=torch.long),
-            torch.tensor(item_idx, dtype=torch.long),
-            torch.tensor(rating, dtype=torch.float32),
+            torch.tensor(self.users[index], dtype=torch.long),
+            torch.tensor(self.items[index], dtype=torch.long),
+            torch.tensor(self.ratings[index], dtype=torch.float32),
         )
 
 
@@ -41,11 +49,15 @@ class MovieLensDataModule:
         num_neg: int = 4,
         seed: int = 42,
         ratings_csv_path: str | None = None,
+        num_workers: int = 0,
+        pin_memory: bool = False,
     ) -> None:
         self.batch_size = batch_size
         self.num_neg = num_neg
         self.seed = seed
         self.ratings_csv_path = ratings_csv_path or resolve_ratings_path()
+        self.num_workers = num_workers
+        self.pin_memory = pin_memory
 
         self.num_users = 0
         self.num_items = 0
@@ -72,54 +84,74 @@ class MovieLensDataModule:
         self.user_id_map = {int(uid): int(idx) for idx, uid in enumerate(user_uniques)}
         self.item_id_map = {int(mid): int(idx) for idx, mid in enumerate(item_uniques)}
 
+        # Chronological per-user split, vectorized so it scales to tens of
+        # millions of rows. For each user the last interaction is test, the
+        # second-to-last is validation (only when the user has >= 3), and the
+        # rest are training. This matches the original per-user loop exactly.
+        sort_keys = ["user_idx"]
+        if "timestamp" in ratings.columns:
+            sort_keys.append("timestamp")
+        ratings = ratings.sort_values(sort_keys, kind="stable").reset_index(drop=True)
+
+        grouped = ratings.groupby("user_idx", sort=True)
+        pos_from_start = grouped.cumcount().to_numpy()
+        group_size = grouped["user_idx"].transform("size").to_numpy()
+        pos_from_end = group_size - 1 - pos_from_start
+
+        is_test = (group_size >= 2) & (pos_from_end == 0)
+        is_val = (group_size >= 3) & (pos_from_end == 1)
+        is_train = ~(is_test | is_val)
+
+        users = ratings["user_idx"].to_numpy(dtype=np.int64)
+        items = ratings["item_idx"].to_numpy(dtype=np.int64)
+        rates = ratings["rating"].to_numpy(dtype=np.float32)
+
         rng = np.random.default_rng(self.seed)
-        train_samples: list[tuple[int, int, float]] = []
-        val_samples: list[tuple[int, int, float]] = []
-        test_samples: list[tuple[int, int, float]] = []
 
-        for _, group in ratings.groupby("user_idx"):
-            group = group.sort_values("timestamp" if "timestamp" in group.columns else None)
-            records = list(group.itertuples(index=False))
-            if len(records) == 1:
-                row = records[0]
-                train_samples.append((int(row.user_idx), int(row.item_idx), float(row.rating)))
-                continue
-            if len(records) == 2:
-                row_train = records[0]
-                row_test = records[1]
-                train_samples.append((int(row_train.user_idx), int(row_train.item_idx), float(row_train.rating)))
-                test_samples.append((int(row_test.user_idx), int(row_test.item_idx), float(row_test.rating)))
-                continue
+        def _make_dataset(mask: np.ndarray) -> NCFDataset:
+            idx = np.flatnonzero(mask)
+            rng.shuffle(idx)
+            return NCFDataset(users[idx], items[idx], rates[idx])
 
-            row_val = records[-2]
-            row_test = records[-1]
-            for row in records[:-2]:
-                train_samples.append((int(row.user_idx), int(row.item_idx), float(row.rating)))
-            val_samples.append((int(row_val.user_idx), int(row_val.item_idx), float(row_val.rating)))
-            test_samples.append((int(row_test.user_idx), int(row_test.item_idx), float(row_test.rating)))
-
-        rng.shuffle(train_samples)
-        rng.shuffle(val_samples)
-        rng.shuffle(test_samples)
-
-        self.train_dataset = NCFDataset(train_samples)
-        self.val_dataset = NCFDataset(val_samples)
-        self.test_dataset = NCFDataset(test_samples)
+        self.train_dataset = _make_dataset(is_train)
+        self.val_dataset = _make_dataset(is_val)
+        self.test_dataset = _make_dataset(is_test)
 
     def train_dataloader(self) -> DataLoader:
         if self.train_dataset is None:
             raise RuntimeError("prepare_data must be called before train_dataloader")
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def val_dataloader(self) -> DataLoader:
         if self.val_dataset is None:
             raise RuntimeError("prepare_data must be called before val_dataloader")
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def test_dataloader(self) -> DataLoader:
         if self.test_dataset is None:
             raise RuntimeError("prepare_data must be called before test_dataloader")
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            persistent_workers=self.num_workers > 0,
+        )
 
     def sanity_check(self) -> None:
         if self.train_dataset is None or self.val_dataset is None or self.test_dataset is None:

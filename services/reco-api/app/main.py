@@ -56,6 +56,7 @@ movies_csv_path = os.getenv("MOVIES_CSV_PATH", "ml-latest-small/movies.csv")
 ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
 onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
 metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")
+serving_stats_path = os.getenv("SERVING_STATS_PATH", "models/serving_stats.json")
 default_system_evidence_path = Path(__file__).resolve().parents[1] / "evidence" / "system_evidence.json"
 system_evidence_path = os.getenv("SYSTEM_EVIDENCE_PATH", str(default_system_evidence_path))
 candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
@@ -117,31 +118,52 @@ except OSError:
     print(f"Warning: failed to load movies CSV at {movies_csv_path}")
 
 movie_popularity: dict[int, int] = {}
-ratings_user_ids: set[int] = set()
-ratings_movie_ids: set[int] = set()
-try:
-    with open(ratings_csv_path, newline="", encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            user_id = int(row.get("userId", "0"))
-            movie_id = int(row.get("movieId", "0"))
-            if user_id:
-                ratings_user_ids.add(user_id)
-            if movie_id:
-                ratings_movie_ids.add(movie_id)
-                movie_popularity[movie_id] = movie_popularity.get(movie_id, 0) + 1
-except OSError:
-    print(f"Warning: failed to load ratings CSV at {ratings_csv_path}")
+popular_movie_ids: list[int] = []
+serving_stats_loaded = False
+# Prefer the precomputed serving stats artifact so we never scan the raw ratings
+# file at startup (MovieLens 32M is ~877MB). Fall back to scanning ratings.csv
+# for small dev/CI datasets that ship without the artifact.
+if os.path.exists(serving_stats_path):
+    try:
+        with open(serving_stats_path, encoding="utf-8") as stats_file:
+            stats = json.load(stats_file)
+        movie_popularity = {
+            int(key): int(value)
+            for key, value in stats.get("movie_popularity", {}).items()
+        }
+        popular_movie_ids = [int(mid) for mid in stats.get("popular_movie_ids", [])]
+        num_users = int(stats.get("num_users", num_users))
+        num_items = int(stats.get("num_items", num_items))
+        serving_stats_loaded = True
+    except (OSError, ValueError):
+        print(f"Warning: failed to load serving stats at {serving_stats_path}")
 
-if ratings_user_ids:
-    num_users = len(ratings_user_ids)
-if ratings_movie_ids:
-    num_items = len(ratings_movie_ids)
+if not serving_stats_loaded:
+    ratings_user_ids: set[int] = set()
+    ratings_movie_ids: set[int] = set()
+    try:
+        with open(ratings_csv_path, newline="", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                user_id = int(row.get("userId", "0"))
+                movie_id = int(row.get("movieId", "0"))
+                if user_id:
+                    ratings_user_ids.add(user_id)
+                if movie_id:
+                    ratings_movie_ids.add(movie_id)
+                    movie_popularity[movie_id] = movie_popularity.get(movie_id, 0) + 1
+    except OSError:
+        print(f"Warning: failed to load ratings CSV at {ratings_csv_path}")
 
-popular_movie_ids = [
-    movie_id
-    for movie_id, _ in sorted(movie_popularity.items(), key=lambda item: item[1], reverse=True)
-]
+    if ratings_user_ids:
+        num_users = len(ratings_user_ids)
+    if ratings_movie_ids:
+        num_items = len(ratings_movie_ids)
+
+    popular_movie_ids = [
+        movie_id
+        for movie_id, _ in sorted(movie_popularity.items(), key=lambda item: item[1], reverse=True)
+    ]
 
 catalog = seed_ranker.Catalog(
     movie_titles=movie_titles,

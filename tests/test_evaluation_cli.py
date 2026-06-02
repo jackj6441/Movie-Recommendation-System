@@ -4,6 +4,23 @@ import sys
 from pathlib import Path
 
 
+def _dataset_dir() -> str:
+    """Prefer the committed ml-32m sample when present, else ml-latest-small.
+
+    The sample is generated during the offline 32M pipeline and committed
+    alongside the 32M-based artifacts so these smoke tests run on a dataset in
+    the same id space as the committed model/embeddings.
+    """
+    sample = Path("data/ml-32m-sample")
+    if (sample / "ratings.csv").exists() and (sample / "movies.csv").exists():
+        return str(sample)
+    return "ml-latest-small"
+
+
+_RATINGS_CSV = f"{_dataset_dir()}/ratings.csv"
+_MOVIES_CSV = f"{_dataset_dir()}/movies.csv"
+
+
 def test_build_report_writes_json_and_markdown(tmp_path):
     model_metrics = tmp_path / "model_metrics.json"
     model_metrics.write_text(
@@ -71,7 +88,7 @@ def test_eval_model_writes_rmse_metrics(tmp_path):
             "--metadata",
             "services/reco-api/models/metadata.json",
             "--ratings",
-            "ml-latest-small/ratings.csv",
+            _RATINGS_CSV,
             "--max-samples",
             "25",
             "--output",
@@ -96,9 +113,9 @@ def test_eval_retrieval_writes_ranking_and_baseline_metrics(tmp_path):
             sys.executable,
             "evaluation/eval_retrieval.py",
             "--ratings",
-            "ml-latest-small/ratings.csv",
+            _RATINGS_CSV,
             "--movies",
-            "ml-latest-small/movies.csv",
+            _MOVIES_CSV,
             "--content-embeddings",
             "services/reco-api/models/content_embeddings.npz",
             "--content-index",

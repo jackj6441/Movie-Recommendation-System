@@ -26,16 +26,25 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--grad_accum", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        default=0,
+        help="DataLoader worker processes (raise for large datasets like 32M)",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    pin_memory = torch.cuda.is_available()
     config = DataConfig(
         batch_size=args.batch_size,
         num_neg=args.num_neg,
         seed=args.seed,
         ratings_csv_path=args.data_path,
+        num_workers=args.num_workers,
+        pin_memory=pin_memory,
     )
 
     data_module = MovieLensDataModule(
@@ -43,6 +52,8 @@ def main() -> None:
         num_neg=config.num_neg,
         seed=config.seed,
         ratings_csv_path=config.ratings_csv_path,
+        num_workers=config.num_workers,
+        pin_memory=config.pin_memory,
     )
     data_module.prepare_data()
 

@@ -7,3 +7,5 @@ class DataConfig:
     num_neg: int = 0
     seed: int = 42
     ratings_csv_path: str | None = None
+    num_workers: int = 0
+    pin_memory: bool = False

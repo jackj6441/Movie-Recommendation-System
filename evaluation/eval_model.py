@@ -1,6 +1,7 @@
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -70,6 +71,22 @@ def evaluate(args: argparse.Namespace) -> dict:
     label_array = np.array(labels, dtype=np.float32)
     rmse = math.sqrt(float(np.mean((predictions - label_array) ** 2)))
 
+    # Sanity check against shipping an undertrained model (issue #9). An
+    # undertrained NCF collapses toward a constant near 0, so predictions have a
+    # tiny spread and a mean far from the label mean. We flag (not fail) so the
+    # signal is visible in CI logs and the metrics artifact.
+    predicted_mean = float(np.mean(predictions))
+    predicted_std = float(np.std(predictions))
+    label_mean = float(np.mean(label_array))
+    degenerate = predicted_std < 0.05 or abs(predicted_mean - label_mean) > 1.0
+    if degenerate:
+        print(
+            "WARNING: prediction distribution looks degenerate "
+            f"(predicted_mean={predicted_mean:.3f}, predicted_std={predicted_std:.3f}, "
+            f"label_mean={label_mean:.3f}); the model may be undertrained.",
+            file=sys.stderr,
+        )
+
     return {
         "artifact": args.model,
         "metadata": args.metadata,
@@ -77,6 +94,10 @@ def evaluate(args: argparse.Namespace) -> dict:
         "split_strategy": "per-user last interaction",
         "sample_count": len(labels),
         "rmse": rmse,
+        "predicted_mean": predicted_mean,
+        "predicted_std": predicted_std,
+        "label_mean": label_mean,
+        "degenerate_prediction": bool(degenerate),
     }
 
 

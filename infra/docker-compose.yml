@@ -14,8 +14,10 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       - RAG_PROVIDER=${RAG_PROVIDER:-mock}
-      - MOVIES_CSV_PATH=/data/ml-latest-small/movies.csv
-      - RATINGS_CSV_PATH=/data/ml-latest-small/ratings.csv
+      # Catalog and serving stats ship inside the image under /app/models, so no
+      # raw ratings file or host dataset mount is needed at runtime.
+      - MOVIES_CSV_PATH=/app/models/catalog_movies.csv
+      - SERVING_STATS_PATH=/app/models/serving_stats.json
       - ONNX_MODEL_PATH=/app/models/ncf.onnx
       - METADATA_PATH=/app/models/metadata.json
       - CANDIDATE_POOL=500
@@ -24,8 +26,6 @@ services:
       - ALPHA=0.7
     depends_on:
       - redis
-    volumes:
-      - ../ml-latest-small:/data/ml-latest-small:ro
 
   web:
     build: ../web
