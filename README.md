@@ -21,11 +21,8 @@ It packages a movie recommender as an operational ML system: PyTorch Lightning t
 ## Project Evidence
 
 - Evaluation report: `evaluation/results/eval_report.md`
-  - RMSE: `3.1438`
-  - Recall@K: `0.05`
-  - NDCG@K: `0.0258`
-  - Coverage: `0.0287`
-  - Top-K diversity: `0.5997`
+  - Product retrieval (MovieLens 32M catalog, min 20 ratings): Recall@K `0.04`, NDCG@K `0.0187`, coverage `0.0171`, top-K diversity `0.63`
+  - NCF RMSE (legacy `ml-latest-small` model, not used in product ranking): see `evaluation/results/model_metrics.json` if present
 - Benchmark report: `benchmarks/results/benchmark_report.md`
   - `GET /healthz`
   - `GET /metrics`

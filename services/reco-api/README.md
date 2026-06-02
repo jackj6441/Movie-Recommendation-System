@@ -7,8 +7,9 @@ Placeholder for FastAPI + ONNX Runtime + Redis service.
 - `REDIS_URL`: Redis connection string.
 - `ONNX_MODEL_PATH`: Path to `ncf.onnx` inside the container.
 - `METADATA_PATH`: Path to `metadata.json` inside the container.
-- `MOVIES_CSV_PATH`: Path to MovieLens `movies.csv`.
-- `RATINGS_CSV_PATH`: Path to MovieLens `ratings.csv`.
+- `MOVIES_CSV_PATH`: Path to the served catalog CSV (the filtered `catalog_movies.csv` built alongside the content embeddings).
+- `SERVING_STATS_PATH`: Path to the precomputed `serving_stats.json` (popularity, num_users, num_items). When present, the API loads it instead of scanning raw ratings at startup.
+- `RATINGS_CSV_PATH`: Path to MovieLens `ratings.csv`. Only used as a fallback for small dev/CI datasets that ship without `serving_stats.json`.
 - `CANDIDATE_POOL`: Number of candidate movies scored by ONNX.
 - `CACHE_TTL_SECONDS`: TTL for `/recommend` cache.
 - `EXPLAIN_TTL_SECONDS`: TTL for `/explain` cache.

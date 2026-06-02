@@ -2,9 +2,10 @@
 
 ## Dataset
 
-- Development dataset: MovieLens `ml-latest-small`.
-- Required files: `ratings.csv` and `movies.csv`.
-- Optional metadata: `links.csv` and `tags.csv` are present in the dataset but are not required by the current serving path.
+- Product catalog and content embeddings: MovieLens **32M** (`ml-32m`), movies with at least **20** ratings (~23k titles in `catalog_movies.csv`).
+- Offline training and NCF evaluation may still reference `ml-latest-small` until a full 32M NCF retrain is committed.
+- Required serving files: `catalog_movies.csv`, `content_embeddings.npz`, `content_index.json`, `serving_stats.json`.
+- Full `ml-32m/ratings.csv` is used offline only (not loaded at API startup).
 - Dataset versioning is currently file-based. A future Model Registry phase should record a formal dataset version with each model artifact.
 
 ## Split Strategy
@@ -33,8 +34,10 @@ Current serving artifacts live under `services/reco-api/models/`:
 
 - `ncf.onnx`: exported NCF rating model for ONNX Runtime.
 - `metadata.json`: user and movie index mappings for the NCF model.
-- `content_embeddings.npz`: movie content embedding matrix.
+- `content_embeddings.npz`: movie content embedding matrix (32M catalog cap).
 - `content_index.json`: movie identifier to embedding row mapping.
+- `catalog_movies.csv`: served movie catalog (search, seeds, scoring).
+- `serving_stats.json`: precomputed popularity and user/item counts for startup.
 
 The current product UI uses Seed Set recommendations driven by Content Signal. The NCF / ONNX model is available through legacy/debug paths and the model evaluation harness unless a later phase wires it into product ranking.
 
@@ -42,7 +45,7 @@ The current product UI uses Seed Set recommendations driven by Content Signal. T
 
 - Movie metadata is sparse: content embeddings are built from title and genre text only.
 - The public product flow is seed-based and content-signal driven, so Hybrid Score language must be used carefully.
-- MovieLens small is useful for development but does not represent production-scale catalog or traffic.
+- The served catalog is a popularity-filtered subset of MovieLens 32M, not the full 87k-movie metadata file.
 - There is no online learning, personalization feedback loop, or formal A/B testing in the current system.
 - RAG explanations describe an existing Recommendation List; they do not choose rankings.
 

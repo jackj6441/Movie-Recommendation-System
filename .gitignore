@@ -9,7 +9,9 @@
 
 # Datasets / archives
 *.zip
+*.tgz
 ml-32m/
+movie-reco-*-artifacts.tgz
 
 # Python
 __pycache__/

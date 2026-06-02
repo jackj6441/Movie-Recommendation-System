@@ -52,7 +52,7 @@ async def record_http_metrics(request, call_next):
 
 redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 model_version = os.getenv("MODEL_VERSION", "dev")
-movies_csv_path = os.getenv("MOVIES_CSV_PATH", "ml-latest-small/movies.csv")
+movies_csv_path = os.getenv("MOVIES_CSV_PATH", "models/catalog_movies.csv")
 ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
 onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
 metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")

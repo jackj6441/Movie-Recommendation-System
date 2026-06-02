@@ -11,6 +11,8 @@ def load_app(monkeypatch, evidence_path: Path | None = None):
 
     monkeypatch.setenv("MOVIES_CSV_PATH", str(repo_root / "ml-latest-small" / "movies.csv"))
     monkeypatch.setenv("RATINGS_CSV_PATH", str(repo_root / "ml-latest-small" / "ratings.csv"))
+    # Force the ratings fallback so the committed serving_stats.json is not used.
+    monkeypatch.setenv("SERVING_STATS_PATH", str(repo_root / "ml-latest-small" / "__no_serving_stats__.json"))
     monkeypatch.setenv("CONTENT_EMBEDDINGS_PATH", str(api_root / "models" / "content_embeddings.npz"))
     monkeypatch.setenv("CONTENT_INDEX_PATH", str(api_root / "models" / "content_index.json"))
     monkeypatch.setenv("ONNX_MODEL_PATH", str(api_root / "models" / "ncf.onnx"))
@@ -39,8 +41,9 @@ def test_system_evidence_returns_portfolio_summary(monkeypatch):
     assert payload["serving"]["model_version"] == "dev"
     assert payload["model_truth"]["product_ranking_path"] == "Seed Set recommendations driven by Content Signal"
     assert "legacy/debug/evaluation path" in payload["model_truth"]["ncf_onnx_status"]
-    assert payload["evaluation"]["recall_at_k"] == 0.05
-    assert payload["evaluation"]["popularity_baseline_recall_at_k"] == 0.02
+    assert payload["evaluation"]["recall_at_k"] == 0.04
+    assert payload["evaluation"]["popularity_baseline_recall_at_k"] == 0.03
+    assert payload["evaluation"]["dataset"] == "MovieLens 32M (served catalog, min 20 ratings)"
     assert payload["benchmark"]["recommendations_p95_ms"] == 65.459
     assert payload["rag"]["public_provider"] == "mock"
 

@@ -87,8 +87,9 @@ def test_eval_model_writes_rmse_metrics(tmp_path):
             "services/reco-api/models/ncf.onnx",
             "--metadata",
             "services/reco-api/models/metadata.json",
+            # NCF metadata matches ml-latest-small, not the 32M sample catalog.
             "--ratings",
-            _RATINGS_CSV,
+            "ml-latest-small/ratings.csv",
             "--max-samples",
             "25",
             "--output",

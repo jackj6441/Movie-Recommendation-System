@@ -10,14 +10,16 @@
     "ui_url": "http://34.228.75.214:3000"
   },
   "evaluation": {
-    "ndcg_at_k": 0.0258,
-    "popularity_baseline_recall_at_k": 0.02,
-    "recall_at_k": 0.05,
-    "recommendation_coverage": 0.0287,
-    "rmse": 3.1438,
-    "topk_diversity": 0.5997
+    "catalog_movies": 23350,
+    "dataset": "MovieLens 32M (served catalog, min 20 ratings)",
+    "ndcg_at_k": 0.0187,
+    "popularity_baseline_recall_at_k": 0.03,
+    "recall_at_k": 0.04,
+    "recommendation_coverage": 0.0171,
+    "rmse": null,
+    "topk_diversity": 0.6298
   },
-  "generated_at": "2026-05-31T21:37:06.556726+00:00",
+  "generated_at": "2026-06-02T17:05:48+00:00",
   "model_truth": {
     "ncf_onnx_status": "legacy/debug/evaluation path unless later wired into product ranking",
     "product_ranking_path": "Seed Set recommendations driven by Content Signal"
