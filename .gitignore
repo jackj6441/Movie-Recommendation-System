@@ -4,6 +4,13 @@
 !.env.example
 *.log
 
+# Secrets / keys
+*.pem
+
+# Datasets / archives
+*.zip
+ml-32m/
+
 # Python
 __pycache__/
 *.py[cod]
