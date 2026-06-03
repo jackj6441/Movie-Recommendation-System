@@ -433,6 +433,41 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Toy Story 2 (1999)")).toBeInTheDocument()
   })
 
+  it("shows a retryable search error without clearing the typed query", async () => {
+    let searchAttempts = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({ seeds: [] })
+        if (url.includes("/movies/search")) {
+          searchAttempts += 1
+          if (searchAttempts === 1) {
+            return Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}) } as Response)
+          }
+          return jsonResponse([{ movie_id: 122, title: "Spirited Away (2001)" }])
+        }
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(screen.getByRole("button", { name: "Skip" }))
+    const search = screen.getByPlaceholderText("Search movies...")
+    await user.type(search, "spirited")
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Movie search is unavailable")
+    expect(search).toHaveValue("spirited")
+
+    await user.click(screen.getByRole("button", { name: "Retry search" }))
+
+    expect(await screen.findByText("Spirited Away (2001)")).toBeInTheDocument()
+    expect(searchAttempts).toBe(2)
+  })
+
   it("returns to the previous step when the back button is clicked", async () => {
     const user = userEvent.setup()
     render(<App />)

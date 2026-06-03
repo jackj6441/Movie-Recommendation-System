@@ -23,7 +23,8 @@ export default function App() {
   const genreSeeds = useGenreSeeds(selectedGenres)
   const [searchQuery, setSearchQuery] = useState("")
   const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
-  const { suggestions, noSearchResults, setSuggestions } = useMovieSearch(searchQuery, seeds)
+  const { suggestions, noSearchResults, searchLoading, searchError, retrySearch, setSuggestions } =
+    useMovieSearch(searchQuery, seeds)
   const [resultTopics, setResultTopics] = useState<string[]>([])
   const [timeRange, setTimeRange] = useState<TimeRangeKey>("all")
   const [resultsJustArrived, setResultsJustArrived] = useState(false)
@@ -236,9 +237,12 @@ export default function App() {
               onSearchQueryChange={setSearchQuery}
               suggestions={suggestions}
               noSearchResults={noSearchResults}
+              searchLoading={searchLoading}
+              searchError={searchError}
               seeds={seeds}
               genreSeeds={genreSeeds}
               loading={loading}
+              onRetrySearch={retrySearch}
               onAddSeed={addSeed}
               onRemoveSeed={(id) => setSeeds((prev) => prev.filter((item) => item.movie_id !== id))}
               onClearSeeds={() => {

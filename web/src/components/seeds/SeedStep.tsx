@@ -12,9 +12,12 @@ type SeedStepProps = {
   onSearchQueryChange: (value: string) => void
   suggestions: MovieSuggestion[]
   noSearchResults: boolean
+  searchLoading: boolean
+  searchError: string | null
   seeds: MovieSuggestion[]
   genreSeeds: MovieSuggestion[]
   loading: boolean
+  onRetrySearch: () => void
   onAddSeed: (movie: MovieSuggestion) => void
   onRemoveSeed: (movieId: number) => void
   onClearSeeds: () => void
@@ -27,9 +30,12 @@ export function SeedStep({
   onSearchQueryChange,
   suggestions,
   noSearchResults,
+  searchLoading,
+  searchError,
   seeds,
   genreSeeds,
   loading,
+  onRetrySearch,
   onAddSeed,
   onRemoveSeed,
   onClearSeeds,
@@ -91,11 +97,20 @@ export function SeedStep({
               aria-expanded={suggestions.length > 0}
               aria-autocomplete="list"
               aria-controls="search-suggestions"
+              aria-describedby="movie-search-hint"
               aria-activedescendant={
                 suggestionIndex >= 0 ? `suggestion-${suggestions[suggestionIndex]?.movie_id}` : undefined
               }
               autoComplete="off"
             />
+            <p className="search-hint" id="movie-search-hint">
+              Search by title, then select 1–{MAX_SEEDS} movies.
+            </p>
+            {searchLoading && searchQuery.trim() && (
+              <div className="search-feedback" role="status" aria-live="polite">
+                Searching movies...
+              </div>
+            )}
             {suggestions.length > 0 && (
               <div className="suggestions" id="search-suggestions" role="listbox">
                 {suggestions.map((movie, idx) => (
@@ -114,7 +129,15 @@ export function SeedStep({
                 ))}
               </div>
             )}
-            {noSearchResults && searchQuery.trim() && (
+            {searchError && searchQuery.trim() && (
+              <div className="search-error" role="alert">
+                <span>{searchError}</span>
+                <button type="button" className="retry-btn compact" onClick={onRetrySearch}>
+                  Retry search
+                </button>
+              </div>
+            )}
+            {!searchError && noSearchResults && searchQuery.trim() && (
               <div className="no-results" role="status" aria-live="polite">
                 No movies found for &ldquo;{searchQuery.trim()}&rdquo;
               </div>
