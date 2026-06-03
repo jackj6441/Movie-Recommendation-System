@@ -735,6 +735,7 @@ describe("App RAG explanations", () => {
   })
 
   it("shows genre error with retry when the genres API fails", async () => {
+    vi.useFakeTimers()
     let genreAttempts = 0
     vi.stubGlobal(
       "fetch",
@@ -750,14 +751,12 @@ describe("App RAG explanations", () => {
 
     render(<App />)
 
-    await waitFor(
-      () => {
-        expect(screen.getByRole("alert")).toHaveTextContent(/Could not load genres/i)
-      },
-      { timeout: 4000 }
-    )
+    await vi.runAllTimersAsync()
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/Could not load genres/i)
     expect(genreAttempts).toBeGreaterThanOrEqual(3)
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
+    vi.useRealTimers()
   })
 
   it("renders the System Evidence dashboard without claiming model comparison", async () => {

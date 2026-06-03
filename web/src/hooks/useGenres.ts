@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { apiBase, PRIORITY_GENRES } from "../config"
 import { sortGenres } from "../utils/format"
 
-const MAX_RETRIES = 3
+const MAX_RETRIES = 5
 
 async function fetchGenresOnce(): Promise<string[]> {
   const res = await fetch(`${apiBase}/genres`)
@@ -32,7 +32,7 @@ export function useGenres() {
         return
       } catch {
         if (attempt < MAX_RETRIES - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
+          await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)))
         }
       }
     }
