@@ -121,7 +121,26 @@ export function ResultsStep({
             </div>
           ) : hasResults ? (
             <>
-              <HeroPick item={hero} ragItem={heroRag} ragLoading={ragLoading} />
+              <HeroPick
+                item={hero}
+                ragItem={heroRag}
+                ragLoading={ragLoading}
+                actions={
+                  <>
+                    <button
+                      type="button"
+                      className="hero-primary-action"
+                      onClick={onShuffle}
+                      disabled={loading || ragLoading}
+                    >
+                      {shuffleLabel}
+                    </button>
+                    <button type="button" className="hero-secondary-action" onClick={onStartOver}>
+                      Start over
+                    </button>
+                  </>
+                }
+              />
 
               {rest.length > 0 && (
                 <>
@@ -151,13 +170,7 @@ export function ResultsStep({
           )}
         </div>
 
-        <nav className="wizard-nav" aria-label="Recommendation actions">
-          <button type="button" onClick={onShuffle} disabled={loading || ragLoading}>
-            {shuffleLabel}
-          </button>
-          <button type="button" className="ghost" onClick={onStartOver}>
-            Start over
-          </button>
+        <nav className="results-secondary-actions" aria-label="Recommendation actions">
           <button type="button" className="ghost" onClick={onBack}>
             Back
           </button>
