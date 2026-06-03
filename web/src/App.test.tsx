@@ -139,13 +139,13 @@ describe("App RAG explanations", () => {
     vi.unstubAllGlobals()
   })
 
-  it("requests and displays the RAG explanation after recommendations are generated", async () => {
+  it("requests and displays the RAG per-card reason after recommendations are generated", async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await requestRecommendations(user)
 
-    expect(await screen.findByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
+    expect(await screen.findByText("It keeps the same light adventure pattern.")).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/rag/explanations"),
       expect.objectContaining({ method: "POST" })
@@ -205,10 +205,9 @@ describe("App RAG explanations", () => {
 
     expect((await screen.findAllByText("Some Movie")).length).toBeGreaterThan(0)
     expect(screen.getByText("AI explanation unavailable. Your recommendations are still accurate.")).toBeInTheDocument()
-    expect(screen.getByText("No explanation available for this set of recommendations.")).toBeInTheDocument()
   })
 
-  it("shows restrained fallback copy without exposing provider details", async () => {
+  it("renders per-card reasons on fallback without exposing provider details", async () => {
     ragExplanationSource = "deterministic_fallback"
 
     const user = userEvent.setup()
@@ -216,8 +215,8 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    expect(await screen.findByText("Personalized explanation unavailable — showing a general summary instead.")).toBeInTheDocument()
-    expect(screen.getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
+    expect(await screen.findByText("It keeps the same light adventure pattern.")).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Why these movies?" })).not.toBeInTheDocument()
     expect(screen.queryByText("external")).not.toBeInTheDocument()
     expect(screen.queryByText("should-not-render")).not.toBeInTheDocument()
     expect(screen.queryByText("hidden prompt")).not.toBeInTheDocument()
@@ -265,16 +264,16 @@ describe("App RAG explanations", () => {
     expect(within(seedBanner as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
   })
 
-  it("keeps the AI explanation panel summary-only after item reasons move into cards", async () => {
+  it("removes the standalone AI explanation summary and score breakdown from the results page", async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await requestRecommendations(user)
 
-    const aiExplanation = screen.getByRole("heading", { name: "Why these movies?" }).closest(".card")
-    expect(aiExplanation).not.toBeNull()
-    expect(within(aiExplanation as HTMLElement).getByText("These picks match your seed set through shared tone and genre signals.")).toBeInTheDocument()
-    expect(within(aiExplanation as HTMLElement).queryByText("It keeps the same light adventure pattern.")).not.toBeInTheDocument()
+    expect(await screen.findByText("It keeps the same light adventure pattern.")).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Why these movies?" })).not.toBeInTheDocument()
+    expect(screen.queryByText("These picks match your seed set through shared tone and genre signals.")).not.toBeInTheDocument()
+    expect(screen.queryByText("Score breakdown")).not.toBeInTheDocument()
   })
 
   it("renders featured cards without crashing when fewer than three recommendations exist", async () => {
@@ -317,7 +316,7 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    await screen.findByText("These picks match your seed set through shared tone and genre signals.")
+    await screen.findByText("It keeps the same light adventure pattern.")
     expect(screen.queryByText("external")).not.toBeInTheDocument()
     expect(screen.queryByText("should-not-render")).not.toBeInTheDocument()
     expect(screen.queryByText("hidden prompt")).not.toBeInTheDocument()
@@ -646,6 +645,64 @@ describe("App RAG explanations", () => {
     )
   })
 
+  it("refetches with year bounds when a results time-range chip is selected", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+    await screen.findByText("It keeps the same light adventure pattern.")
+
+    await user.click(screen.getByRole("button", { name: "1990s" }))
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/recommendations"),
+        expect.objectContaining({ body: expect.stringContaining('"year_min":1990') })
+      )
+    )
+  })
+
+  it("refetches with genres when a results topic chip is selected", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+    await screen.findByText("It keeps the same light adventure pattern.")
+
+    await user.click(screen.getByRole("button", { name: "Drama" }))
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/recommendations"),
+        expect.objectContaining({ body: expect.stringContaining('"genres":["Drama"]') })
+      )
+    )
+  })
+
+  it("shows a no-match empty state with a reset action when filters return nothing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) return jsonResponse({ seeds: [{ movie_id: 1, title: "Toy Story (1995)" }] })
+        if (url.endsWith("/recommendations")) {
+          return jsonResponse({ items: [], seed_movies: [], anchor_source: "seed", model_version: "dev" })
+        }
+        if (url.endsWith("/rag/explanations")) return jsonResponse({ summary: "", items: [], explanation_source: "rag" })
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await requestRecommendations(user)
+
+    expect(await screen.findByText("No movies match your current filters.")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Reset filters" })).toBeInTheDocument()
+  })
+
   it("fetches seeds filtered by genre when the user selects a genre chip", async () => {
     vi.stubGlobal(
       "fetch",
@@ -855,6 +912,46 @@ describe("App movie posters", () => {
     await requestRecommendations(user)
     const card = await screen.findByRole("heading", { name: "Some Movie" })
     expect(card.closest(".movie-card")).toHaveClass("has-poster")
+  })
+
+  it("renders a poster grid for ranked overflow in the More movies section", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) return jsonResponse([{ name: "Comedy" }])
+        if (url.includes("/genres/all/seeds")) {
+          return jsonResponse({ seeds: [{ movie_id: 1, title: "Toy Story (1995)", ...posterFields }] })
+        }
+        if (url.endsWith("/recommendations")) {
+          return jsonResponse({
+            items: [
+              { movie_id: 11, title: "First (2001)", score: 0.9, ...posterFields },
+              { movie_id: 12, title: "Second (2002)", score: 0.8, ...posterFields },
+              { movie_id: 13, title: "Third (2003)", score: 0.7, ...posterFields },
+              { movie_id: 14, title: "Fourth (2004)", score: 0.6, ...posterFields },
+            ],
+            seed_movies: [{ movie_id: 1, title: "Toy Story (1995)", ...posterFields }],
+            anchor_source: "seed",
+            model_version: "test-model",
+          })
+        }
+        if (url.endsWith("/rag/explanations")) {
+          return jsonResponse({ summary: "Summary", items: [], explanation_source: "rag" })
+        }
+        return jsonResponse({})
+      })
+    )
+
+    const user = userEvent.setup()
+    render(<App />)
+    await requestRecommendations(user)
+
+    const moreSection = (await screen.findByRole("heading", { name: "More movies you might like" })).closest(".card")
+    expect(moreSection).not.toBeNull()
+    const overflowTitle = within(moreSection as HTMLElement).getByText("Fourth (2004)")
+    expect(overflowTitle.closest(".poster-tile")).not.toBeNull()
+    expect(within(moreSection as HTMLElement).queryByText("0.600")).not.toBeInTheDocument()
   })
 
   it("renders search suggestion thumbnails when poster_thumb_url is present", async () => {

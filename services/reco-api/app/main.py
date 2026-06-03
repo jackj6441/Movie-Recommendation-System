@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -101,8 +102,19 @@ except Exception:
 
 content_ok = False
 
+# MovieLens titles embed the release year, e.g. "Toy Story (1995)". We parse the
+# trailing 4-digit year so the product can filter recommendations by decade.
+_YEAR_RE = re.compile(r"\((\d{4})\)")
+
+
+def parse_year(title: str) -> int | None:
+    matches = _YEAR_RE.findall(title)
+    return int(matches[-1]) if matches else None
+
+
 movie_titles: dict[int, str] = {}
 movie_genres: dict[int, list[str]] = {}
+movie_years: dict[int, int] = {}
 all_genres: set[str] = set()
 try:
     with open(movies_csv_path, newline="", encoding="utf-8") as csvfile:
@@ -116,6 +128,9 @@ try:
                 genre_list = [g for g in genres_value.split("|") if g and g != "(no genres listed)"]
                 movie_genres[movie_id] = genre_list
                 all_genres.update(genre_list)
+                year = parse_year(title)
+                if year is not None:
+                    movie_years[movie_id] = year
 except OSError:
     print(f"Warning: failed to load movies CSV at {movies_csv_path}")
 
@@ -178,6 +193,8 @@ catalog = seed_ranker.Catalog(
     movie_titles=movie_titles,
     popular_movie_ids=popular_movie_ids,
     candidate_pool=candidate_pool,
+    movie_genres=movie_genres,
+    movie_years=movie_years,
 )
 
 
@@ -322,6 +339,9 @@ def movie_search(q: str = ""):
 class SeedsRequest(BaseModel):
     seeds: list[int]
     shuffle: bool = False
+    genres: list[str] | None = None
+    year_min: int | None = None
+    year_max: int | None = None
 
 
 @app.get("/score")
@@ -547,7 +567,14 @@ def recommendations(request: SeedsRequest):
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
     try:
-        result = seed_ranker.rank(request.seeds, request.shuffle, catalog)
+        result = seed_ranker.rank(
+            request.seeds,
+            request.shuffle,
+            catalog,
+            genres=request.genres,
+            year_min=request.year_min,
+            year_max=request.year_max,
+        )
     except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
     except seed_ranker.ContentUnavailableError:
@@ -573,7 +600,14 @@ def explanations(request: SeedsRequest):
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
     try:
-        result = seed_ranker.rank(request.seeds, request.shuffle, catalog)
+        result = seed_ranker.rank(
+            request.seeds,
+            request.shuffle,
+            catalog,
+            genres=request.genres,
+            year_min=request.year_min,
+            year_max=request.year_max,
+        )
     except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
     except seed_ranker.ContentUnavailableError:

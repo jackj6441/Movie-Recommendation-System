@@ -39,15 +39,6 @@ export function FeaturedMovieCard({ recommendation, ragItem, index }: FeaturedMo
       <span className="movie-rank">#{index + 1}</span>
       <h3>{formatTitle(recommendation.title)}</h3>
       {ragItem && <p className="movie-reason">{ragItem.reason}</p>}
-      {ragItem && ragItem.evidence.length > 0 && (
-        <div className="signal-row">
-          {ragItem.evidence.slice(0, 3).map((ev) => (
-            <span className="signal-chip" key={ev}>
-              {ev}
-            </span>
-          ))}
-        </div>
-      )}
     </article>
   )
 }

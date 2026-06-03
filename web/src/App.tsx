@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react"
-import { apiBase, MAX_GENRES } from "./config"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { apiBase, MAX_GENRES, timeRangeBounds, type TimeRangeKey } from "./config"
 import { AppShell } from "./components/layout/AppShell"
 import { GenreStep } from "./components/genres/GenreStep"
 import { SeedStep } from "./components/seeds/SeedStep"
@@ -9,7 +9,6 @@ import { useGenres } from "./hooks/useGenres"
 import { useGenreSeeds } from "./hooks/useGenreSeeds"
 import { useMovieSearch } from "./hooks/useMovieSearch"
 import type {
-  ExplainResponse,
   MovieSuggestion,
   RagExplanationResponse,
   RecommendationResponse,
@@ -25,15 +24,16 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
   const [seeds, setSeeds] = useState<MovieSuggestion[]>([])
   const { suggestions, noSearchResults, setSuggestions } = useMovieSearch(searchQuery, seeds)
+  const [resultTopics, setResultTopics] = useState<string[]>([])
+  const [timeRange, setTimeRange] = useState<TimeRangeKey>("all")
   const [resultsJustArrived, setResultsJustArrived] = useState(false)
   const [loading, setLoading] = useState(false)
   const [ragLoading, setRagLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<RecommendationResponse | null>(null)
-  const [explain, setExplain] = useState<ExplainResponse | null>(null)
-  const [explainError, setExplainError] = useState<string | null>(null)
   const [ragExplain, setRagExplain] = useState<RagExplanationResponse | null>(null)
   const [ragExplainError, setRagExplainError] = useState<string | null>(null)
+  const lastFetchKeyRef = useRef<string | null>(null)
   const [systemEvidence, setSystemEvidence] = useState<SystemEvidence | null>(null)
   const [systemEvidenceLoading, setSystemEvidenceLoading] = useState(false)
   const [systemEvidenceError, setSystemEvidenceError] = useState<string | null>(null)
@@ -43,14 +43,21 @@ export default function App() {
       setLoading(true)
       setRagLoading(true)
       setError(null)
-      setExplainError(null)
       setRagExplainError(null)
       setRagExplain(null)
+      const { yearMin, yearMax } = timeRangeBounds(timeRange)
+      const requestBody = JSON.stringify({
+        seeds: seeds.map((seed) => seed.movie_id),
+        shuffle,
+        genres: resultTopics.length > 0 ? resultTopics : null,
+        year_min: yearMin,
+        year_max: yearMax,
+      })
       try {
         const res = await fetch(`${apiBase}/recommendations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
+          body: requestBody,
         })
         if (!res.ok) {
           throw new Error(`Request failed: ${res.status}`)
@@ -69,26 +76,10 @@ export default function App() {
       }
 
       try {
-        const explainRes = await fetch(`${apiBase}/explanations`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
-        })
-        if (!explainRes.ok) {
-          throw new Error(`Explain failed: ${explainRes.status}`)
-        }
-        const explainJson = (await explainRes.json()) as ExplainResponse
-        setExplain(explainJson)
-      } catch (err) {
-        setExplainError(err instanceof Error ? err.message : "Unknown error")
-        setExplain(null)
-      }
-
-      try {
         const ragExplainRes = await fetch(`${apiBase}/rag/explanations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ seeds: seeds.map((seed) => seed.movie_id), shuffle }),
+          body: requestBody,
         })
         if (!ragExplainRes.ok) {
           throw new Error(`RAG explain failed: ${ragExplainRes.status}`)
@@ -102,8 +93,40 @@ export default function App() {
         setRagLoading(false)
       }
     },
-    [seeds]
+    [seeds, resultTopics, timeRange]
   )
+
+  // Drives recommendations from the results page: fetches immediately on first
+  // entry, then debounces refetches whenever the seed set or filters change so
+  // typing/clicking through filters does not fire a request per keystroke.
+  useEffect(() => {
+    if (step !== 3 || seeds.length === 0) return
+    const key = JSON.stringify({
+      ids: seeds.map((seed) => seed.movie_id),
+      topics: resultTopics,
+      timeRange,
+    })
+    if (lastFetchKeyRef.current === null) {
+      lastFetchKeyRef.current = key
+      fetchRecommendations(false)
+      return
+    }
+    if (lastFetchKeyRef.current === key) return
+    lastFetchKeyRef.current = key
+    const handle = setTimeout(() => fetchRecommendations(false), 400)
+    return () => clearTimeout(handle)
+  }, [step, seeds, resultTopics, timeRange, fetchRecommendations])
+
+  const toggleResultTopic = (genre: string) => {
+    setResultTopics((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    )
+  }
+
+  const resetResultFilters = () => {
+    setResultTopics([])
+    setTimeRange("all")
+  }
 
   const fetchSystemEvidence = useCallback(async () => {
     setSystemEvidenceLoading(true)
@@ -152,11 +175,12 @@ export default function App() {
     setSearchQuery("")
     setSuggestions([])
     setSelectedGenres([])
+    setResultTopics([])
+    setTimeRange("all")
+    lastFetchKeyRef.current = null
     setData(null)
-    setExplain(null)
     setRagExplain(null)
     setError(null)
-    setExplainError(null)
     setRagExplainError(null)
   }
 
@@ -169,9 +193,6 @@ export default function App() {
             Try again
           </button>
         </div>
-      )}
-      {explainError && (
-        <p className="error-text">Score details couldn&apos;t load. Your recommendations are still shown above.</p>
       )}
       {ragExplainError && (
         <p className="warning">AI explanation unavailable. Your recommendations are still accurate.</p>
@@ -223,8 +244,10 @@ export default function App() {
                 setSuggestions([])
               }}
               onRecommend={() => {
+                setResultTopics(selectedGenres)
+                setTimeRange("all")
+                lastFetchKeyRef.current = null
                 setStep(3)
-                fetchRecommendations(false)
               }}
               onBack={() => setStep(1)}
             />
@@ -233,13 +256,17 @@ export default function App() {
           {step === 3 && (
             <ResultsStep
               seeds={seeds}
-              selectedGenres={selectedGenres}
+              genres={genres}
+              resultTopics={resultTopics}
+              timeRange={timeRange}
               loading={loading}
               ragLoading={ragLoading}
               data={data}
-              explain={explain}
               ragExplain={ragExplain}
               resultsJustArrived={resultsJustArrived}
+              onToggleTopic={toggleResultTopic}
+              onChangeTimeRange={setTimeRange}
+              onResetFilters={resetResultFilters}
               onShuffle={() => fetchRecommendations(true)}
               onStartOver={resetWizard}
               onBack={() => setStep(2)}

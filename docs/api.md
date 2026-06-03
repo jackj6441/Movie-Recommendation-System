@@ -106,8 +106,17 @@ Response:
 
 Body:
 ```json
-{"seeds": [356, 260, 318, 1198, 1210], "shuffle": false}
+{"seeds": [356, 260, 318, 1198, 1210], "shuffle": false, "genres": ["Comedy", "Drama"], "year_min": 1990, "year_max": 1999}
 ```
+
+Fields:
+
+- `seeds` (required): 1 to 5 movie IDs to anchor recommendations.
+- `shuffle` (optional, default `false`): randomize the candidate pool for variety.
+- `genres` (optional): list of genre names. A movie matches if it has **any** of the listed genres (OR semantics). Omit or send `null`/`[]` for no genre filter.
+- `year_min` / `year_max` (optional): inclusive release-year bounds parsed from the movie title. Omit either side for an open range.
+
+When any filter is active the candidate pool widens to the full catalog so niche filters still surface matches; ranking by seed similarity is unchanged. The endpoint returns up to 24 ranked items (the UI shows the first 3 as featured picks and the rest as a poster grid). If no candidate satisfies the filters, `items` is an empty array.
 
 Response:
 ```json
@@ -136,7 +145,7 @@ Response:
 
 ### POST /explanations
 
-Body:
+Body (same `SeedsRequest` as `/recommendations`, including the optional `genres`, `year_min`, and `year_max` filters):
 ```json
 {"seeds": [356, 260, 318, 1198, 1210], "shuffle": false}
 ```

@@ -8,10 +8,15 @@ a ranked list alongside similar-movie context.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 import numpy as np
 
 from app import content
+
+# Number of ranked items returned to the product UI. Sized so the results page
+# can show 3 featured picks plus a poster grid and still survive client filters.
+TOP_K = 24
 
 
 class InvalidSeedsError(Exception):
@@ -29,6 +34,8 @@ class Catalog:
     movie_titles: dict[int, str]
     popular_movie_ids: list[int]
     candidate_pool: int
+    movie_genres: dict[int, list[str]] = field(default_factory=dict)
+    movie_years: dict[int, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,15 +58,60 @@ def _normalize(vec: np.ndarray) -> np.ndarray:
     return vec if norm == 0 else vec / norm
 
 
+def _passes_filters(
+    movie_id: int,
+    catalog: Catalog,
+    genre_set: set[str],
+    year_min: Optional[int],
+    year_max: Optional[int],
+) -> bool:
+    """Return True if a movie satisfies the genre (ANY) and year-range filters."""
+    if genre_set:
+        movie_genre_list = catalog.movie_genres.get(movie_id, [])
+        if not any(g.lower() in genre_set for g in movie_genre_list):
+            return False
+    if year_min is not None or year_max is not None:
+        year = catalog.movie_years.get(movie_id)
+        if year is None:
+            return False
+        if year_min is not None and year < year_min:
+            return False
+        if year_max is not None and year > year_max:
+            return False
+    return True
+
+
 def _build_candidate_ids(
     catalog: Catalog,
     exclude: set[int],
     shuffle: bool,
+    genres: Optional[list[str]] = None,
+    year_min: Optional[int] = None,
+    year_max: Optional[int] = None,
 ) -> list[int]:
-    """Return content-indexed candidate movie IDs, excluding seeds."""
+    """Return content-indexed candidate movie IDs, excluding seeds.
+
+    Without filters we score only the most popular slice of the catalog for
+    speed. When any genre/year filter is active we widen the candidate base to
+    the full catalog first so niche filters still surface real matches instead
+    of going empty, then rank by seed similarity downstream.
+    """
     ranked = catalog.popular_movie_ids if catalog.popular_movie_ids else sorted(catalog.movie_titles.keys())
-    pool_size = min(catalog.candidate_pool * 3, len(ranked))
-    candidates = [mid for mid in ranked[:pool_size] if mid not in exclude]
+    filters_active = bool(genres) or year_min is not None or year_max is not None
+
+    if filters_active:
+        seen = set(ranked)
+        base = list(ranked) + [mid for mid in catalog.movie_titles.keys() if mid not in seen]
+        genre_set = {g.lower() for g in genres} if genres else set()
+        candidates = [
+            mid
+            for mid in base
+            if mid not in exclude and _passes_filters(mid, catalog, genre_set, year_min, year_max)
+        ]
+    else:
+        pool_size = min(catalog.candidate_pool * 3, len(ranked))
+        candidates = [mid for mid in ranked[:pool_size] if mid not in exclude]
+
     candidates = content.filter_movie_ids(candidates)
     if shuffle:
         rng = np.random.default_rng()
@@ -68,7 +120,14 @@ def _build_candidate_ids(
     return candidates
 
 
-def rank(seeds: list[int], shuffle: bool, catalog: Catalog) -> RankedList:
+def rank(
+    seeds: list[int],
+    shuffle: bool,
+    catalog: Catalog,
+    genres: Optional[list[str]] = None,
+    year_min: Optional[int] = None,
+    year_max: Optional[int] = None,
+) -> RankedList:
     """Score and rank candidate movies against a seed set using content embeddings.
 
     The anchor vector is the normalised mean of all valid seed embeddings.
@@ -90,7 +149,14 @@ def rank(seeds: list[int], shuffle: bool, catalog: Catalog) -> RankedList:
     anchor_vec = _normalize(np.mean(seed_vectors, axis=0))
     anchor_movie_id = valid_seeds[0]
 
-    candidate_ids = _build_candidate_ids(catalog, exclude=set(valid_seeds), shuffle=shuffle)
+    candidate_ids = _build_candidate_ids(
+        catalog,
+        exclude=set(valid_seeds),
+        shuffle=shuffle,
+        genres=genres,
+        year_min=year_min,
+        year_max=year_max,
+    )
     if not candidate_ids:
         return RankedList(
             items=[],
@@ -103,7 +169,7 @@ def rank(seeds: list[int], shuffle: bool, catalog: Catalog) -> RankedList:
         content.get_similarity_scores_from_vector(anchor_vec, candidate_ids),
         dtype=np.float32,
     )
-    top_indices = np.argsort(scores)[::-1][:10]
+    top_indices = np.argsort(scores)[::-1][:TOP_K]
     items = [
         RankedItem(
             movie_id=int(candidate_ids[idx]),
