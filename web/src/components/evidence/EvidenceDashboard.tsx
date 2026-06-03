@@ -14,12 +14,21 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
     evidence?.evaluation.popularity_baseline_recall_at_k ?? 0,
     0.01
   )
+  const recallLift = evidence ? formatLift(evidence.evaluation.recall_at_k, evidence.evaluation.popularity_baseline_recall_at_k) : null
+  const servingReady = evidence
+    ? evidence.serving.status === "ok" &&
+      evidence.serving.redis_ok &&
+      evidence.serving.onnx_ok &&
+      evidence.serving.metadata_ok
+    : false
 
   return (
     <section className="layout evidence-layout">
       <div className="card full-width">
         <h2>System Evidence</h2>
-        <div className="subtitle">Current system vs baseline plus production readiness evidence.</div>
+        <div className="subtitle">
+          Three checks for reviewers: serving readiness, model quality, and deployment proof.
+        </div>
         {loading && (
           <div aria-busy="true" aria-label="Loading system evidence">
             <div className="skeleton skeleton-text" style={{ width: "40%" }} />
@@ -35,11 +44,39 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
           </div>
         )}
         {evidence && (
-          <div className="evidence-summary">
-            <span className="evidence-pill">System: {evidence.system_name}</span>
-            <span className="evidence-pill">Model version: {evidence.serving.model_version}</span>
-            <span className="evidence-pill">RAG: {evidence.rag.public_provider}</span>
-          </div>
+          <>
+            <div className="evidence-proof-grid" aria-label="System proof summary">
+              <article className="evidence-proof">
+                <span>Serving is live</span>
+                <strong>{servingReady ? "Ready" : "Degraded"}</strong>
+                <p>
+                  API health, Redis cache, ONNX runtime, and metadata are checked before this demo
+                  claims recommendations are ready.
+                </p>
+              </article>
+              <article className="evidence-proof">
+                <span>Model beats baseline</span>
+                <strong>{recallLift ?? "n/a"}</strong>
+                <p>
+                  Current Recall@K is compared with a popularity baseline so quality is anchored
+                  to a simple alternative.
+                </p>
+              </article>
+              <article className="evidence-proof">
+                <span>Deployment is reproducible</span>
+                <strong>{evidence.deployment.platform}</strong>
+                <p>
+                  The running demo uses {evidence.deployment.runtime}, matching the portfolio
+                  deployment story rather than a local-only mock.
+                </p>
+              </article>
+            </div>
+            <div className="evidence-summary">
+              <span className="evidence-pill">System: {evidence.system_name}</span>
+              <span className="evidence-pill">Model version: {evidence.serving.model_version}</span>
+              <span className="evidence-pill">RAG: {evidence.rag.public_provider}</span>
+            </div>
+          </>
         )}
       </div>
 
@@ -47,7 +84,9 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
         <>
           <div className="card evidence-card">
             <h2>Serving Health</h2>
-            <div className="subtitle">Live readiness signal from the serving API.</div>
+            <div className="subtitle">
+              A reviewer can trust the demo only when the online dependencies are present.
+            </div>
             <div className="metric-grid">
               <div>
                 <span>Status</span>
@@ -70,30 +109,38 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
 
           <div className="card evidence-card">
             <h2>Evaluation Quality</h2>
-            <div className="subtitle">Offline quality and catalog behavior from the evaluation harness.</div>
+            <div className="subtitle">
+              Offline metrics show whether the recommender ranks relevant movies and covers the catalog.
+            </div>
             <div className="metric-grid">
               <div>
-                <span>RMSE</span>
+                <span>Prediction error</span>
                 <strong>{evidence.evaluation.rmse.toFixed(4)}</strong>
+                <small>RMSE, lower is better</small>
               </div>
               <div>
-                <span>NDCG@K</span>
+                <span>Ranking quality</span>
                 <strong>{formatMetric(evidence.evaluation.ndcg_at_k)}</strong>
+                <small>NDCG@K, higher is better</small>
               </div>
               <div>
                 <span>Coverage</span>
                 <strong>{formatMetric(evidence.evaluation.recommendation_coverage)}</strong>
+                <small>Catalog reach</small>
               </div>
               <div>
                 <span>Diversity</span>
                 <strong>{formatMetric(evidence.evaluation.topk_diversity)}</strong>
+                <small>Variety across top picks</small>
               </div>
             </div>
           </div>
 
           <div className="card evidence-card">
             <h2>Current vs Popularity Baseline</h2>
-            <div className="subtitle">Baseline comparison, not a multi-model comparison.</div>
+            <div className="subtitle">
+              Current ranking is {recallLift} the popularity baseline on Recall@K.
+            </div>
             <div className="baseline-bars" aria-label="Recall@K baseline comparison">
               <div className="baseline-row">
                 <span>Current Recall@K</span>
@@ -118,8 +165,11 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
                 <strong>{formatMetric(evidence.evaluation.popularity_baseline_recall_at_k)}</strong>
               </div>
             </div>
-            <p className="subtle">{evidence.model_truth.product_ranking_path}</p>
-            <p className="subtle">{evidence.model_truth.ncf_onnx_status}</p>
+            <details className="evidence-details">
+              <summary>Model artifact details</summary>
+              <p className="subtle">{evidence.model_truth.product_ranking_path}</p>
+              <p className="subtle">{evidence.model_truth.ncf_onnx_status}</p>
+            </details>
           </div>
 
           <div className="card evidence-card">
@@ -167,4 +217,9 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
       )}
     </section>
   )
+}
+
+function formatLift(current: number, baseline: number) {
+  if (baseline <= 0) return "baseline unavailable"
+  return `${(current / baseline).toFixed(1)}x Recall@K`
 }
