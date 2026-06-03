@@ -1,6 +1,10 @@
 /** Browser-reachable API base for local dev and Docker. */
 export function resolveApiBase(): string {
   const fromEnv = import.meta.env.VITE_API_BASE?.trim()
+  // Vite dev proxies reco-api routes on the same origin (any fallback port).
+  if (import.meta.env.DEV && typeof window !== "undefined" && !fromEnv) {
+    return ""
+  }
   if (typeof window !== "undefined") {
     const pageHost = window.location.hostname
     if (fromEnv) {

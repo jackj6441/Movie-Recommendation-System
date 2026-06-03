@@ -28,6 +28,15 @@ def load_app(monkeypatch):
     return importlib.import_module("app.main").app
 
 
+def test_cors_allows_vite_dev_port_fallback(monkeypatch):
+    client = TestClient(load_app(monkeypatch))
+
+    response = client.get("/genres", headers={"Origin": "http://localhost:3002"})
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3002"
+
+
 def test_cors_allows_configured_ec2_frontend_origin(monkeypatch):
     monkeypatch.setenv("CORS_ALLOW_ORIGINS", "http://34.228.75.214:3000")
     client = TestClient(load_app(monkeypatch))

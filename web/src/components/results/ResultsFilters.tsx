@@ -1,4 +1,7 @@
+import { useState } from "react"
 import { TIME_RANGES, type TimeRangeKey } from "../../config"
+
+const VISIBLE_GENRES = 6
 
 type ResultsFiltersProps = {
   genres: string[]
@@ -19,24 +22,32 @@ export function ResultsFilters({
   onChangeTimeRange,
   onResetFilters,
 }: ResultsFiltersProps) {
+  const [showAllGenres, setShowAllGenres] = useState(false)
   const hasActiveFilters = resultTopics.length > 0 || timeRange !== "all"
 
+  const orderedGenres = [
+    ...genres.filter((genre) => resultTopics.includes(genre)),
+    ...genres.filter((genre) => !resultTopics.includes(genre)),
+  ]
+  const visibleGenres = showAllGenres ? orderedGenres : orderedGenres.slice(0, VISIBLE_GENRES)
+  const hiddenCount = orderedGenres.length - visibleGenres.length
+
   return (
-    <div className="results-filters card full-width">
-      <div className="results-filters-head">
-        <h2>Refine results</h2>
+    <section className="rail-section rail-filters" aria-label="Active filters">
+      <div className="rail-head">
+        <h2 className="rail-title">Active filters</h2>
         {hasActiveFilters && (
-          <button type="button" className="ghost reset-filters-btn" onClick={onResetFilters} disabled={disabled}>
-            Reset filters
+          <button type="button" className="rail-reset" onClick={onResetFilters} disabled={disabled}>
+            Reset
           </button>
         )}
       </div>
 
       <div className="filter-group">
         <span className="filter-label" id="time-range-label">
-          Time range
+          Decade
         </span>
-        <div className="chips" role="group" aria-labelledby="time-range-label">
+        <div className="chips chips-compact" role="group" aria-labelledby="time-range-label">
           {TIME_RANGES.map((range) => (
             <button
               type="button"
@@ -54,11 +65,11 @@ export function ResultsFilters({
 
       {genres.length > 0 && (
         <div className="filter-group">
-          <span className="filter-label" id="topic-label">
-            Topics
+          <span className="filter-label" id="results-genre-label">
+            Genres
           </span>
-          <div className="chips" role="group" aria-labelledby="topic-label">
-            {genres.map((genre) => (
+          <div className="chips chips-compact" role="group" aria-labelledby="results-genre-label">
+            {visibleGenres.map((genre) => (
               <button
                 type="button"
                 key={genre}
@@ -71,8 +82,18 @@ export function ResultsFilters({
               </button>
             ))}
           </div>
+          {hiddenCount > 0 && !showAllGenres && (
+            <button type="button" className="chip-more" onClick={() => setShowAllGenres(true)}>
+              {`+ ${hiddenCount} more`}
+            </button>
+          )}
+          {showAllGenres && orderedGenres.length > VISIBLE_GENRES && (
+            <button type="button" className="chip-more" onClick={() => setShowAllGenres(false)}>
+              Show fewer
+            </button>
+          )}
         </div>
       )}
-    </div>
+    </section>
   )
 }

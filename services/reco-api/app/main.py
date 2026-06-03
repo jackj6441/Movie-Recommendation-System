@@ -36,8 +36,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_allowed_origins(),
-    # Covers any Vite dev port (5173 default + 5174-5179 fallbacks)
-    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):517[0-9]",
+    # Vite dev: 5173+ fallbacks and this app's 3000+ when ports are already taken
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):(300[0-9]|517[0-9])",
     allow_methods=["*"],
     allow_headers=["*"],
 )

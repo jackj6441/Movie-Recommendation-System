@@ -28,6 +28,7 @@ export default function App() {
   const [timeRange, setTimeRange] = useState<TimeRangeKey>("all")
   const [resultsJustArrived, setResultsJustArrived] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [shuffling, setShuffling] = useState(false)
   const [ragLoading, setRagLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<RecommendationResponse | null>(null)
@@ -40,6 +41,7 @@ export default function App() {
 
   const fetchRecommendations = useCallback(
     async (shuffle = false) => {
+      setShuffling(shuffle)
       setLoading(true)
       setRagLoading(true)
       setError(null)
@@ -73,6 +75,7 @@ export default function App() {
         return
       } finally {
         setLoading(false)
+        setShuffling(false)
       }
 
       try {
@@ -260,6 +263,7 @@ export default function App() {
               resultTopics={resultTopics}
               timeRange={timeRange}
               loading={loading}
+              shuffling={shuffling}
               ragLoading={ragLoading}
               data={data}
               ragExplain={ragExplain}

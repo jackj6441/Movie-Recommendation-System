@@ -169,12 +169,12 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
-    expect(featured).not.toBeNull()
+    const stage = document.querySelector(".results-stage")
+    expect(stage).not.toBeNull()
 
-    const first = within(featured as HTMLElement).getByText("First Recommendation")
-    const second = within(featured as HTMLElement).getByText("Second Recommendation")
-    const third = within(featured as HTMLElement).getByText("Third Recommendation")
+    const first = within(stage as HTMLElement).getByText("First Recommendation")
+    const second = within(stage as HTMLElement).getByText("Second Recommendation")
+    const third = within(stage as HTMLElement).getByText("Third Recommendation")
 
     expect(first.compareDocumentPosition(second)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(second.compareDocumentPosition(third)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
@@ -223,7 +223,7 @@ describe("App RAG explanations", () => {
     expect(screen.queryByText("sk-test-secret")).not.toBeInTheDocument()
   })
 
-  it("shows RAG reasons on top three featured recommendation cards only", async () => {
+  it("shows RAG reason on the hero pick only, not on overflow poster tiles", async () => {
     recommendationItems = [
       { movie_id: 101, title: "First Recommendation", score: 0.91 },
       { movie_id: 102, title: "Second Recommendation", score: 0.82 },
@@ -241,16 +241,16 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
-    expect(featured).not.toBeNull()
-    expect(within(featured as HTMLElement).getByText("First AI reason")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).getByText("Second AI reason")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).getByText("Third AI reason")).toBeInTheDocument()
+    const hero = document.querySelector(".hero-pick")
+    expect(hero).not.toBeNull()
+    expect(within(hero as HTMLElement).getByText("First AI reason")).toBeInTheDocument()
+    expect(screen.queryByText("Second AI reason")).not.toBeInTheDocument()
+    expect(screen.queryByText("Third AI reason")).not.toBeInTheDocument()
 
-    const moreRecommendations = screen.getByRole("heading", { name: "More movies you might like" }).closest(".card")
-    expect(moreRecommendations).not.toBeNull()
-    expect(within(moreRecommendations as HTMLElement).getByText("Fourth Recommendation")).toBeInTheDocument()
-    expect(within(moreRecommendations as HTMLElement).queryByText(/AI reason/)).not.toBeInTheDocument()
+    const grid = document.querySelector(".more-movies-grid")
+    expect(grid).not.toBeNull()
+    expect(within(grid as HTMLElement).getByText("Fourth Recommendation")).toBeInTheDocument()
+    expect(within(grid as HTMLElement).queryByText(/AI reason/)).not.toBeInTheDocument()
   })
 
   it("keeps the selected seed set visible on the recommendation results page", async () => {
@@ -259,9 +259,9 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const seedBanner = document.querySelector(".seed-banner")
-    expect(seedBanner).not.toBeNull()
-    expect(within(seedBanner as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
+    const rail = document.querySelector(".context-rail")
+    expect(rail).not.toBeNull()
+    expect(within(rail as HTMLElement).getByText("Toy Story (1995)")).toBeInTheDocument()
   })
 
   it("removes the standalone AI explanation summary and score breakdown from the results page", async () => {
@@ -285,12 +285,12 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
-    expect(featured).not.toBeNull()
-    expect(within(featured as HTMLElement).getByText("Only Movie")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).getByText("Only reason")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).queryByText("#2")).not.toBeInTheDocument()
-    expect(within(featured as HTMLElement).queryByText("#3")).not.toBeInTheDocument()
+    const hero = document.querySelector(".hero-pick")
+    expect(hero).not.toBeNull()
+    expect(within(hero as HTMLElement).getByText("Only Movie")).toBeInTheDocument()
+    expect(within(hero as HTMLElement).getByText("Only reason")).toBeInTheDocument()
+    expect(screen.queryByText("#2")).not.toBeInTheDocument()
+    expect(screen.queryByText("#3")).not.toBeInTheDocument()
   })
 
   it("does not expose the api base url in the rendered page", async () => {
@@ -339,12 +339,12 @@ describe("App RAG explanations", () => {
 
     await requestRecommendations(user)
 
-    const featured = screen.getByRole("heading", { name: "Featured for you" }).closest(".card")
-    expect(featured).not.toBeNull()
-    expect(within(featured as HTMLElement).getByText("Third Movie")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).queryByText("Third reason")).not.toBeInTheDocument()
-    expect(within(featured as HTMLElement).getByText("First reason")).toBeInTheDocument()
-    expect(within(featured as HTMLElement).getByText("Second reason")).toBeInTheDocument()
+    const hero = document.querySelector(".hero-pick")
+    expect(hero).not.toBeNull()
+    expect(within(hero as HTMLElement).getByText("First reason")).toBeInTheDocument()
+    expect(within(hero as HTMLElement).queryByText("Second reason")).not.toBeInTheDocument()
+    expect(screen.getByText("Third Movie")).toBeInTheDocument()
+    expect(screen.queryByText("Third reason")).not.toBeInTheDocument()
   })
 
   it("does not render the More recommendations section when all results fit in featured cards", async () => {
@@ -397,10 +397,9 @@ describe("App RAG explanations", () => {
     await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
-    // Step 3 appears immediately — loading subtitle shown before data arrives
-    expect(await screen.findByText("Finding your movies…")).toBeInTheDocument()
-    // No real movie articles yet — skeleton divs stand in
-    expect(screen.queryAllByRole("article")).toHaveLength(0)
+    // Step 3 appears immediately — screen reader status before data arrives
+    expect(await screen.findByText("Finding your movies.")).toBeInTheDocument()
+    expect(document.querySelector(".hero-skeleton")).toBeInTheDocument()
 
     resolveRecommendations({
       ok: false,
@@ -439,10 +438,10 @@ describe("App RAG explanations", () => {
     render(<App />)
 
     await user.click(screen.getByRole("button", { name: "Skip" }))
-    expect(screen.getByText("Select Movies")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select movies" })).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Back" }))
-    expect(screen.getByText("Select Genres")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select genres" })).toBeInTheDocument()
   })
 
   it("resets to step one and clears seeds when restart is clicked on results page", async () => {
@@ -452,9 +451,9 @@ describe("App RAG explanations", () => {
     await requestRecommendations(user)
 
     await user.click(await screen.findByRole("button", { name: "Start over" }))
-    expect(screen.getByText("Select Genres")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select genres" })).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Skip" }))
-    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+    expect(screen.getByText("Search or select movies in the panel beside you.")).toBeInTheDocument()
   })
 
   it("displays movie titles with leading article moved to the front", async () => {
@@ -521,7 +520,7 @@ describe("App RAG explanations", () => {
   it("shows English labels on step 1: heading, skip, and next buttons", async () => {
     render(<App />)
 
-    expect(screen.getByRole("heading", { name: "Select Genres" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select genres" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Skip" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument()
   })
@@ -532,7 +531,7 @@ describe("App RAG explanations", () => {
 
     await user.click(screen.getByRole("button", { name: "Skip" }))
 
-    expect(screen.getByRole("heading", { name: "Select Movies" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select movies" })).toBeInTheDocument()
     expect(screen.getByPlaceholderText("Search movies...")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument()
@@ -587,7 +586,7 @@ describe("App RAG explanations", () => {
 
     await user.click(screen.getByRole("button", { name: "Skip" }))
     await user.click(await screen.findByRole("button", { name: "Select" }))
-    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+    expect(screen.getAllByText("Toy Story (1995)").length).toBeGreaterThan(0)
 
     await user.type(screen.getByPlaceholderText("Search movies..."), "toy")
 
@@ -602,12 +601,12 @@ describe("App RAG explanations", () => {
 
     await user.click(screen.getByRole("button", { name: "Skip" }))
     await user.click(await screen.findByRole("button", { name: "Select" }))
-    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+    expect(screen.getAllByText("Toy Story (1995)").length).toBeGreaterThan(0)
 
     await user.click(screen.getByRole("button", { name: "Clear selection" }))
 
-    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
-    expect(screen.getByText("Select Movies")).toBeInTheDocument()
+    expect(screen.getByText("Search or select movies in the panel beside you.")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Select movies" })).toBeInTheDocument()
   })
 
   it("removes a seed from the selected list when the × button is clicked", async () => {
@@ -617,12 +616,12 @@ describe("App RAG explanations", () => {
     await user.click(screen.getByRole("button", { name: "Skip" }))
     await user.click(await screen.findByRole("button", { name: "Select" }))
 
-    expect(screen.getByText("Selected (1/5):")).toBeInTheDocument()
+    expect(screen.getAllByText("Toy Story (1995)").length).toBeGreaterThan(0)
     expect(screen.getByRole("button", { name: "Remove Toy Story (1995)" })).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Remove Toy Story (1995)" }))
 
-    expect(screen.getByText("Selected (0/5):")).toBeInTheDocument()
+    expect(screen.getByText("Search or select movies in the panel beside you.")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Remove Toy Story (1995)" })).not.toBeInTheDocument()
   })
 
@@ -759,10 +758,11 @@ describe("App RAG explanations", () => {
       await user.click(btn)
     }
 
-    expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
+    expect(screen.getByText("Maximum reached — remove a pick from the rail to add another.")).toBeInTheDocument()
+    expect(document.querySelectorAll(".seed-item")).toHaveLength(5)
 
     await user.click(selectButtons[5])
-    expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
+    expect(document.querySelectorAll(".seed-item")).toHaveLength(5)
   })
 
   it("loads all genres from the API in a single grid", async () => {
@@ -911,7 +911,7 @@ describe("App movie posters", () => {
     render(<App />)
     await requestRecommendations(user)
     const card = await screen.findByRole("heading", { name: "Some Movie" })
-    expect(card.closest(".movie-card")).toHaveClass("has-poster")
+    expect(card.closest(".hero-pick")).toHaveClass("has-poster")
   })
 
   it("renders a poster grid for ranked overflow in the More movies section", async () => {
@@ -947,11 +947,13 @@ describe("App movie posters", () => {
     render(<App />)
     await requestRecommendations(user)
 
-    const moreSection = (await screen.findByRole("heading", { name: "More movies you might like" })).closest(".card")
-    expect(moreSection).not.toBeNull()
-    const overflowTitle = within(moreSection as HTMLElement).getByText("Fourth (2004)")
+    const grid = await screen.findByRole("heading", { name: "More movies you might like" })
+    expect(grid).toBeInTheDocument()
+    const gridEl = document.querySelector(".more-movies-grid")
+    expect(gridEl).not.toBeNull()
+    const overflowTitle = within(gridEl as HTMLElement).getByText("Fourth (2004)")
     expect(overflowTitle.closest(".poster-tile")).not.toBeNull()
-    expect(within(moreSection as HTMLElement).queryByText("0.600")).not.toBeInTheDocument()
+    expect(within(gridEl as HTMLElement).queryByText("0.600")).not.toBeInTheDocument()
   })
 
   it("renders search suggestion thumbnails when poster_thumb_url is present", async () => {

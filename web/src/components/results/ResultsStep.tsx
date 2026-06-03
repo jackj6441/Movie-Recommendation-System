@@ -1,10 +1,9 @@
 import type { MovieSuggestion, RagExplanationResponse, RecommendationResponse } from "../../types"
 import type { TimeRangeKey } from "../../config"
-import { formatTitle } from "../../utils/format"
-import { FeaturedMovieCard } from "./FeaturedMovieCard"
+import { HeroPick } from "./HeroPick"
 import { PosterTile } from "./PosterTile"
-import { ResultsFilters } from "./ResultsFilters"
-import { MovieThumb } from "../ui/MovieThumb"
+import { ResultsRail } from "./ResultsRail"
+import { WizardShell } from "../layout/WizardShell"
 
 type ResultsStepProps = {
   seeds: MovieSuggestion[]
@@ -12,6 +11,7 @@ type ResultsStepProps = {
   resultTopics: string[]
   timeRange: TimeRangeKey
   loading: boolean
+  shuffling: boolean
   ragLoading: boolean
   data: RecommendationResponse | null
   ragExplain: RagExplanationResponse | null
@@ -24,12 +24,15 @@ type ResultsStepProps = {
   onBack: () => void
 }
 
+const SKELETON_TILES = Array.from({ length: 8 })
+
 export function ResultsStep({
   seeds,
   genres,
   resultTopics,
   timeRange,
   loading,
+  shuffling,
   ragLoading,
   data,
   ragExplain,
@@ -43,74 +46,108 @@ export function ResultsStep({
 }: ResultsStepProps) {
   const items = data?.items ?? []
   const hasResults = items.length > 0
+  const initialLoading = loading && !data
+  const refetching = loading && Boolean(data) && !shuffling
   const noMatches = Boolean(data) && !loading && !hasResults
 
+  const hero = items[0]
+  const heroRag = hero ? ragExplain?.items?.find((item) => item.movie_id === hero.movie_id) : undefined
+  const rest = items.slice(1)
+
+  const statusMessage = initialLoading
+    ? "Finding your movies."
+    : shuffling && loading
+      ? "Shuffling recommendations."
+      : refetching
+        ? "Updating recommendations."
+        : noMatches
+          ? "No movies match your current filters."
+          : hasResults
+            ? `Showing ${items.length} recommendations.`
+            : ""
+
+  const shuffleLabel = shuffling && loading ? "Shuffling…" : "Shuffle"
+
   return (
-    <>
-      <div className="seed-banner">
-        <span className="seed-banner-label">Seeds:</span>
-        {seeds.map((seed) => (
-          <span className={`seed${seed.poster_thumb_url ? " with-thumb" : ""}`} key={seed.movie_id}>
-            {seed.poster_thumb_url && <MovieThumb url={seed.poster_thumb_url} />}
-            <span>{formatTitle(seed.title)}</span>
-          </span>
-        ))}
-      </div>
+    <WizardShell
+      rail={
+        <ResultsRail
+          seeds={seeds}
+          genres={genres}
+          resultTopics={resultTopics}
+          timeRange={timeRange}
+          disabled={loading}
+          onToggleTopic={onToggleTopic}
+          onChangeTimeRange={onChangeTimeRange}
+          onResetFilters={onResetFilters}
+        />
+      }
+    >
+      <div className="results-main">
+        <p className="sr-only" role="status" aria-live="polite">
+          {statusMessage}
+        </p>
 
-      <ResultsFilters
-        genres={genres}
-        resultTopics={resultTopics}
-        timeRange={timeRange}
-        disabled={loading}
-        onToggleTopic={onToggleTopic}
-        onChangeTimeRange={onChangeTimeRange}
-        onResetFilters={onResetFilters}
-      />
+        <header className="results-header">
+          <h2 className="section-title">Featured for you</h2>
+          {!initialLoading && hasResults && (
+            <p className="results-meta">{items.length} matches</p>
+          )}
+        </header>
 
-      <div className={`card full-width${resultsJustArrived ? " arrived" : ""}`}>
-        <h2>Featured for you</h2>
-        <div className="subtitle">
-          {loading && !data
-            ? "Finding your movies…"
-            : noMatches
-              ? "No matches for these filters"
-              : `Your top ${Math.min(items.length, 3)} picks`}
+        <div
+          className={`results-stage${refetching ? " is-refetching" : ""}${resultsJustArrived ? " arrived" : ""}`}
+          aria-busy={loading}
+        >
+          {initialLoading ? (
+            <>
+              <div className="hero-pick hero-skeleton" aria-hidden="true" />
+              <h3 className="subsection-title">More movies you might like</h3>
+              <div className="more-movies-grid">
+                {SKELETON_TILES.map((_, index) => (
+                  <div className="poster-tile poster-skeleton" key={index} aria-hidden="true" />
+                ))}
+              </div>
+            </>
+          ) : noMatches ? (
+            <div className="empty-results" role="status">
+              <p>No movies match your current filters. Try a wider decade or fewer genres.</p>
+              <button type="button" className="retry-btn" onClick={onResetFilters}>
+                Reset filters
+              </button>
+            </div>
+          ) : hasResults ? (
+            <>
+              <HeroPick item={hero} ragItem={heroRag} ragLoading={ragLoading} />
+
+              {rest.length > 0 && (
+                <>
+                  <h3 className="subsection-title">More movies you might like</h3>
+                  <div className="more-movies-grid">
+                    {rest.map((item, index) => (
+                      <PosterTile
+                        key={item.movie_id}
+                        item={item}
+                        rank={index < 2 ? index + 2 : undefined}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          ) : null}
+
+          {refetching && (
+            <div className="refetch-veil" aria-hidden="true">
+              <span className="refetch-dot" />
+              Updating
+            </div>
+          )}
         </div>
 
-        {noMatches ? (
-          <div className="empty-results" role="status">
-            <p>No movies match your current filters.</p>
-            <button type="button" className="retry-btn" onClick={onResetFilters}>
-              Reset filters
-            </button>
-          </div>
-        ) : (
-          <div className="featured-grid">
-            {loading && !data
-              ? [0, 1, 2].map((i) => (
-                  <div className="movie-card skeleton-card" key={i} aria-hidden="true">
-                    <div className="skeleton-dark skeleton-movie-title" />
-                    <div className="skeleton-dark skeleton-text-dark" style={{ width: "85%" }} />
-                    <div className="skeleton-dark skeleton-text-dark" style={{ width: "60%" }} />
-                  </div>
-                ))
-              : items.slice(0, 3).map((recommendation, index) => {
-                  const ragItem = ragExplain?.items?.find((item) => item.movie_id === recommendation.movie_id)
-                  return (
-                    <FeaturedMovieCard
-                      key={recommendation.movie_id}
-                      recommendation={recommendation}
-                      ragItem={ragItem}
-                      index={index}
-                    />
-                  )
-                })}
-          </div>
-        )}
-
-        <div className="wizard-nav">
+        <nav className="wizard-nav" aria-label="Recommendation actions">
           <button type="button" onClick={onShuffle} disabled={loading || ragLoading}>
-            {loading ? "Shuffling…" : "Shuffle"}
+            {shuffleLabel}
           </button>
           <button type="button" className="ghost" onClick={onStartOver}>
             Start over
@@ -118,20 +155,8 @@ export function ResultsStep({
           <button type="button" className="ghost" onClick={onBack}>
             Back
           </button>
-        </div>
+        </nav>
       </div>
-
-      {items.length > 3 && (
-        <div className="card full-width">
-          <h2>More movies you might like</h2>
-          <div className="subtitle">More matches ranked by the same model.</div>
-          <div className="more-movies-grid">
-            {items.slice(3).map((item) => (
-              <PosterTile key={item.movie_id} item={item} />
-            ))}
-          </div>
-        </div>
-      )}
-    </>
+    </WizardShell>
   )
 }

@@ -4,7 +4,12 @@ import { formatTitle } from "../../utils/format"
 
 const POSTER_OVERLAY = "linear-gradient(180deg, rgba(20, 18, 16, 0.05), rgba(20, 18, 16, 0.85))"
 
-export function PosterTile({ item }: { item: RecommendationItem }) {
+type PosterTileProps = {
+  item: RecommendationItem
+  rank?: number
+}
+
+export function PosterTile({ item, rank }: PosterTileProps) {
   const [posterHidden, setPosterHidden] = useState(false)
   const showPoster = Boolean(item.poster_url) && !posterHidden
 
@@ -31,6 +36,7 @@ export function PosterTile({ item }: { item: RecommendationItem }) {
           onError={() => setPosterHidden(true)}
         />
       )}
+      {rank != null && <span className="poster-rank">{`#${rank}`}</span>}
       <h3 className="poster-tile-title">{formatTitle(item.title)}</h3>
     </article>
   )

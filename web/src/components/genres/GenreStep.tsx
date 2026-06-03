@@ -1,4 +1,8 @@
-import { MAX_GENRES } from "../../config"
+import { useState } from "react"
+import { MAX_GENRES, PRIORITY_GENRES } from "../../config"
+import { sortGenres } from "../../utils/format"
+
+const VISIBLE_GENRES = 6
 
 type GenreStepProps = {
   genres: string[]
@@ -21,15 +25,21 @@ export function GenreStep({
   onSkip,
   onNext,
 }: GenreStepProps) {
+  const [showAllGenres, setShowAllGenres] = useState(false)
+
+  const orderedGenres = sortGenres(genres, PRIORITY_GENRES)
+  const visibleGenres = showAllGenres ? orderedGenres : orderedGenres.slice(0, VISIBLE_GENRES)
+  const hiddenCount = orderedGenres.length - visibleGenres.length
+
   return (
-    <div className="card">
-      <h2>Select Genres</h2>
-      <div className="subtitle">Choose up to {MAX_GENRES} genres to narrow your seeds (optional)</div>
+    <div className="card full-width genre-step">
+      <h2 className="section-title">Select genres</h2>
+      <p className="step-lead">Choose up to {MAX_GENRES} genres to narrow your seeds. Optional.</p>
 
       {loading && (
         <div className="chips" aria-busy="true" aria-label="Loading genres">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <span className="chip skeleton" key={i} style={{ width: "5rem", height: "2rem" }} />
+            <span className="chip skeleton" key={i} style={{ width: "5rem", height: "2.75rem" }} />
           ))}
         </div>
       )}
@@ -46,7 +56,7 @@ export function GenreStep({
       {!loading && !error && (
         <>
           <div className="chips" role="group" aria-label="Movie genres">
-            {genres.map((genre) => (
+            {visibleGenres.map((genre) => (
               <button
                 type="button"
                 key={genre}
@@ -58,6 +68,16 @@ export function GenreStep({
               </button>
             ))}
           </div>
+          {hiddenCount > 0 && !showAllGenres && (
+            <button type="button" className="chip-more" onClick={() => setShowAllGenres(true)}>
+              {`+ ${hiddenCount} more genres`}
+            </button>
+          )}
+          {showAllGenres && orderedGenres.length > VISIBLE_GENRES && (
+            <button type="button" className="chip-more" onClick={() => setShowAllGenres(false)}>
+              Show fewer
+            </button>
+          )}
           <p className="genre-status">
             {selectedGenres.length}/{MAX_GENRES} selected
             {selectedGenres.length >= MAX_GENRES && " — remove one to pick another"}
@@ -65,14 +85,14 @@ export function GenreStep({
         </>
       )}
 
-      <div className="wizard-nav">
+      <nav className="wizard-nav" aria-label="Genre step actions">
         <button type="button" className="ghost" onClick={onSkip}>
           Skip
         </button>
         <button type="button" onClick={onNext}>
           Next
         </button>
-      </div>
+      </nav>
     </div>
   )
 }
