@@ -37,6 +37,8 @@
 - `services/reco-api/models/metadata.json`
 - `services/reco-api/models/content_embeddings.npz`
 - `services/reco-api/models/content_index.json`
+- `services/reco-api/models/poster_urls.json` (offline TMDB poster URLs; built locally via `training/build_poster_lookup.py`)
+- `services/reco-api/models/poster_meta.json` (poster coverage stats for `/healthz`)
 
 ## Caching
 

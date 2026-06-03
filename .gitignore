@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 *.log
+poster_build.log
 
 # Secrets / keys
 *.pem

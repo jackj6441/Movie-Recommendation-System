@@ -17,9 +17,13 @@ def load_app(monkeypatch):
     monkeypatch.setenv("CONTENT_INDEX_PATH", str(api_root / "models" / "content_index.json"))
     monkeypatch.setenv("ONNX_MODEL_PATH", str(api_root / "models" / "ncf.onnx"))
     monkeypatch.setenv("METADATA_PATH", str(api_root / "models" / "metadata.json"))
+    monkeypatch.setenv(
+        "POSTER_URLS_PATH",
+        str(api_root / "tests" / "fixtures" / "poster_urls.sample.json"),
+    )
 
     sys.path.insert(0, str(api_root))
-    for module_name in ["app.main", "app.content", "app.rag", "app.seed_ranker", "app.metrics"]:
+    for module_name in ["app.main", "app.content", "app.posters", "app.rag", "app.seed_ranker", "app.metrics"]:
         sys.modules.pop(module_name, None)
     return importlib.import_module("app.main").app
 

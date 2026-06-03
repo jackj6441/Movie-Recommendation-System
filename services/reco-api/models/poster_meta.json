@@ -1,0 +1,8 @@
+{
+  "catalog_movies": 23350,
+  "linked_movies": 23331,
+  "poster_count": 23024,
+  "poster_coverage": 0.986039,
+  "built_at": "2026-06-02T23:20:18.340105+00:00",
+  "links_path": "ml-32m/links.csv"
+}

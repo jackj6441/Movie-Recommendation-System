@@ -1,0 +1,45 @@
+---
+description: Commit completed work automatically after tests pass (this repo)
+alwaysApply: true
+---
+
+# Auto-commit (Movie Recommendation Project)
+
+For this repository, **commit without waiting for the user to say "commit"** when a coherent unit of work is done.
+
+## When to commit
+
+Commit after:
+
+- A feature, bug fix, or docs update is **finished**
+- Relevant tests pass (or the change is docs-only and obviously safe)
+- The working tree has meaningful changes to commit
+
+Do **not** commit:
+
+- Mid-task with failing tests or known broken state
+- Secrets (`.env`, keys, credentials) or generated local-only datasets (`ml-32m/`, `*.zip`)
+- Empty commits (no staged changes)
+
+## How to commit
+
+Follow the git safety protocol:
+
+1. Run `git status`, `git diff`, and `git log -1` (parallel) to draft the message
+2. Stage only relevant files; never `git config` changes
+3. Commit with a HEREDOC message (1–2 sentences, focus on **why**)
+4. Run `git status` after to verify success
+5. **Do not push** unless the user explicitly asks
+
+## Message style
+
+Match recent history: imperative, concise, complete sentences.
+
+Examples:
+
+- `Add offline TMDB poster lookup and UI thumbnails`
+- `Fix RAG explain crash when items array is missing`
+
+## User override
+
+If the user says **do not commit**, **ask before committing**, or **only commit when I ask**, follow that instruction for the rest of the session.

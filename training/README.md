@@ -36,3 +36,21 @@ python training/export_onnx.py
 ```bash
 python training/build_content_embeddings.py --device mps
 ```
+
+## Build poster lookup (local only)
+
+Extract MovieLens 32M `links.csv` (not committed) and set a TMDB API key:
+
+```bash
+# Credentials in repo-root .env (see .env.example) are loaded automatically.
+python training/build_poster_lookup.py \
+  --links ml-32m/links.csv \
+  --catalog services/reco-api/models/catalog_movies.csv
+```
+
+Outputs:
+
+- `services/reco-api/models/poster_urls.json`
+- `services/reco-api/models/poster_meta.json`
+
+Commit both artifacts after a successful run. Use `--resume` to continue a partial build, or `--limit 50` for a smoke test.

@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content, metrics, rag, seed_ranker
+from app import content, metrics, posters, rag, seed_ranker
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
@@ -57,6 +57,8 @@ ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
 onnx_model_path = os.getenv("ONNX_MODEL_PATH", "models/ncf.onnx")
 metadata_path = os.getenv("METADATA_PATH", "models/metadata.json")
 serving_stats_path = os.getenv("SERVING_STATS_PATH", "models/serving_stats.json")
+poster_urls_path = os.getenv("POSTER_URLS_PATH", "models/poster_urls.json")
+poster_meta_path = os.getenv("POSTER_META_PATH", "models/poster_meta.json")
 default_system_evidence_path = Path(__file__).resolve().parents[1] / "evidence" / "system_evidence.json"
 system_evidence_path = os.getenv("SYSTEM_EVIDENCE_PATH", str(default_system_evidence_path))
 candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
@@ -116,6 +118,13 @@ try:
                 all_genres.update(genre_list)
 except OSError:
     print(f"Warning: failed to load movies CSV at {movies_csv_path}")
+
+poster_lookup = posters.load_poster_lookup(poster_urls_path)
+poster_meta = posters.load_poster_meta(poster_meta_path)
+if not poster_lookup and os.path.exists(poster_urls_path):
+    print(f"Warning: poster lookup at {poster_urls_path} is empty or unreadable")
+elif not os.path.exists(poster_urls_path):
+    print(f"Warning: poster lookup not found at {poster_urls_path}")
 
 movie_popularity: dict[int, int] = {}
 popular_movie_ids: list[int] = []
@@ -181,6 +190,11 @@ def get_title(movie_id: int) -> str:
     return movie_titles.get(movie_id, f"Movie {movie_id}")
 
 
+def movie_payload(movie_id: int, **fields) -> dict:
+    payload = {"movie_id": movie_id, "title": get_title(movie_id), **fields}
+    return posters.enrich_movie(movie_id, payload, poster_lookup)
+
+
 def get_ranked_movie_ids() -> list[int]:
     if popular_movie_ids:
         return popular_movie_ids
@@ -196,7 +210,7 @@ def serving_status() -> dict:
             redis_ok = bool(redis_client.ping())
         except redis.RedisError:
             redis_ok = False
-    return {
+    status = {
         "status": "ok",
         "redis_ok": redis_ok,
         "onnx_ok": onnx_session is not None,
@@ -210,6 +224,10 @@ def serving_status() -> dict:
         "explain_ttl_seconds": explain_ttl_seconds,
         "alpha": alpha,
     }
+    status.update(
+        posters.poster_health_fields(poster_lookup, poster_meta, len(movie_titles))
+    )
+    return status
 
 
 def load_system_evidence() -> dict:
@@ -283,9 +301,7 @@ def genre_seeds(genre: str, limit: int = 20):
 
     movie_ids = get_popular_movies(movie_ids, limit)
     return {
-        "seeds": [
-            {"movie_id": movie_id, "title": get_title(movie_id)} for movie_id in movie_ids
-        ]
+        "seeds": [movie_payload(movie_id) for movie_id in movie_ids]
     }
 
 
@@ -297,7 +313,7 @@ def movie_search(q: str = ""):
     results = []
     for movie_id, title in movie_titles.items():
         if query in title.lower():
-            results.append({"movie_id": movie_id, "title": title})
+            results.append(posters.enrich_movie(movie_id, {"movie_id": movie_id, "title": title}, poster_lookup))
             if len(results) >= 20:
                 break
     return results
@@ -542,10 +558,10 @@ def recommendations(request: SeedsRequest):
 
     return {
         "items": [
-            {"movie_id": item.movie_id, "title": item.title, "score": item.content_score}
+            movie_payload(item.movie_id, title=item.title, score=item.content_score)
             for item in result.items
         ],
-        "seed_movies": [{"movie_id": mid, "title": get_title(mid)} for mid in result.seed_movie_ids],
+        "seed_movies": [movie_payload(mid) for mid in result.seed_movie_ids],
         "anchor_source": "seed",
         "model_version": model_version,
     }

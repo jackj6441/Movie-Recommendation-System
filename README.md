@@ -77,6 +77,17 @@ Important model truth: the current UI uses Seed Set recommendations driven by Co
 - `infra`: Docker Compose local and EC2 demo infrastructure.
 - `docs`: PRDs, architecture, API docs, deployment guide, and model card.
 
+## Posters (optional offline build)
+
+Movie posters are served from committed `services/reco-api/models/poster_urls.json`. To rebuild from MovieLens 32M links and TMDB:
+
+```bash
+export TMDB_API_KEY=your_key_here
+python training/build_poster_lookup.py --links ml-32m/links.csv
+```
+
+See `training/README.md` for details. Docker runtime does not need `TMDB_API_KEY`.
+
 ## Local Development
 
 ```bash

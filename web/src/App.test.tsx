@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest"
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App"
@@ -553,15 +553,17 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    expect(screen.getByText(/^1\/3/)).toBeInTheDocument()
+    expect(screen.getByLabelText("Recommendation steps")).toBeInTheDocument()
+    expect(screen.getByText("Genres").closest(".stepper-step")).toHaveClass("active")
 
     await user.click(screen.getByRole("button", { name: "Skip" }))
-    expect(screen.getByText(/^2\/3/)).toBeInTheDocument()
+    expect(screen.getByText("Movies").closest(".stepper-step")).toHaveClass("active")
 
     await user.click(await screen.findByRole("button", { name: "Select" }))
     await user.click(screen.getByRole("button", { name: "Recommend" }))
 
-    expect(await screen.findByText(/^3\/3/)).toBeInTheDocument()
+    expect(screen.getByText("Results").closest(".stepper-step")).toHaveClass("active")
+    expect(screen.getByText("Results").closest(".stepper-step")).toHaveAttribute("aria-current", "step")
   })
 
   it("excludes already-selected seeds from search suggestions", async () => {
@@ -661,7 +663,7 @@ describe("App RAG explanations", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "Comedy" }))
+    await user.click(await screen.findByRole("button", { name: "Comedy" }))
     await user.click(screen.getByRole("button", { name: "Next" }))
 
     expect(await screen.findByText("Comedy Movie (2000)")).toBeInTheDocument()
@@ -706,6 +708,58 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Selected (5/5):")).toBeInTheDocument()
   })
 
+  it("loads all genres from the API in a single grid", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) {
+          return jsonResponse([
+            { name: "Comedy" },
+            { name: "Drama" },
+            { name: "Action" },
+            { name: "Horror" },
+            { name: "Sci-Fi" },
+          ])
+        }
+        return jsonResponse({})
+      })
+    )
+
+    render(<App />)
+
+    expect(await screen.findByRole("button", { name: "Comedy" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Horror" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Sci-Fi" })).toBeInTheDocument()
+    expect(screen.getByText("0/3 selected")).toBeInTheDocument()
+  })
+
+  it("shows genre error with retry when the genres API fails", async () => {
+    let genreAttempts = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+        if (url.endsWith("/genres")) {
+          genreAttempts += 1
+          return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({}) } as Response)
+        }
+        return jsonResponse({})
+      })
+    )
+
+    render(<App />)
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole("alert")).toHaveTextContent(/Could not load genres/i)
+      },
+      { timeout: 4000 }
+    )
+    expect(genreAttempts).toBeGreaterThanOrEqual(3)
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument()
+  })
+
   it("renders the System Evidence dashboard without claiming model comparison", async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -727,6 +781,91 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Docker Compose")).toBeInTheDocument()
     expect(screen.getByText("mock")).toBeInTheDocument()
     expect(screen.queryByText("Model Comparison")).not.toBeInTheDocument()
+  })
+})
+
+describe("App movie posters", () => {
+  const posterFields = {
+    poster_url: "https://image.tmdb.org/t/p/w500/test.jpg",
+    poster_thumb_url: "https://image.tmdb.org/t/p/w185/test.jpg",
+  }
+
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: RequestInfo | URL) => {
+        const url = input.toString()
+
+        if (url.endsWith("/genres")) {
+          return jsonResponse([{ name: "Comedy" }])
+        }
+        if (url.includes("/genres/all/seeds")) {
+          return jsonResponse({
+            seeds: [{ movie_id: 1, title: "Toy Story (1995)", ...posterFields }],
+          })
+        }
+        if (url.includes("/movies/search")) {
+          return jsonResponse([{ movie_id: 1, title: "Toy Story (1995)", ...posterFields }])
+        }
+        if (url.endsWith("/recommendations")) {
+          return jsonResponse({
+            items: [{ movie_id: 239, title: "Some Movie", score: 0.9, ...posterFields }],
+            seed_movies: [{ movie_id: 1, title: "Toy Story (1995)", ...posterFields }],
+            anchor_source: "seed",
+            model_version: "test-model",
+          })
+        }
+        if (url.endsWith("/explanations")) {
+          return jsonResponse({
+            user_id: null,
+            model_version: "test-model",
+            alpha: 0.7,
+            anchor_movie: { movie_id: 1, title: "Toy Story (1995)" },
+            topk: [{ movie_id: 239, title: "Some Movie", ncf: 0, content: 0.9, final: 0.9 }],
+            similar_movies: [],
+            content_available: true,
+            anchor_source: "seed",
+          })
+        }
+        if (url.endsWith("/rag/explanations")) {
+          return jsonResponse({
+            summary: "Summary",
+            items: [{ movie_id: 239, reason: "Reason", evidence: ["seed_set"] }],
+            explanation_source: "rag",
+          })
+        }
+        return jsonResponse({})
+      })
+    )
+  })
+
+  it("renders the TMDB attribution footer", () => {
+    render(<App />)
+    expect(screen.getByText(/not endorsed or certified by TMDB/i)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "TMDB" })).toHaveAttribute("href", "https://www.themoviedb.org/")
+  })
+
+  it("renders featured cards with poster styling when poster_url is present", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await requestRecommendations(user)
+    const card = await screen.findByRole("heading", { name: "Some Movie" })
+    expect(card.closest(".movie-card")).toHaveClass("has-poster")
+  })
+
+  it("renders search suggestion thumbnails when poster_thumb_url is present", async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getAllByRole("button", { name: "Skip" })[0])
+    const search = screen.getByPlaceholderText("Search movies...")
+    await user.type(search, "Toy")
+    const listbox = await screen.findByRole("listbox")
+    expect(within(listbox).getByRole("presentation")).toHaveAttribute("src", posterFields.poster_thumb_url)
   })
 })
 

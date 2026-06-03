@@ -22,9 +22,14 @@ Response:
   "candidate_pool": 500,
   "cache_ttl_seconds": 300,
   "explain_ttl_seconds": 60,
-  "alpha": 0.7
+  "alpha": 0.7,
+  "poster_ok": true,
+  "poster_count": 21000,
+  "poster_coverage": 0.9
 }
 ```
+
+`poster_ok`, `poster_count`, and `poster_coverage` come from the offline `poster_urls.json` / `poster_meta.json` artifacts (no TMDB calls at runtime).
 
 ## Observability
 
@@ -54,8 +59,17 @@ Case-insensitive substring search by title. Returns up to 20 matches.
 
 Response:
 ```json
-[{"movie_id": 1, "title": "Toy Story (1995)"}]
+[
+  {
+    "movie_id": 1,
+    "title": "Toy Story (1995)",
+    "poster_url": "https://image.tmdb.org/t/p/w500/...",
+    "poster_thumb_url": "https://image.tmdb.org/t/p/w185/..."
+  }
+]
 ```
+
+`poster_url` and `poster_thumb_url` are optional. They are omitted when no offline lookup exists for that movie.
 
 ## Genres
 
@@ -74,7 +88,16 @@ Returns popular seed movies for a genre.
 
 Response:
 ```json
-{"seeds": [{"movie_id": 356, "title": "Forrest Gump (1994)"}]}
+{
+  "seeds": [
+    {
+      "movie_id": 356,
+      "title": "Forrest Gump (1994)",
+      "poster_url": "https://image.tmdb.org/t/p/w500/...",
+      "poster_thumb_url": "https://image.tmdb.org/t/p/w185/..."
+    }
+  ]
+}
 ```
 
 ## Seed Recommendations (Product)
@@ -89,8 +112,23 @@ Body:
 Response:
 ```json
 {
-  "items": [{"movie_id": 186, "title": "Nine Months (1995)", "score": 0.74}],
-  "seed_movies": [{"movie_id": 356, "title": "Forrest Gump (1994)"}],
+  "items": [
+    {
+      "movie_id": 186,
+      "title": "Nine Months (1995)",
+      "score": 0.74,
+      "poster_url": "https://image.tmdb.org/t/p/w500/...",
+      "poster_thumb_url": "https://image.tmdb.org/t/p/w185/..."
+    }
+  ],
+  "seed_movies": [
+    {
+      "movie_id": 356,
+      "title": "Forrest Gump (1994)",
+      "poster_url": "https://image.tmdb.org/t/p/w500/...",
+      "poster_thumb_url": "https://image.tmdb.org/t/p/w185/..."
+    }
+  ],
   "anchor_source": "seed",
   "model_version": "dev"
 }
