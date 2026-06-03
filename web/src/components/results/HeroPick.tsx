@@ -2,10 +2,9 @@ import { useState } from "react"
 import type { RagExplanationItem, RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 
-// Scrim is heavy on the left where the text sits and clears toward the right so
-// the poster art reads. Applied over the poster via an inline background-image.
+// Keeps poster text readable without dimming the whole movie artwork.
 const HERO_SCRIM =
-  "linear-gradient(90deg, rgba(22,18,15,0.94) 0%, rgba(22,18,15,0.78) 34%, rgba(22,18,15,0.28) 64%, rgba(22,18,15,0) 100%)"
+  "linear-gradient(180deg, rgba(20,18,16,0.05), rgba(20,18,16,0.72))"
 
 type HeroPickProps = {
   item: RecommendationItem
@@ -18,14 +17,7 @@ export function HeroPick({ item, ragItem, ragLoading }: HeroPickProps) {
   const showPoster = Boolean(item.poster_url) && !posterHidden
 
   return (
-    <article
-      className={`hero-pick${showPoster ? " has-poster" : ""}`}
-      style={
-        showPoster
-          ? { backgroundImage: `${HERO_SCRIM}, url(${item.poster_url})` }
-          : undefined
-      }
-    >
+    <article className={`hero-pick${showPoster ? " has-poster" : ""}`}>
       {item.poster_url && (
         <img
           className="hero-pick-probe"
@@ -34,21 +26,30 @@ export function HeroPick({ item, ragItem, ragLoading }: HeroPickProps) {
           onError={() => setPosterHidden(true)}
         />
       )}
-      <span className="hero-bracket hero-bracket-tl" aria-hidden="true" />
-      <span className="hero-bracket hero-bracket-tr" aria-hidden="true" />
-      <span className="hero-bracket hero-bracket-bl" aria-hidden="true" />
-      <span className="hero-bracket hero-bracket-br" aria-hidden="true" />
-
-      <div className="hero-pick-body">
+      <div
+        className="hero-poster-panel"
+        style={
+          showPoster
+            ? { backgroundImage: `${HERO_SCRIM}, url(${item.poster_url})` }
+            : undefined
+        }
+        aria-hidden="true"
+      >
         <span className="hero-rank">#1</span>
+      </div>
+      <div className="hero-pick-body">
+        <span className="hero-kicker">Tonight&apos;s strongest match</span>
         <h2 className="hero-title">{formatTitle(item.title)}</h2>
         {ragItem ? (
-          <p className="hero-reason">{ragItem.reason}</p>
+          <div className="hero-reason-block">
+            <span>Why it fits</span>
+            <p className="hero-reason">{ragItem.reason}</p>
+          </div>
         ) : ragLoading ? (
-          <p className="hero-reason-skeleton" aria-hidden="true">
+          <div className="hero-reason-skeleton" aria-hidden="true">
             <span className="skeleton-dark hero-reason-line" />
             <span className="skeleton-dark hero-reason-line short" />
-          </p>
+          </div>
         ) : null}
       </div>
     </article>

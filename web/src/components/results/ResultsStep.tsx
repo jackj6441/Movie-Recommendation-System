@@ -89,7 +89,10 @@ export function ResultsStep({
         </p>
 
         <header className="results-header">
-          <h2 className="section-title">Featured for you</h2>
+          <div>
+            <p className="results-kicker">Your movie night shortlist</p>
+            <h2 className="section-title">Featured for you</h2>
+          </div>
           {!initialLoading && hasResults && (
             <p className="results-meta">{items.length} matches</p>
           )}
@@ -122,7 +125,10 @@ export function ResultsStep({
 
               {rest.length > 0 && (
                 <>
-                  <h3 className="subsection-title">More movies you might like</h3>
+                  <div className="recommendation-section-head">
+                    <h3 className="subsection-title">More movies you might like</h3>
+                    <p>Keep browsing from the same taste profile.</p>
+                  </div>
                   <div className="more-movies-grid">
                     {rest.map((item, index) => (
                       <PosterTile
