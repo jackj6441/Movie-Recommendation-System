@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import artifacts, content, metrics, posters, rag, seed_ranker
+from app import artifacts, content, ltr, metrics, posters, rag, seed_ranker
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
@@ -184,9 +184,10 @@ def serving_status() -> dict:
         "num_items": num_items,
         "model_version": model_version,
         "candidate_pool": candidate_pool,
-        "ranking_mode": "multi_retriever_fusion",
+        "ranking_mode": seed_ranker.active_ranking_mode_label(),
     }
     status.update(artifacts.fusion_health())
+    status.update(ltr.ltr_health())
     status.update(
         posters.poster_health_fields(poster_lookup, poster_meta, len(movie_titles))
     )

@@ -1,19 +1,19 @@
 """Seed-based ranking pipeline.
 
 Orchestrates four retrievers (content, SVD, item-CF, popularity), merges candidates,
-and applies Phase 1 weighted fusion. Used by recommendations, explanations, and RAG.
+and ranks with Phase 1 fusion or Phase 2 LightGBM Lambdarank.
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-import numpy as np
-
 from app import content
 from app.artifacts import load_fusion_weights
-from app.fusion import CHANNELS, fuse, merge_candidate_ids
+from app.fusion import CHANNELS, feature_rows, fuse, merge_candidate_ids
+from app import ltr as ltr_ranker
 from app.retrievers import content_retriever, item_cf, popularity, svd
 
 TOP_K = 24
@@ -54,6 +54,38 @@ class RankedList:
     seed_movie_ids: list[int]
     anchor_movie_id: int
     similar_movies: list[tuple[int, float]]
+    ranking_mode: str = "multi_retriever_fusion"
+
+
+def resolve_ranking_mode() -> str:
+    """Return active ranker: ``ltr`` only when model is loaded and env requests it."""
+    mode = os.getenv("RANKING_MODE", "fusion").strip().lower()
+    if mode == "ltr" and ltr_ranker.ltr_available():
+        return "ltr"
+    return "fusion"
+
+
+def active_ranking_mode_label() -> str:
+    if resolve_ranking_mode() == "ltr":
+        return "multi_retriever_ltr"
+    return "multi_retriever_fusion"
+
+
+def collect_channel_hits(
+    valid_seeds: list[int],
+    exclude: set[int],
+    catalog: Catalog,
+) -> dict[str, list[tuple[int, float]]]:
+    return {
+        "content": content_retriever.retrieve(valid_seeds, exclude),
+        "svd": svd.retrieve(valid_seeds, exclude),
+        "item_cf": item_cf.retrieve(valid_seeds, exclude),
+        "pop": popularity.retrieve(
+            catalog.popular_movie_ids,
+            catalog.movie_popularity,
+            exclude,
+        ),
+    }
 
 
 def _passes_filters(
@@ -103,9 +135,10 @@ def rank(
     year_max: Optional[int] = None,
     fusion_weights: Optional[dict[str, float]] = None,
     top_k: int = TOP_K,
+    ranking_mode: Optional[str] = None,
 ) -> RankedList:
-    """Run multi-retriever fusion and return the top ``TOP_K`` recommendations."""
-    del shuffle  # fusion ranking is deterministic; shuffle kept for API compatibility
+    """Run multi-retriever retrieval then fusion or LTR scoring."""
+    del shuffle
 
     valid_seeds = [mid for mid in seeds if mid in catalog.movie_titles]
     valid_seeds = content.filter_movie_ids(valid_seeds)
@@ -117,17 +150,7 @@ def rank(
 
     exclude = set(valid_seeds)
     anchor_movie_id = valid_seeds[0]
-
-    channel_hits = {
-        "content": content_retriever.retrieve(valid_seeds, exclude),
-        "svd": svd.retrieve(valid_seeds, exclude),
-        "item_cf": item_cf.retrieve(valid_seeds, exclude),
-        "pop": popularity.retrieve(
-            catalog.popular_movie_ids,
-            catalog.movie_popularity,
-            exclude,
-        ),
-    }
+    channel_hits = collect_channel_hits(valid_seeds, exclude, catalog)
 
     merged_ids = merge_candidate_ids(channel_hits)
     genre_set = {g.lower() for g in genres} if genres else set()
@@ -139,20 +162,32 @@ def rank(
             seed_movie_ids=valid_seeds,
             anchor_movie_id=anchor_movie_id,
             similar_movies=[],
+            ranking_mode=active_ranking_mode_label(),
         )
 
     content_raw = {mid: score for mid, score in channel_hits["content"]}
-    weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
-    fused = fuse(filtered_ids, channel_hits, weights)
+    mode = ranking_mode or resolve_ranking_mode()
+    scored: list[tuple[int, float, dict[str, float]]]
+
+    if mode == "ltr":
+        rows = feature_rows(filtered_ids, channel_hits)
+        scored = ltr_ranker.score_candidates(rows)
+        if not scored:
+            mode = "fusion"
+            weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
+            scored = fuse(filtered_ids, channel_hits, weights)
+    else:
+        weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
+        scored = fuse(filtered_ids, channel_hits, weights)
 
     items: list[RankedItem] = []
-    for movie_id, fusion_score, breakdown in fused[:top_k]:
+    for movie_id, final_score, breakdown in scored[:top_k]:
         items.append(
             RankedItem(
                 movie_id=movie_id,
                 title=catalog.movie_titles.get(movie_id, f"Movie {movie_id}"),
                 content_score=float(content_raw.get(movie_id, 0.0)),
-                fusion_score=float(fusion_score),
+                fusion_score=float(final_score),
                 channel_scores={channel: float(breakdown[channel]) for channel in CHANNELS},
             )
         )
@@ -163,9 +198,11 @@ def rank(
     except Exception:
         similar_movies = []
 
+    label = "multi_retriever_ltr" if mode == "ltr" else "multi_retriever_fusion"
     return RankedList(
         items=items,
         seed_movie_ids=valid_seeds,
         anchor_movie_id=anchor_movie_id,
         similar_movies=similar_movies,
+        ranking_mode=label,
     )

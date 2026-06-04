@@ -84,6 +84,10 @@ POST /recommendations { seeds[1..5] }
 | `FUSION_WEIGHTS_PATH` | Weight JSON |
 | `RAG_PROVIDER` | `mock` / `external` / test modes |
 
-## Phase 2 (planned)
+## Phase 2 (LightGBM Lambdarank)
 
-Same candidate union + feature row shape; replace weighted fusion with LightGBM Lambdarank after Phase 1 metrics gate.
+- Offline: `training/train_lambdarank.py` on four normalized channel features per candidate.
+- Labels: graded relevance (`rating >= 4` → 2, `3` → 1, else 0) for held-out next-item queries.
+- Artifacts: `ltr_model.txt`, `ltr_meta.json`.
+- Serving: set `RANKING_MODE=ltr` (falls back to fusion if model missing).
+- API field `score` / `final` still exposed as `fusion_score` for UI/RAG compatibility.

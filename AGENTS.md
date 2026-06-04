@@ -67,7 +67,7 @@ npm run build
 - Debug endpoint: `GET /debug/similar` (content similarity; not used by the UI).
 - Health check is `GET /healthz`.
 - Search is case-insensitive substring search by title.
-- Seed-based recommendations use four retrievers + weighted fusion (`fusion_weights.json`).
+- Seed-based recommendations use four retrievers + weighted fusion (`fusion_weights.json`); optional Phase 2 via `RANKING_MODE=ltr` and `ltr_model.txt`.
 - Explanations show `content` and `final` (fusion) scores. RAG module is legacy-shaped; refactor deferred.
 
 ## Agent skills

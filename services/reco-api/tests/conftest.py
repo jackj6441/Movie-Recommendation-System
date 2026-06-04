@@ -13,6 +13,7 @@ _APP_MODULES = [
     "app.posters",
     "app.artifacts",
     "app.fusion",
+    "app.ltr",
     "app.retrievers",
     "app.retrievers.content_retriever",
     "app.retrievers.svd",

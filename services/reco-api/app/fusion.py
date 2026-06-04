@@ -38,6 +38,19 @@ def merge_candidate_ids(
     return ordered[:cap]
 
 
+def feature_rows(
+    candidate_ids: Iterable[int],
+    channel_hits: dict[str, list[tuple[int, float]]],
+) -> list[tuple[int, dict[str, float]]]:
+    """Per-candidate normalized channel features (same inputs as weighted fusion)."""
+    normalized = {channel: minmax_normalize(channel_hits.get(channel, [])) for channel in CHANNELS}
+    rows: list[tuple[int, dict[str, float]]] = []
+    for movie_id in candidate_ids:
+        breakdown = {channel: normalized[channel].get(movie_id, 0.0) for channel in CHANNELS}
+        rows.append((int(movie_id), breakdown))
+    return rows
+
+
 def fuse(
     candidate_ids: Iterable[int],
     channel_hits: dict[str, list[tuple[int, float]]],

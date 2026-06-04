@@ -46,6 +46,36 @@ python training/build_item_neighbors.py --ratings_csv data/ml-32m-sample/ratings
 
 Commit both artifacts after a full 32M run alongside the content embeddings.
 
+## Phase 2: LightGBM Lambdarank
+
+Build graded-relevance training rows (same seed-held-out protocol as `eval_fusion`) and train:
+
+```bash
+python training/train_lambdarank.py \
+  --ratings ml-32m/ratings.csv \
+  --movies services/reco-api/models/catalog_movies.csv \
+  --max-users 2000
+```
+
+Outputs:
+
+- `services/reco-api/models/ltr_model.txt`
+- `services/reco-api/models/ltr_meta.json`
+
+Enable in serving (default remains Phase 1 fusion):
+
+```bash
+export RANKING_MODE=ltr
+```
+
+Evaluate:
+
+```bash
+python evaluation/eval_ltr.py --max-users 100 --compare-fusion
+```
+
+On macOS, LightGBM may require OpenMP: `brew install libomp` if import fails.
+
 ## Build poster lookup (local only)
 
 Extract MovieLens 32M `links.csv` (not committed) and set a TMDB API key:

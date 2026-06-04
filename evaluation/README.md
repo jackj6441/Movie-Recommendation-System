@@ -38,6 +38,14 @@ python evaluation/tune_fusion_weights.py --quick --max-users 20
 
 Report: `evaluation/results/fusion_tune.json`.
 
+## Phase 2 LTR (@10 and @24)
+
+Requires a trained `ltr_model.txt`:
+
+```bash
+python evaluation/eval_ltr.py --max-users 100 --compare-fusion
+```
+
 ## Combined report
 
 ```bash
