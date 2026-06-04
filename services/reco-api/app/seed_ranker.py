@@ -101,6 +101,8 @@ def rank(
     genres: Optional[list[str]] = None,
     year_min: Optional[int] = None,
     year_max: Optional[int] = None,
+    fusion_weights: Optional[dict[str, float]] = None,
+    top_k: int = TOP_K,
 ) -> RankedList:
     """Run multi-retriever fusion and return the top ``TOP_K`` recommendations."""
     del shuffle  # fusion ranking is deterministic; shuffle kept for API compatibility
@@ -140,10 +142,11 @@ def rank(
         )
 
     content_raw = {mid: score for mid, score in channel_hits["content"]}
-    fused = fuse(filtered_ids, channel_hits, load_fusion_weights())
+    weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
+    fused = fuse(filtered_ids, channel_hits, weights)
 
     items: list[RankedItem] = []
-    for movie_id, fusion_score, breakdown in fused[:TOP_K]:
+    for movie_id, fusion_score, breakdown in fused[:top_k]:
         items.append(
             RankedItem(
                 movie_id=movie_id,

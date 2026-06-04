@@ -17,7 +17,7 @@ Primary docs:
 - Before editing, form a complete todolist from the prompt.
 - Work on one feature at a time.
 - Keep bug fixes minimal. Do not do broad refactors unless explicitly asked.
-- Preserve the fixed stack: FastAPI + ONNX Runtime + Redis, PyTorch Lightning, React + TypeScript + D3, Docker, AWS EC2.
+- Preserve the fixed stack: FastAPI + NumPy fusion serving, offline PyTorch/SentenceTransformer training, React + TypeScript, Docker, AWS EC2.
 - Do not commit `.env` files, secrets, or sensitive data. Never log secrets.
 - Every service must expose `/healthz`.
 - API responses must include `model_version` when returning model-backed results.
@@ -27,8 +27,10 @@ Primary docs:
 
 ## Repo layout
 
-- `services/reco-api`: FastAPI + ONNX Runtime + Redis recommendation service.
-- `training`: MovieLens data pipeline, NCF training, ONNX export, and content embedding build scripts.
+- `services/reco-api`: FastAPI seed-set fusion ranking (`app/retrievers/`, `app/fusion.py`, `app/seed_ranker.py`).
+- `training`: Content embeddings, serving stats, SVD factors, item neighbors, poster lookup.
+- `evaluation`: `eval_fusion.py`, `tune_fusion_weights.py`, `build_report.py`.
+- `benchmarks`: `benchmark_api.py` (+ `--sync-evidence` for portfolio JSON).
 - `web`: React + D3 recommendation dashboard.
 - `infra`: Docker Compose local development files.
 - `docs`: PRD, architecture notes, and API reference.
@@ -65,8 +67,8 @@ npm run build
 - Debug endpoint: `GET /debug/similar` (content similarity; not used by the UI).
 - Health check is `GET /healthz`.
 - Search is case-insensitive substring search by title.
-- Seed-based recommendations use content embeddings to score candidates.
-- Explanations should show signal sources clearly: content and final (fusion) score.
+- Seed-based recommendations use four retrievers + weighted fusion (`fusion_weights.json`).
+- Explanations show `content` and `final` (fusion) scores. RAG module is legacy-shaped; refactor deferred.
 
 ## Agent skills
 

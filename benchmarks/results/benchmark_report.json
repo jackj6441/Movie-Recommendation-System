@@ -1,56 +1,80 @@
 {
-  "base_url": "http://127.0.0.1:18000",
+  "base_url": "mock://local",
   "endpoints": [
     {
-      "mean_ms": 11.02804159745574,
+      "mean_ms": 0.0004668254405260086,
       "method": "GET",
       "name": "GET /healthz",
-      "p50_ms": 3.6319999489933252,
-      "p95_ms": 34.46085839532315,
-      "p99_ms": 40.56957167573273,
+      "p50_ms": 0.000250060111284256,
+      "p95_ms": 0.0009585171937942504,
+      "p99_ms": 0.0010252371430397034,
       "path": "/healthz",
       "request_count": 5,
       "success_count": 5,
-      "success_rate": 1.0
+      "success_rate": 1.0,
+      "timeout_sec": 10.0
     },
     {
-      "mean_ms": 20.16188323032111,
+      "mean_ms": 0.00021657906472682953,
+      "method": "GET",
+      "name": "GET /metrics",
+      "p50_ms": 0.00020884908735752106,
+      "p95_ms": 0.0002746470272541046,
+      "p99_ms": 0.00028776004910469055,
+      "path": "/metrics",
+      "request_count": 5,
+      "success_count": 5,
+      "success_rate": 1.0,
+      "timeout_sec": 10.0
+    },
+    {
+      "mean_ms": 0.00020838342607021332,
       "method": "POST",
       "name": "POST /recommendations",
-      "p50_ms": 5.3140000673010945,
-      "p95_ms": 65.4588744509965,
-      "p99_ms": 77.37880772911012,
+      "p50_ms": 0.00020815059542655945,
+      "p95_ms": 0.00024167820811271665,
+      "p99_ms": 0.000248197466135025,
       "path": "/recommendations",
       "request_count": 5,
       "success_count": 5,
-      "success_rate": 1.0
+      "success_rate": 1.0,
+      "timeout_sec": 60.0
     },
     {
-      "mean_ms": 5.117549956776202,
+      "mean_ms": 0.00019157305359840393,
       "method": "POST",
       "name": "POST /explanations",
-      "p50_ms": 4.976041964255273,
-      "p95_ms": 5.786900199018419,
-      "p99_ms": 5.907213645987213,
+      "p50_ms": 0.00020791776478290558,
+      "p95_ms": 0.00020791776478290558,
+      "p99_ms": 0.00020791776478290558,
       "path": "/explanations",
       "request_count": 5,
       "success_count": 5,
-      "success_rate": 1.0
+      "success_rate": 1.0,
+      "timeout_sec": 60.0
     },
     {
-      "mean_ms": 4.904366610571742,
+      "mean_ms": 0.00019171275198459625,
       "method": "POST",
       "name": "POST /rag/explanations",
-      "p50_ms": 4.983457969501615,
-      "p95_ms": 5.087966239079833,
-      "p99_ms": 5.092526068910956,
+      "p50_ms": 0.00020791776478290558,
+      "p95_ms": 0.00020866282284259796,
+      "p99_ms": 0.00020881183445453644,
       "path": "/rag/explanations",
       "request_count": 5,
       "success_count": 5,
-      "success_rate": 1.0
+      "success_rate": 1.0,
+      "timeout_sec": 15.0
     }
   ],
   "environment": "local",
   "request_count_per_endpoint": 5,
-  "timestamp": "2026-05-31T21:37:06.556726+00:00"
+  "serving": {
+    "fusion_ok": true,
+    "item_cf_ok": false,
+    "ranking_mode": "multi_retriever_fusion",
+    "status": "ok",
+    "svd_ok": false
+  },
+  "timestamp": "2026-06-04T21:05:35.091121+00:00"
 }

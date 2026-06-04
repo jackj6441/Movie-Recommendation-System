@@ -1,6 +1,6 @@
 # Benchmarking
 
-Use the benchmark harness to measure the recommendation API from a local or remote deployment. The script sends real HTTP requests to the core product endpoints and writes both machine-readable and human-readable reports.
+Measure the recommendation API from a local or remote deployment. The harness sends HTTP requests to core product endpoints and writes JSON/Markdown reports. RAG behavior is not modified here—benchmarks only observe latency and success rate.
 
 ## Command
 
@@ -12,26 +12,42 @@ python benchmarks/benchmark_api.py \
   --environment local
 ```
 
-For EC2, replace `--base-url` with the public API URL:
+Fusion ranking scans the full catalog for content/SVD channels, so `/recommendations` and `/explanations` use **60s** per-request timeouts by default (override with `--timeout 90` for all endpoints).
+
+Sync portfolio evidence (benchmark p95 + optional fusion eval metrics):
+
+```bash
+python benchmarks/benchmark_api.py \
+  --base-url http://localhost:8000 \
+  --requests 20 \
+  --environment local \
+  --sync-evidence
+```
+
+Requires `evaluation/results/fusion_metrics.json` only when you want `recall_at_10` / `ndcg_at_24` copied into `services/reco-api/evidence/system_evidence.json`.
+
+## EC2
 
 ```bash
 python benchmarks/benchmark_api.py \
   --base-url http://<ec2-public-ip>:8000 \
   --requests 10 \
   --output-dir benchmarks/results \
-  --environment ec2
+  --environment ec2 \
+  --sync-evidence
 ```
 
 ## Endpoints
 
-The benchmark covers:
+| Endpoint | Notes |
+|----------|--------|
+| `GET /healthz` | Captured once as `serving` snapshot (`ranking_mode`, `fusion_ok`, …) |
+| `GET /metrics` | Prometheus text; success = HTTP 200 |
+| `POST /recommendations` | Seed payload `[1,2,3]`; measures fusion path |
+| `POST /explanations` | Same ranker as recommendations (duplicate call today) |
+| `POST /rag/explanations` | Mock RAG by default; 15s timeout |
 
-- `GET /healthz`
-- `POST /recommendations`
-- `POST /explanations`
-- `POST /rag/explanations`
-
-The POST endpoints use a stable Seed Set payload:
+Stable POST body:
 
 ```json
 {"seeds": [1, 2, 3], "shuffle": false}
@@ -39,26 +55,22 @@ The POST endpoints use a stable Seed Set payload:
 
 ## Artifacts
 
-The script writes:
+- `benchmarks/results/benchmark_report.json`
+- `benchmarks/results/benchmark_report.md`
 
-- `benchmark_report.json`
-- `benchmark_report.md`
+JSON includes `serving` from `/healthz` plus per-endpoint latency percentiles.
 
-The JSON report is intended for automation and future comparison. The Markdown report is intended for README summaries, interview evidence, and manual review.
+## Metrics per endpoint
 
-## Metrics
+- `success_rate`, `p50_ms`, `p95_ms`, `p99_ms`, `mean_ms`, `timeout_sec`
 
-Each endpoint report includes:
+Use mock RAG (`RAG_PROVIDER=mock`) for public benchmark runs to avoid provider keys and cost.
 
-- `request_count`: number of requests sent to the endpoint.
-- `success_rate`: fraction of requests that returned a 2xx response.
-- `p50`: median latency in milliseconds.
-- `p95`: 95th percentile latency in milliseconds.
-- `p99`: 99th percentile latency in milliseconds.
-- `mean_ms`: average latency in milliseconds.
+## Full offline + benchmark pipeline
 
-The report also records the target `base_url`, timestamp, and environment label so local and EC2 runs can be compared without guessing where the numbers came from.
-
-## Notes
-
-Use mock RAG mode for public benchmark runs unless you intentionally want to measure an external provider. This avoids uncontrolled provider cost and removes provider-key requirements from portfolio demos.
+```bash
+python evaluation/eval_fusion.py --max-users 100
+python evaluation/tune_fusion_weights.py --quick   # or full grid on 32M
+python benchmarks/benchmark_api.py --base-url http://localhost:8000 --requests 20 --sync-evidence
+python evaluation/build_report.py
+```

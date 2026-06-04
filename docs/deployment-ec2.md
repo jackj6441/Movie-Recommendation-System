@@ -129,7 +129,8 @@ python benchmarks/benchmark_api.py \
   --base-url http://<ec2-public-ip>:8000 \
   --requests 10 \
   --output-dir benchmarks/results \
-  --environment ec2
+  --environment ec2 \
+  --sync-evidence
 ```
 
 ## Update Deployment

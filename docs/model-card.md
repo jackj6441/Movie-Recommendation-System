@@ -18,8 +18,8 @@
 
 The evaluation harness is expected to report:
 
-- Recall@K for Seed Set recommendation retrieval.
-- NDCG@K for Seed Set recommendation retrieval.
+- Recall@10 / Recall@24 and NDCG@10 / NDCG@24 for Phase 1 fusion (`evaluation/eval_fusion.py`).
+- Legacy Recall@K / NDCG@K for content-only baseline (`evaluation/eval_retrieval.py`).
 - Recommendation coverage.
 - Top-K diversity.
 - Popularity baseline comparison.

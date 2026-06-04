@@ -40,10 +40,12 @@ def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
     endpoints = {endpoint["name"]: endpoint for endpoint in report["endpoints"]}
     assert set(endpoints) == {
         "GET /healthz",
+        "GET /metrics",
         "POST /recommendations",
         "POST /explanations",
         "POST /rag/explanations",
     }
+    assert report["serving"]["ranking_mode"] == "multi_retriever_fusion"
     for endpoint in endpoints.values():
         assert endpoint["request_count"] == 2
         assert endpoint["success_rate"] == 1.0
@@ -55,6 +57,62 @@ def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
     assert "# API Benchmark Report" in markdown
     assert "GET /healthz" in markdown
     assert "POST /rag/explanations" in markdown
+
+
+def test_benchmark_sync_evidence_merges_latency_and_fusion_metrics(tmp_path):
+    evidence_path = tmp_path / "system_evidence.json"
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "system_name": "movie-recommendation-system",
+                "evaluation": {"recall_at_k": 0.04},
+                "benchmark": {"recommendations_p95_ms": 1.0},
+            }
+        ),
+        encoding="utf-8",
+    )
+    fusion_metrics = tmp_path / "fusion_metrics.json"
+    fusion_metrics.write_text(
+        json.dumps(
+            {
+                "recall_at_10": 0.11,
+                "recall_at_24": 0.15,
+                "ndcg_at_10": 0.05,
+                "ndcg_at_24": 0.07,
+                "user_count": 50,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "benchmarks/benchmark_api.py",
+            "--base-url",
+            "mock://local",
+            "--requests",
+            "2",
+            "--output-dir",
+            str(tmp_path / "bench"),
+            "--sync-evidence",
+            "--evidence-path",
+            str(evidence_path),
+            "--fusion-metrics",
+            str(fusion_metrics),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert evidence["benchmark"]["recommendations_p95_ms"] >= 0
+    assert evidence["benchmark"]["ranking_mode"] == "multi_retriever_fusion"
+    assert evidence["evaluation"]["recall_at_10"] == 0.11
+    assert evidence["evaluation"]["ndcg_at_24"] == 0.07
+    assert "generated_at" in evidence
 
 
 def test_benchmark_docs_explain_command_and_artifacts():
@@ -69,6 +127,8 @@ def test_benchmark_docs_explain_command_and_artifacts():
     assert "p50" in content
     assert "p95" in content
     assert "p99" in content
+    assert "--sync-evidence" in content
+    assert "multi_retriever_fusion" in content or "fusion" in content.lower()
 
 
 def test_local_benchmark_report_artifact_is_published():
@@ -82,7 +142,9 @@ def test_local_benchmark_report_artifact_is_published():
     assert report["request_count_per_endpoint"] > 0
     assert {endpoint["name"] for endpoint in report["endpoints"]} == {
         "GET /healthz",
+        "GET /metrics",
         "POST /recommendations",
         "POST /explanations",
         "POST /rag/explanations",
     }
+    assert report.get("serving", {}).get("ranking_mode") == "multi_retriever_fusion"

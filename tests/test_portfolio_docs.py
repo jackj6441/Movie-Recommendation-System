@@ -74,7 +74,7 @@ def test_portfolio_docs_state_public_rag_and_model_truth():
     for expected in [
         "RAG_PROVIDER=mock",
         "Do not commit",
-        "Seed Set recommendations driven by content embeddings",
         "multi-retriever fusion",
+        "eval_fusion.py",
     ]:
         assert expected in combined

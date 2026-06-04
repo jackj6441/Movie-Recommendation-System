@@ -38,11 +38,11 @@ It packages a movie recommender as an operational ML system: offline artifact bu
 
 ```text
 MovieLens data
-  -> content embeddings + serving stats (offline)
-  -> FastAPI seed-based serving
-  -> RAG explanation layer
-  -> React UI
-  -> /healthz + /metrics + benchmark reports
+  -> content + SVD + item-CF + serving stats (offline)
+  -> FastAPI four-retriever fusion (Top-24)
+  -> RAG explanation layer (mock by default)
+  -> React UI + System Evidence Dashboard
+  -> /healthz + /metrics + eval/benchmark artifacts
   -> AWS EC2 Docker Compose demo
 ```
 
@@ -66,8 +66,8 @@ Important model truth: the UI uses Seed Set recommendations via multi-retriever 
 
 ## Repository Structure
 
-- `services/reco-api`: FastAPI + ONNX Runtime + Redis serving service.
-- `training`: PyTorch Lightning training, export, and embedding utilities.
+- `services/reco-api`: FastAPI seed-set serving with Phase 1 multi-retriever fusion.
+- `training`: MovieLens preprocessing, embeddings, SVD/item-CF artifact builds.
 - `evaluation`: reproducible model and retrieval evaluation harness.
 - `benchmarks`: API benchmark CLI and committed benchmark reports.
 - `web`: React + D3 recommendation dashboard.
@@ -110,14 +110,18 @@ curl -X POST http://localhost:8000/rag/explanations -H "Content-Type: applicatio
 
 ```bash
 python evaluation/eval_retrieval.py
+python evaluation/eval_fusion.py --max-users 100
+python evaluation/tune_fusion_weights.py --quick
 python evaluation/build_report.py
 ```
 
 ## Benchmark
 
 ```bash
-python benchmarks/benchmark_api.py --base-url http://localhost:8000 --requests 20 --environment local
+python benchmarks/benchmark_api.py --base-url http://localhost:8000 --requests 20 --environment local --sync-evidence
 ```
+
+See `docs/benchmarking.md` and `evaluation/README.md`.
 
 ## Deployment Notes
 
