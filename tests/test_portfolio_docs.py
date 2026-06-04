@@ -10,7 +10,7 @@ def test_readme_presents_ml_infra_portfolio_story():
 
     for expected in [
         "Production-style ML recommendation platform",
-        "training -> evaluation -> export -> serving -> caching -> explanation -> monitoring -> deployment",
+        "training -> evaluation -> serving -> explanation -> monitoring -> deployment",
         "http://34.228.75.214:3000",
         "evaluation/results/eval_report.md",
         "benchmarks/results/benchmark_report.md",
@@ -50,11 +50,8 @@ def test_resume_bullets_are_ml_infra_focused_and_copy_ready():
     assert 3 <= len(bullets) <= 5
 
     for expected in [
-        "PyTorch Lightning",
-        "ONNX Runtime",
-        "Redis",
         "FastAPI",
-        "React/D3",
+        "React",
         "Docker Compose",
         "Prometheus-style",
         "AWS EC2",
@@ -77,8 +74,7 @@ def test_portfolio_docs_state_public_rag_and_model_truth():
     for expected in [
         "RAG_PROVIDER=mock",
         "Do not commit",
-        "Seed Set recommendations driven by Content Signal",
-        "NCF / ONNX model remains",
-        "product ranking",
+        "Seed Set recommendations driven by content embeddings",
+        "multi-retriever fusion",
     ]:
         assert expected in combined

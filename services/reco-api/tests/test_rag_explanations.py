@@ -1,35 +1,12 @@
-import importlib
 import json
 import logging
-import sys
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 
-def load_app(monkeypatch):
-    repo_root = Path(__file__).resolve().parents[3]
-    api_root = repo_root / "services" / "reco-api"
-
-    monkeypatch.setenv("MOVIES_CSV_PATH", str(repo_root / "ml-latest-small" / "movies.csv"))
-    monkeypatch.setenv("RATINGS_CSV_PATH", str(repo_root / "ml-latest-small" / "ratings.csv"))
-    # Force the ratings fallback so the committed serving_stats.json is not used.
-    monkeypatch.setenv("SERVING_STATS_PATH", str(repo_root / "ml-latest-small" / "__no_serving_stats__.json"))
-    monkeypatch.setenv("CONTENT_EMBEDDINGS_PATH", str(api_root / "models" / "content_embeddings.npz"))
-    monkeypatch.setenv("CONTENT_INDEX_PATH", str(api_root / "models" / "content_index.json"))
-    monkeypatch.setenv("ONNX_MODEL_PATH", str(api_root / "models" / "ncf.onnx"))
-    monkeypatch.setenv("METADATA_PATH", str(api_root / "models" / "metadata.json"))
-
-    sys.path.insert(0, str(api_root))
-    sys.modules.pop("app.main", None)
-    sys.modules.pop("app.content", None)
-    sys.modules.pop("app.rag", None)
-    sys.modules.pop("app.seed_ranker", None)
-    return importlib.import_module("app.main").app
-
-
-def test_rag_explanations_returns_mock_structured_explanation_for_seed_set(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_rag_explanations_returns_mock_structured_explanation_for_seed_set(load_app):
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -46,11 +23,11 @@ def test_rag_explanations_returns_mock_structured_explanation_for_seed_set(monke
     for item in payload["items"]:
         assert set(item) == {"movie_id", "reason", "evidence"}
         assert item["reason"]
-        assert set(item["evidence"]).issubset({"seed_set", "content_signal", "hybrid_score"})
+        assert set(item["evidence"]).issubset({"seed_set", "content_signal", "fusion_score"})
 
 
-def test_rag_explanations_items_match_deterministic_top_three_order(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_rag_explanations_items_match_deterministic_top_three_order(load_app):
+    client = TestClient(load_app)
 
     deterministic_response = client.post("/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
     rag_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
@@ -64,9 +41,9 @@ def test_rag_explanations_items_match_deterministic_top_three_order(monkeypatch)
     assert rag_items == deterministic_top_three
 
 
-def test_rag_explanations_returns_cached_explanation_for_repeated_seed_set(monkeypatch):
+def test_rag_explanations_returns_cached_explanation_for_repeated_seed_set(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
@@ -79,9 +56,9 @@ def test_rag_explanations_returns_cached_explanation_for_repeated_seed_set(monke
     assert second_response.json()["evidence_hash"] == first_response.json()["evidence_hash"]
 
 
-def test_rag_explanations_cache_misses_when_evidence_hash_changes(monkeypatch):
+def test_rag_explanations_cache_misses_when_evidence_hash_changes(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [19, 20, 21], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [22, 23, 24], "shuffle": False})
@@ -93,10 +70,10 @@ def test_rag_explanations_cache_misses_when_evidence_hash_changes(monkeypatch):
     assert first_response.json()["evidence_hash"] != second_response.json()["evidence_hash"]
 
 
-def test_rag_explanations_cache_misses_when_provider_model_changes(monkeypatch):
+def test_rag_explanations_cache_misses_when_provider_model_changes(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_PROVIDER_MODEL", "mock-model-a")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [4, 5, 6], "shuffle": False})
     monkeypatch.setenv("RAG_PROVIDER_MODEL", "mock-model-b")
@@ -108,10 +85,10 @@ def test_rag_explanations_cache_misses_when_provider_model_changes(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_cache_misses_when_model_version_changes(monkeypatch):
+def test_rag_explanations_cache_misses_when_model_version_changes(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("MODEL_VERSION", "model-version-a")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [25, 26, 27], "shuffle": False})
     monkeypatch.setenv("MODEL_VERSION", "model-version-b")
@@ -125,10 +102,10 @@ def test_rag_explanations_cache_misses_when_model_version_changes(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_cache_misses_when_ttl_expires(monkeypatch):
+def test_rag_explanations_cache_misses_when_ttl_expires(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_CACHE_TTL_SECONDS", "0")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [7, 8, 9], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [7, 8, 9], "shuffle": False})
@@ -139,10 +116,10 @@ def test_rag_explanations_cache_misses_when_ttl_expires(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_ignores_cache_when_ttl_is_invalid(monkeypatch):
+def test_rag_explanations_ignores_cache_when_ttl_is_invalid(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_CACHE_TTL_SECONDS", "not-a-number")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [13, 14, 15], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [13, 14, 15], "shuffle": False})
@@ -153,10 +130,10 @@ def test_rag_explanations_ignores_cache_when_ttl_is_invalid(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_ignores_cache_when_ttl_is_negative(monkeypatch):
+def test_rag_explanations_ignores_cache_when_ttl_is_negative(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_CACHE_TTL_SECONDS", "-5")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [16, 17, 18], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [16, 17, 18], "shuffle": False})
@@ -167,10 +144,10 @@ def test_rag_explanations_ignores_cache_when_ttl_is_negative(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_cache_misses_when_prompt_version_changes(monkeypatch):
+def test_rag_explanations_cache_misses_when_prompt_version_changes(load_app, monkeypatch):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     monkeypatch.setenv("RAG_PROMPT_VERSION", "rag-exp-test-a")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [10, 11, 12], "shuffle": False})
     monkeypatch.setenv("RAG_PROMPT_VERSION", "rag-exp-test-b")
@@ -184,9 +161,9 @@ def test_rag_explanations_cache_misses_when_prompt_version_changes(monkeypatch):
     assert second_response.json()["explanation_source"] == "rag"
 
 
-def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, caplog):
+def test_rag_explanations_logs_safe_metadata_for_successful_rag(load_app, monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger="app.rag")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -214,10 +191,10 @@ def test_rag_explanations_logs_safe_metadata_for_successful_rag(monkeypatch, cap
     assert metadata_log["latency_ms"] >= 0
 
 
-def test_rag_explanations_metadata_logs_do_not_include_sensitive_payloads(monkeypatch, caplog):
+def test_rag_explanations_metadata_logs_do_not_include_sensitive_payloads(load_app, monkeypatch, caplog):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-secret")
     caplog.set_level(logging.INFO, logger="app.rag")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -231,10 +208,10 @@ def test_rag_explanations_metadata_logs_do_not_include_sensitive_payloads(monkey
     assert '"summary"' not in logged_text
 
 
-def test_rag_explanations_logs_safe_metadata_for_cache_hit(monkeypatch, caplog):
+def test_rag_explanations_logs_safe_metadata_for_cache_hit(load_app, monkeypatch, caplog):
     monkeypatch.setenv("RAG_CACHE_ENABLED", "true")
     caplog.set_level(logging.INFO, logger="app.rag")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     first_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
     second_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
@@ -261,8 +238,8 @@ def test_rag_explanations_logs_safe_metadata_for_cache_hit(monkeypatch, caplog):
     assert metadata_log["latency_ms"] >= 0
 
 
-def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_rag_explanations_reuses_seed_set_validation(load_app):
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [], "shuffle": False})
 
@@ -270,9 +247,9 @@ def test_rag_explanations_reuses_seed_set_validation(monkeypatch):
     assert response.json() == {"detail": "seeds must be 1 to 5 items"}
 
 
-def test_rag_explanations_falls_back_when_provider_returns_invalid_json(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_returns_invalid_json(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_json")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -289,9 +266,9 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_json(monkeypa
     assert payload["evidence_hash"].startswith("sha256:")
 
 
-def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_schema")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -303,10 +280,10 @@ def test_rag_explanations_falls_back_when_provider_returns_invalid_schema(monkey
     assert payload["items"]
 
 
-def test_rag_explanations_logs_safe_metadata_for_schema_fallback(monkeypatch, caplog):
+def test_rag_explanations_logs_safe_metadata_for_schema_fallback(load_app, monkeypatch, caplog):
     monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_schema")
     caplog.set_level(logging.INFO, logger="app.rag")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -331,9 +308,9 @@ def test_rag_explanations_logs_safe_metadata_for_schema_fallback(monkeypatch, ca
     assert metadata_log["latency_ms"] >= 0
 
 
-def test_rag_explanations_falls_back_when_provider_adds_extra_item_field(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_adds_extra_item_field(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_extra_item_field")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -343,9 +320,9 @@ def test_rag_explanations_falls_back_when_provider_adds_extra_item_field(monkeyp
     assert payload["fallback_reason"] == "schema_validation_failed"
 
 
-def test_rag_explanations_falls_back_when_provider_adds_extra_top_level_field(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_adds_extra_top_level_field(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_extra_top_level_field")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -355,9 +332,9 @@ def test_rag_explanations_falls_back_when_provider_adds_extra_top_level_field(mo
     assert payload["fallback_reason"] == "schema_validation_failed"
 
 
-def test_rag_explanations_falls_back_when_provider_changes_item_order(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_changes_item_order(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_wrong_item_order")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -367,9 +344,9 @@ def test_rag_explanations_falls_back_when_provider_changes_item_order(monkeypatc
     assert payload["fallback_reason"] == "schema_validation_failed"
 
 
-def test_rag_explanations_falls_back_when_provider_omits_top_three_item(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_omits_top_three_item(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_missing_top_three_item")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -379,9 +356,9 @@ def test_rag_explanations_falls_back_when_provider_omits_top_three_item(monkeypa
     assert payload["fallback_reason"] == "schema_validation_failed"
 
 
-def test_rag_explanations_falls_back_when_provider_times_out(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_times_out(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -393,9 +370,9 @@ def test_rag_explanations_falls_back_when_provider_times_out(monkeypatch):
     assert payload["items"]
 
 
-def test_rag_explanations_falls_back_when_provider_errors(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_errors(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_provider_error")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -407,10 +384,10 @@ def test_rag_explanations_falls_back_when_provider_errors(monkeypatch):
     assert payload["items"]
 
 
-def test_rag_explanations_falls_back_when_external_provider_has_no_api_key(monkeypatch):
+def test_rag_explanations_falls_back_when_external_provider_has_no_api_key(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.delenv("RAG_PROVIDER_API_KEY", raising=False)
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -420,7 +397,7 @@ def test_rag_explanations_falls_back_when_external_provider_has_no_api_key(monke
     assert payload["fallback_reason"] == "provider_error"
 
 
-def test_rag_explanations_uses_external_provider_response_from_backend_env(monkeypatch):
+def test_rag_explanations_uses_external_provider_response_from_backend_env(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_PROVIDER_MODEL", "external-test-model")
@@ -433,23 +410,23 @@ def test_rag_explanations_uses_external_provider_response_from_backend_env(monke
                     {
                         "movie_id": 239,
                         "reason": "External provider reason for Goofy Movie.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                     {
                         "movie_id": 39,
                         "reason": "External provider reason for Clueless.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                     {
                         "movie_id": 175,
                         "reason": "External provider reason for Kids.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                 ],
             }
         ),
     )
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -460,11 +437,11 @@ def test_rag_explanations_uses_external_provider_response_from_backend_env(monke
     assert payload["items"][0]["reason"] == "External provider reason for Goofy Movie."
 
 
-def test_rag_explanations_falls_back_when_external_provider_returns_invalid_json(monkeypatch):
+def test_rag_explanations_falls_back_when_external_provider_returns_invalid_json(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_RESPONSE_JSON", "{not-json")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -474,11 +451,11 @@ def test_rag_explanations_falls_back_when_external_provider_returns_invalid_json
     assert payload["fallback_reason"] == "invalid_json"
 
 
-def test_rag_explanations_falls_back_when_external_provider_times_out(monkeypatch):
+def test_rag_explanations_falls_back_when_external_provider_times_out(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATE_TIMEOUT", "true")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -488,11 +465,11 @@ def test_rag_explanations_falls_back_when_external_provider_times_out(monkeypatc
     assert payload["fallback_reason"] == "provider_timeout"
 
 
-def test_rag_explanations_falls_back_when_external_latency_exceeds_timeout_policy(monkeypatch):
+def test_rag_explanations_falls_back_when_external_latency_exceeds_timeout_policy(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "9")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -502,7 +479,7 @@ def test_rag_explanations_falls_back_when_external_latency_exceeds_timeout_polic
     assert payload["fallback_reason"] == "provider_timeout"
 
 
-def test_rag_explanations_allows_external_latency_within_timeout_policy(monkeypatch):
+def test_rag_explanations_allows_external_latency_within_timeout_policy(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "7.5")
@@ -515,23 +492,23 @@ def test_rag_explanations_allows_external_latency_within_timeout_policy(monkeypa
                     {
                         "movie_id": 239,
                         "reason": "External provider reason for Goofy Movie.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                     {
                         "movie_id": 39,
                         "reason": "External provider reason for Clueless.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                     {
                         "movie_id": 175,
                         "reason": "External provider reason for Kids.",
-                        "evidence": ["seed_set", "content_signal", "hybrid_score"],
+                        "evidence": ["seed_set", "content_signal", "fusion_score"],
                     },
                 ],
             }
         ),
     )
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -541,11 +518,11 @@ def test_rag_explanations_allows_external_latency_within_timeout_policy(monkeypa
     assert payload["summary"] == "External provider summary"
 
 
-def test_rag_explanations_falls_back_when_external_latency_config_is_invalid(monkeypatch):
+def test_rag_explanations_falls_back_when_external_latency_config_is_invalid(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "not-a-number")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -555,11 +532,11 @@ def test_rag_explanations_falls_back_when_external_latency_config_is_invalid(mon
     assert payload["fallback_reason"] == "provider_error"
 
 
-def test_rag_explanations_falls_back_when_external_provider_errors(monkeypatch):
+def test_rag_explanations_falls_back_when_external_provider_errors(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATE_ERROR", "true")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -569,9 +546,9 @@ def test_rag_explanations_falls_back_when_external_provider_errors(monkeypatch):
     assert payload["fallback_reason"] == "provider_error"
 
 
-def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
+def test_rag_explanations_falls_back_when_rag_is_disabled(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "disabled")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -581,9 +558,9 @@ def test_rag_explanations_falls_back_when_rag_is_disabled(monkeypatch):
     assert payload["fallback_reason"] == "disabled"
 
 
-def test_rag_explanations_falls_back_when_provider_is_unknown(monkeypatch):
+def test_rag_explanations_falls_back_when_provider_is_unknown(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "unknown_provider")
-    client = TestClient(load_app(monkeypatch))
+    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 

@@ -22,11 +22,6 @@ _MOVIES_CSV = f"{_dataset_dir()}/movies.csv"
 
 
 def test_build_report_writes_json_and_markdown(tmp_path):
-    model_metrics = tmp_path / "model_metrics.json"
-    model_metrics.write_text(
-        json.dumps({"rmse": 0.91, "sample_count": 25}),
-        encoding="utf-8",
-    )
     retrieval_metrics = tmp_path / "retrieval_metrics.json"
     retrieval_metrics.write_text(
         json.dumps(
@@ -46,8 +41,6 @@ def test_build_report_writes_json_and_markdown(tmp_path):
         [
             sys.executable,
             "evaluation/build_report.py",
-            "--model-metrics",
-            str(model_metrics),
             "--retrieval-metrics",
             str(retrieval_metrics),
             "--output-dir",
@@ -68,43 +61,11 @@ def test_build_report_writes_json_and_markdown(tmp_path):
     report = json.loads(json_path.read_text(encoding="utf-8"))
     assert report["project"] == "movie-recommendation-system"
     assert "generated_at" in report
-    assert report["model_metrics"]["rmse"] == 0.91
     assert report["retrieval_metrics"]["recall_at_k"] == 0.2
 
     markdown = markdown_path.read_text(encoding="utf-8")
     assert "# Evaluation Report" in markdown
-    assert "RMSE" in markdown
     assert "Recall@K" in markdown
-
-
-def test_eval_model_writes_rmse_metrics(tmp_path):
-    output_path = tmp_path / "model_metrics.json"
-    result = subprocess.run(
-        [
-            sys.executable,
-            "evaluation/eval_model.py",
-            "--model",
-            "services/reco-api/models/ncf.onnx",
-            "--metadata",
-            "services/reco-api/models/metadata.json",
-            # NCF metadata matches ml-latest-small, not the 32M sample catalog.
-            "--ratings",
-            "ml-latest-small/ratings.csv",
-            "--max-samples",
-            "25",
-            "--output",
-            str(output_path),
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-
-    assert result.returncode == 0, result.stderr
-    metrics = json.loads(output_path.read_text(encoding="utf-8"))
-    assert metrics["artifact"] == "services/reco-api/models/ncf.onnx"
-    assert metrics["sample_count"] == 25
-    assert metrics["rmse"] > 0
 
 
 def test_eval_retrieval_writes_ranking_and_baseline_metrics(tmp_path):

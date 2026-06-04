@@ -1,8 +1,0 @@
-{
-  "artifact": "services/reco-api/models/ncf.onnx",
-  "metadata": "services/reco-api/models/metadata.json",
-  "ratings": "ml-latest-small/ratings.csv",
-  "rmse": 3.143829381103598,
-  "sample_count": 610,
-  "split_strategy": "per-user last interaction"
-}

@@ -56,17 +56,15 @@ describe("App RAG explanations", () => {
             },
             serving: {
               status: "ok",
-              redis_ok: true,
-              onnx_ok: true,
-              metadata_ok: true,
+              content_ok: true,
+              catalog_ok: true,
               model_version: "dev",
             },
             model_truth: {
-              product_ranking_path: "Seed Set recommendations driven by Content Signal",
-              ncf_onnx_status: "legacy/debug/evaluation path unless later wired into product ranking",
+              product_ranking_path: "Seed Set recommendations driven by content embeddings",
+              roadmap: "Multi-retriever fusion (content, SVD, item-CF) with optional LTR reranker",
             },
             evaluation: {
-              rmse: 3.1438,
               recall_at_k: 0.05,
               ndcg_at_k: 0.0258,
               recommendation_coverage: 0.0287,
@@ -121,9 +119,8 @@ describe("App RAG explanations", () => {
           return jsonResponse({
             user_id: null,
             model_version: "test-model",
-            alpha: 0.5,
             anchor_movie: { movie_id: 1, title: "Toy Story (1995)" },
-            topk: [{ movie_id: 239, title: "Some Movie", ncf: 0.4, content: 0.5, final: 0.9 }],
+            topk: [{ movie_id: 239, title: "Some Movie", content: 0.5, final: 0.9 }],
             similar_movies: [],
             content_available: true,
           })
@@ -161,7 +158,7 @@ describe("App RAG explanations", () => {
     ragItems = [
       { movie_id: 103, reason: "Third reason", evidence: ["content_signal"] },
       { movie_id: 101, reason: "First reason", evidence: ["seed_set"] },
-      { movie_id: 102, reason: "Second reason", evidence: ["hybrid_score"] },
+      { movie_id: 102, reason: "Second reason", evidence: ["fusion_score"] },
     ]
 
     const user = userEvent.setup()
@@ -233,7 +230,7 @@ describe("App RAG explanations", () => {
     ragItems = [
       { movie_id: 101, reason: "First AI reason", evidence: ["seed_set"] },
       { movie_id: 102, reason: "Second AI reason", evidence: ["content_signal"] },
-      { movie_id: 103, reason: "Third AI reason", evidence: ["hybrid_score"] },
+      { movie_id: 103, reason: "Third AI reason", evidence: ["fusion_score"] },
     ]
 
     const user = userEvent.setup()
@@ -524,7 +521,7 @@ describe("App RAG explanations", () => {
           explanation_source: "rag",
         })
         if (url.endsWith("/explanations")) return jsonResponse({
-          user_id: null, model_version: "dev", alpha: 0.5,
+          user_id: null, model_version: "dev",
           anchor_movie: null, topk: [], similar_movies: [], content_available: true,
         })
         return jsonResponse({})
@@ -864,7 +861,7 @@ describe("App RAG explanations", () => {
     expect(screen.getByText("Latency Benchmark")).toBeInTheDocument()
     expect(screen.getByText("RAG & Safety")).toBeInTheDocument()
     expect(screen.getByText("AWS EC2 Deployment")).toBeInTheDocument()
-    expect(screen.getByText("Seed Set recommendations driven by Content Signal")).toBeInTheDocument()
+    expect(screen.getByText("Seed Set recommendations driven by content embeddings")).toBeInTheDocument()
     expect(screen.getByText("Current Recall@K")).toBeInTheDocument()
     expect(screen.getByText("Popularity Baseline Recall@K")).toBeInTheDocument()
     expect(screen.getByText("0.050")).toBeInTheDocument()
@@ -915,9 +912,8 @@ describe("App movie posters", () => {
           return jsonResponse({
             user_id: null,
             model_version: "test-model",
-            alpha: 0.7,
             anchor_movie: { movie_id: 1, title: "Toy Story (1995)" },
-            topk: [{ movie_id: 239, title: "Some Movie", ncf: 0, content: 0.9, final: 0.9 }],
+            topk: [{ movie_id: 239, title: "Some Movie", content: 0.9, final: 0.9 }],
             similar_movies: [],
             content_available: true,
             anchor_source: "seed",

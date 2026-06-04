@@ -17,9 +17,8 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
   const recallLift = evidence ? formatLift(evidence.evaluation.recall_at_k, evidence.evaluation.popularity_baseline_recall_at_k) : null
   const servingReady = evidence
     ? evidence.serving.status === "ok" &&
-      evidence.serving.redis_ok &&
-      evidence.serving.onnx_ok &&
-      evidence.serving.metadata_ok
+      evidence.serving.content_ok &&
+      evidence.serving.catalog_ok
     : false
 
   return (
@@ -50,7 +49,7 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
                 <span>Serving is live</span>
                 <strong>{servingReady ? "Ready" : "Degraded"}</strong>
                 <p>
-                  API health, Redis cache, ONNX runtime, and metadata are checked before this demo
+                  API health, content embeddings, and catalog artifacts are checked before this demo
                   claims recommendations are ready.
                 </p>
               </article>
@@ -93,16 +92,12 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
                 <strong>{evidence.serving.status}</strong>
               </div>
               <div>
-                <span>Redis</span>
-                <strong>{evidence.serving.redis_ok ? "ok" : "degraded"}</strong>
+                <span>Content</span>
+                <strong>{evidence.serving.content_ok ? "ok" : "missing"}</strong>
               </div>
               <div>
-                <span>ONNX</span>
-                <strong>{evidence.serving.onnx_ok ? "ok" : "missing"}</strong>
-              </div>
-              <div>
-                <span>Metadata</span>
-                <strong>{evidence.serving.metadata_ok ? "ok" : "missing"}</strong>
+                <span>Catalog</span>
+                <strong>{evidence.serving.catalog_ok ? "ok" : "missing"}</strong>
               </div>
             </div>
           </div>
@@ -113,11 +108,6 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
               Offline metrics show whether the recommender ranks relevant movies and covers the catalog.
             </div>
             <div className="metric-grid">
-              <div>
-                <span>Prediction error</span>
-                <strong>{evidence.evaluation.rmse.toFixed(4)}</strong>
-                <small>RMSE, lower is better</small>
-              </div>
               <div>
                 <span>Ranking quality</span>
                 <strong>{formatMetric(evidence.evaluation.ndcg_at_k)}</strong>
@@ -168,7 +158,9 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
             <details className="evidence-details">
               <summary>Model artifact details</summary>
               <p className="subtle">{evidence.model_truth.product_ranking_path}</p>
-              <p className="subtle">{evidence.model_truth.ncf_onnx_status}</p>
+              {evidence.model_truth.roadmap && (
+                <p className="subtle">{evidence.model_truth.roadmap}</p>
+              )}
             </details>
           </div>
 

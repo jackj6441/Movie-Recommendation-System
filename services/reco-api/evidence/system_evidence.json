@@ -16,13 +16,12 @@
     "popularity_baseline_recall_at_k": 0.03,
     "recall_at_k": 0.04,
     "recommendation_coverage": 0.0171,
-    "rmse": null,
     "topk_diversity": 0.6298
   },
   "generated_at": "2026-06-02T17:05:48+00:00",
   "model_truth": {
-    "ncf_onnx_status": "legacy/debug/evaluation path unless later wired into product ranking",
-    "product_ranking_path": "Seed Set recommendations driven by Content Signal"
+    "product_ranking_path": "Seed Set recommendations driven by content embeddings",
+    "roadmap": "Multi-retriever fusion (content, SVD, item-CF) with optional LTR reranker"
   },
   "rag": {
     "public_provider": "mock",

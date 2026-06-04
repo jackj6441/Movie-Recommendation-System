@@ -1,35 +1,8 @@
-import importlib
-import sys
-from pathlib import Path
-
 from fastapi.testclient import TestClient
 
 
-def load_app(monkeypatch):
-    repo_root = Path(__file__).resolve().parents[3]
-    api_root = repo_root / "services" / "reco-api"
-
-    monkeypatch.setenv("MOVIES_CSV_PATH", str(repo_root / "ml-latest-small" / "movies.csv"))
-    monkeypatch.setenv("RATINGS_CSV_PATH", str(repo_root / "ml-latest-small" / "ratings.csv"))
-    # Force the ratings fallback so the committed serving_stats.json is not used.
-    monkeypatch.setenv("SERVING_STATS_PATH", str(repo_root / "ml-latest-small" / "__no_serving_stats__.json"))
-    monkeypatch.setenv("CONTENT_EMBEDDINGS_PATH", str(api_root / "models" / "content_embeddings.npz"))
-    monkeypatch.setenv("CONTENT_INDEX_PATH", str(api_root / "models" / "content_index.json"))
-    monkeypatch.setenv("ONNX_MODEL_PATH", str(api_root / "models" / "ncf.onnx"))
-    monkeypatch.setenv("METADATA_PATH", str(api_root / "models" / "metadata.json"))
-    monkeypatch.setenv(
-        "POSTER_URLS_PATH",
-        str(api_root / "tests" / "fixtures" / "poster_urls.sample.json"),
-    )
-
-    sys.path.insert(0, str(api_root))
-    for module_name in ["app.main", "app.content", "app.posters", "app.rag", "app.seed_ranker", "app.metrics"]:
-        sys.modules.pop(module_name, None)
-    return importlib.import_module("app.main").app
-
-
-def test_cors_allows_vite_dev_port_fallback(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_cors_allows_vite_dev_port_fallback(poster_load_app):
+    client = TestClient(poster_load_app)
 
     response = client.get("/genres", headers={"Origin": "http://localhost:3002"})
 
@@ -37,9 +10,18 @@ def test_cors_allows_vite_dev_port_fallback(monkeypatch):
     assert response.headers["access-control-allow-origin"] == "http://localhost:3002"
 
 
-def test_cors_allows_configured_ec2_frontend_origin(monkeypatch):
+def test_cors_allows_configured_ec2_frontend_origin(poster_load_app, monkeypatch):
     monkeypatch.setenv("CORS_ALLOW_ORIGINS", "http://34.228.75.214:3000")
-    client = TestClient(load_app(monkeypatch))
+    import importlib
+    import sys
+    from pathlib import Path
+
+    api_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(api_root))
+    for module_name in ["app.main", "app.content", "app.rag", "app.seed_ranker", "app.metrics", "app.posters"]:
+        sys.modules.pop(module_name, None)
+    app = importlib.import_module("app.main").app
+    client = TestClient(app)
 
     response = client.options(
         "/recommendations",

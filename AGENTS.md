@@ -2,7 +2,7 @@
 
 ## Project overview
 
-This repo is an AI-powered movie recommendation system with a FastAPI serving API, PyTorch Lightning training pipeline, React + D3 dashboard, and Docker Compose local infrastructure.
+This repo is an AI-powered movie recommendation system with a FastAPI serving API, offline embedding builds, React dashboard, and Docker Compose local infrastructure.
 
 Primary docs:
 
@@ -44,22 +44,6 @@ docker compose -f infra/docker-compose.yml up --build
 
 Training dry run:
 
-```bash
-python training/train_ncf.py --dry_run
-```
-
-CPU training example:
-
-```bash
-python training/train_ncf.py --epochs 1
-```
-
-Export ONNX:
-
-```bash
-python training/export_onnx.py
-```
-
 Build content embeddings:
 
 ```bash
@@ -78,11 +62,11 @@ npm run build
 
 - Current product flow: select 0-3 genres, pick 1-5 seed movies, get top-10 recommendations plus explanation.
 - Product endpoints are `POST /recommendations` and `POST /explanations`.
-- Legacy debug endpoints exist (`GET /recommend`, `GET /explain`, `GET /score`, `GET /debug/similar`) and are not used by the UI.
+- Debug endpoint: `GET /debug/similar` (content similarity; not used by the UI).
 - Health check is `GET /healthz`.
 - Search is case-insensitive substring search by title.
 - Seed-based recommendations use content embeddings to score candidates.
-- Explanations should show signal sources clearly: NCF, content, and final score.
+- Explanations should show signal sources clearly: content and final (fusion) score.
 
 ## Agent skills
 

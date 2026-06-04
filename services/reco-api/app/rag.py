@@ -18,14 +18,14 @@ RAG_PROMPT_VERSION = "rag-chatgpt-v1"
 class _RagItemSchema(BaseModel):
     movie_id: int
     reason: str
-    evidence: list[Literal["seed_set", "content_signal", "hybrid_score"]]
+    evidence: list[Literal["seed_set", "content_signal", "fusion_score"]]
 
 
 class _RagExplanationSchema(BaseModel):
     summary: str
     items: list[_RagItemSchema]
 EXTERNAL_PROVIDER_TIMEOUT_SECONDS = 8
-RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "hybrid_score"]
+RAG_EVIDENCE_TYPES = ["seed_set", "content_signal", "fusion_score"]
 SUPPORTED_RAG_PROVIDERS = {
     "external",
     "mock",
@@ -273,17 +273,17 @@ def build_provider_payload(deterministic: dict[str, Any], provider: str) -> dict
     if seed_titles:
         summary = (
             f"Based on your Seed Set ({seed_titles}), these Recommendations emphasize "
-            "movies with similar content signals and strong hybrid scores."
+            "movies with similar content signals and strong fusion scores."
         )
     else:
-        summary = "These Recommendations emphasize similar content signals and strong hybrid scores."
+        summary = "These Recommendations emphasize similar content signals and strong fusion scores."
 
     items = [
         {
             "movie_id": item["movie_id"],
             "reason": (
                 f"{item['title']} is recommended because it aligns with your Seed Set "
-                "through content similarity and its Hybrid Score."
+                "through content similarity and its fusion score."
             ),
             "evidence": RAG_EVIDENCE_TYPES,
         }
@@ -329,9 +329,8 @@ def _call_openai(deterministic: dict[str, Any]) -> dict[str, Any]:
 
     recs_text = "\n".join(
         f"- movie_id={item['movie_id']}, title={item['title']!r}, "
-        f"collaborative_signal={item['ncf']:.3f}, "
         f"content_signal={item['content']:.3f}, "
-        f"hybrid_score={item['final']:.3f}"
+        f"fusion_score={item['final']:.3f}"
         for item in top_items
     )
 
@@ -343,7 +342,7 @@ def _call_openai(deterministic: dict[str, Any]) -> dict[str, Any]:
     user_prompt = (
         f"Seed Set (movies the user selected): {seed_titles}\n\n"
         f"Top Recommendations (in this exact order):\n{recs_text}\n\n"
-        "Evidence signals available: seed_set, content_signal, hybrid_score\n\n"
+        "Evidence signals available: seed_set, content_signal, fusion_score\n\n"
         "Write a summary explaining why these recommendations fit the Seed Set, "
         "then write an individual reason for each recommendation in the same order listed above."
     )

@@ -5,10 +5,10 @@ Production-style ML recommendation platform for ML Infra / MLOps portfolio revie
 This repo demonstrates the system path:
 
 ```text
-training -> evaluation -> export -> serving -> caching -> explanation -> monitoring -> deployment
+training -> evaluation -> serving -> explanation -> monitoring -> deployment
 ```
 
-It packages a movie recommender as an operational ML system: PyTorch Lightning training, ONNX Runtime serving, Redis caching, FastAPI APIs, React/D3 UI, RAG-style explanations, Prometheus-style metrics, benchmark reports, CI, and an AWS EC2 Docker Compose demo.
+It packages a movie recommender as an operational ML system: offline artifact builds, FastAPI serving, React UI, RAG-style explanations, Prometheus-style metrics, benchmark reports, CI, and an AWS EC2 Docker Compose demo.
 
 ## Live Demo
 
@@ -22,7 +22,6 @@ It packages a movie recommender as an operational ML system: PyTorch Lightning t
 
 - Evaluation report: `evaluation/results/eval_report.md`
   - Product retrieval (MovieLens 32M catalog, min 20 ratings): Recall@K `0.04`, NDCG@K `0.0187`, coverage `0.0171`, top-K diversity `0.63`
-  - NCF RMSE (legacy `ml-latest-small` model, not used in product ranking): see `evaluation/results/model_metrics.json` if present
 - Benchmark report: `benchmarks/results/benchmark_report.md`
   - `GET /healthz`
   - `GET /metrics`
@@ -39,12 +38,10 @@ It packages a movie recommender as an operational ML system: PyTorch Lightning t
 
 ```text
 MovieLens data
-  -> PyTorch Lightning training
-  -> ONNX export + content embeddings
-  -> FastAPI serving
-  -> Redis cache
+  -> content embeddings + serving stats (offline)
+  -> FastAPI seed-based serving
   -> RAG explanation layer
-  -> React/D3 UI
+  -> React UI
   -> /healthz + /metrics + benchmark reports
   -> AWS EC2 Docker Compose demo
 ```
@@ -56,13 +53,13 @@ MovieLens data
 3. Generate top-10 recommendations.
 4. Inspect explanation, score breakdown, health, metrics, and benchmark evidence.
 
-Important model truth: the current UI uses Seed Set recommendations driven by Content Signal. The NCF / ONNX model remains available through legacy/debug paths and the evaluation harness unless a later phase wires it into product ranking.
+Important model truth: the UI uses Seed Set recommendations driven by content embeddings. A multi-retriever fusion stack (content, SVD, item-CF) is planned next.
 
 ## Stack
 
-- Backend: FastAPI, ONNX Runtime, Redis.
-- Training: PyTorch Lightning, MovieLens preprocessing, ONNX export.
-- Frontend: React, TypeScript, D3, Vite.
+- Backend: FastAPI, NumPy, content embeddings.
+- Training: MovieLens preprocessing, SentenceTransformer embeddings, serving stats.
+- Frontend: React, TypeScript, Vite.
 - Infra: Docker Compose, GitHub Actions CI, AWS EC2.
 - Observability: `GET /healthz`, `GET /metrics`, benchmark artifacts.
 - Portfolio evidence: `GET /system/evidence` and the System Evidence Dashboard.
@@ -112,7 +109,6 @@ curl -X POST http://localhost:8000/rag/explanations -H "Content-Type: applicatio
 ## Reproducible Evaluation
 
 ```bash
-python evaluation/eval_model.py --model services/reco-api/models/ncf.onnx
 python evaluation/eval_retrieval.py
 python evaluation/build_report.py
 ```

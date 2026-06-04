@@ -12,17 +12,13 @@ Response:
 ```json
 {
   "status": "ok",
-  "redis_ok": true,
-  "onnx_ok": true,
-  "metadata_ok": true,
+  "content_ok": true,
+  "catalog_ok": true,
   "num_users": 610,
   "num_items": 9724,
-  "tfidf_ok": false,
   "model_version": "dev",
   "candidate_pool": 500,
-  "cache_ttl_seconds": 300,
-  "explain_ttl_seconds": 60,
-  "alpha": 0.7,
+  "ranking_mode": "content_seed",
   "poster_ok": true,
   "poster_count": 21000,
   "poster_coverage": 0.9
@@ -155,11 +151,10 @@ Response:
 {
   "user_id": null,
   "model_version": "dev",
-  "alpha": 0.7,
   "anchor_movie": {"movie_id": 356, "title": "Forrest Gump (1994)"},
   "seed_movies": [{"movie_id": 356, "title": "Forrest Gump (1994)"}],
   "topk": [
-    {"movie_id": 356, "title": "Forrest Gump (1994)", "ncf": 0.0, "content": 0.64, "final": 0.64}
+    {"movie_id": 356, "title": "Forrest Gump (1994)", "content": 0.64, "final": 0.64}
   ],
   "similar_movies": [{"movie_id": 296, "title": "Pulp Fiction (1994)", "similarity": 0.64}],
   "content_available": true,
@@ -187,12 +182,12 @@ Validation matches `/explanations`:
 Success response (`explanation_source: "rag"`):
 ```json
 {
-  "summary": "Based on your Seed Set (Forrest Gump (1994), ...), these Recommendations emphasize movies with similar content signals and strong hybrid scores.",
+  "summary": "Based on your Seed Set (Forrest Gump (1994), ...), these Recommendations emphasize movies with similar content signals and strong fusion scores.",
   "items": [
     {
       "movie_id": 356,
-      "reason": "Forrest Gump (1994) is recommended because it aligns with your Seed Set through content similarity and its Hybrid Score.",
-      "evidence": ["seed_set", "content_signal", "hybrid_score"]
+      "reason": "Forrest Gump (1994) is recommended because it aligns with your Seed Set through content similarity and its fusion score.",
+      "evidence": ["seed_set", "content_signal", "fusion_score"]
     }
   ],
   "model_version": "dev",
@@ -207,7 +202,7 @@ Success response (`explanation_source: "rag"`):
 Field and enum reference:
 
 - `explanation_source`: one of `rag` (freshly generated), `rag_cache` (served from cache), `deterministic_fallback` (provider unavailable or output rejected).
-- `items[].evidence`: subset of `seed_set`, `content_signal`, `hybrid_score`.
+- `items[].evidence`: subset of `seed_set`, `content_signal`, `fusion_score`.
 - `items` preserve Recommendation List order and cover the top 3 of `topk` (fewer when fewer than 3 recommendations exist).
 - `rag_evidence_version`: evidence schema version, currently `structured-v1`.
 - `prompt_version`: prompt version and cache-key input, default `rag-chatgpt-v1` (override with `RAG_PROMPT_VERSION`).
@@ -225,7 +220,7 @@ Fallback response (`explanation_source: "deterministic_fallback"`), e.g. on prov
     {
       "movie_id": 356,
       "reason": "This Recommendation is based on your Seed Set and existing scoring signals.",
-      "evidence": ["seed_set", "content_signal", "hybrid_score"]
+      "evidence": ["seed_set", "content_signal", "fusion_score"]
     }
   ],
   "model_version": "dev",
@@ -251,14 +246,5 @@ Configuration (backend environment only):
 
 ## Debug Endpoints
 
-### GET /recommend
-Legacy debug endpoint (user_id + k). Not used by UI.
-
-### GET /explain
-Legacy debug endpoint (user_id + k). Not used by UI.
-
-### GET /score
-NCF model score for a single user/movie index.
-
 ### GET /debug/similar
-Content-based similarity for a movie.
+Content-based similarity for a movie (debug only).

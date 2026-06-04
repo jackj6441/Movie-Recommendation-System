@@ -19,7 +19,6 @@ export type RecommendationResponse = {
 export type ExplainItem = {
   movie_id: number
   title: string
-  ncf: number
   content: number
   final: number
 }
@@ -33,7 +32,6 @@ export type SimilarMovie = {
 export type ExplainResponse = {
   user_id: number | null
   model_version: string
-  alpha: number
   anchor_movie: { movie_id: number; title: string } | null
   topk: ExplainItem[]
   similar_movies: SimilarMovie[]
@@ -70,17 +68,15 @@ export type SystemEvidence = {
   }
   serving: {
     status: string
-    redis_ok: boolean
-    onnx_ok: boolean
-    metadata_ok: boolean
+    content_ok: boolean
+    catalog_ok: boolean
     model_version: string
   }
   model_truth: {
     product_ranking_path: string
-    ncf_onnx_status: string
+    roadmap?: string
   }
   evaluation: {
-    rmse: number
     recall_at_k: number
     ndcg_at_k: number
     recommendation_coverage: number

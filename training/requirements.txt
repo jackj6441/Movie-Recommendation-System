@@ -1,9 +1,6 @@
 numpy
-requests
-onnx
-onnxscript
-onnxruntime
 pandas
-pytorch-lightning
+requests
+scipy
 sentence-transformers
 torch

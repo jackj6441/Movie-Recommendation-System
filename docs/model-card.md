@@ -3,8 +3,8 @@
 ## Dataset
 
 - Product catalog and content embeddings: MovieLens **32M** (`ml-32m`), movies with at least **20** ratings (~23k titles in `catalog_movies.csv`).
-- Offline training and NCF evaluation may still reference `ml-latest-small` until a full 32M NCF retrain is committed.
-- Required serving files: `catalog_movies.csv`, `content_embeddings.npz`, `content_index.json`, `serving_stats.json`.
+- Required serving files today: `catalog_movies.csv`, `content_embeddings.npz`, `content_index.json`, `serving_stats.json`.
+- Phase 1 fusion (offline, M2 serving): `item_factors_svd.npz`, `item_neighbors.json` from `training/build_svd_factors.py` and `training/build_item_neighbors.py`.
 - Full `ml-32m/ratings.csv` is used offline only (not loaded at API startup).
 - Dataset versioning is currently file-based. A future Model Registry phase should record a formal dataset version with each model artifact.
 
@@ -18,7 +18,6 @@
 
 The evaluation harness is expected to report:
 
-- RMSE for the ONNX NCF rating model.
 - Recall@K for Seed Set recommendation retrieval.
 - NDCG@K for Seed Set recommendation retrieval.
 - Recommendation coverage.
@@ -32,14 +31,14 @@ The goal of these metrics is reproducible comparison between artifacts or strate
 
 Current serving artifacts live under `services/reco-api/models/`:
 
-- `ncf.onnx`: exported NCF rating model for ONNX Runtime.
-- `metadata.json`: user and movie index mappings for the NCF model.
 - `content_embeddings.npz`: movie content embedding matrix (32M catalog cap).
 - `content_index.json`: movie identifier to embedding row mapping.
 - `catalog_movies.csv`: served movie catalog (search, seeds, scoring).
 - `serving_stats.json`: precomputed popularity and user/item counts for startup.
+- `item_factors_svd.npz` (optional until M2): truncated-SVD item factors aligned to embedding row order.
+- `item_neighbors.json` (optional until M2): item–item co-rating neighbors (top 50 per movie).
 
-The current product UI uses Seed Set recommendations driven by Content Signal. The NCF / ONNX model is available through legacy/debug paths and the model evaluation harness unless a later phase wires it into product ranking.
+The current product UI uses Seed Set recommendations driven by content similarity only until Phase 1 fusion is wired in serving (M2).
 
 ## Limitations
 
@@ -51,7 +50,7 @@ The current product UI uses Seed Set recommendations driven by Content Signal. T
 
 ## Risks
 
-- Evaluation results can be overstated if the product path and NCF path are not clearly separated.
+- Offline fusion metrics must use the same catalog and held-out protocol as serving before claiming product gains.
 - Content-only seed recommendations may overfit to genre/title similarity and miss collaborative taste signals.
 - Public demos must avoid committing or exposing provider API keys.
 - RAG explanations can become misleading if they are allowed to use unsupported movie facts instead of structured evidence.

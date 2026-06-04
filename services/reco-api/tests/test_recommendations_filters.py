@@ -1,32 +1,10 @@
 import csv
-import importlib
 import re
-import sys
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
 _YEAR_RE = re.compile(r"\((\d{4})\)")
-
-
-def load_app(monkeypatch):
-    repo_root = Path(__file__).resolve().parents[3]
-    api_root = repo_root / "services" / "reco-api"
-
-    monkeypatch.setenv("MOVIES_CSV_PATH", str(repo_root / "ml-latest-small" / "movies.csv"))
-    monkeypatch.setenv("RATINGS_CSV_PATH", str(repo_root / "ml-latest-small" / "ratings.csv"))
-    monkeypatch.setenv("SERVING_STATS_PATH", str(repo_root / "ml-latest-small" / "__no_serving_stats__.json"))
-    monkeypatch.setenv("CONTENT_EMBEDDINGS_PATH", str(api_root / "models" / "content_embeddings.npz"))
-    monkeypatch.setenv("CONTENT_INDEX_PATH", str(api_root / "models" / "content_index.json"))
-    monkeypatch.setenv("ONNX_MODEL_PATH", str(api_root / "models" / "ncf.onnx"))
-    monkeypatch.setenv("METADATA_PATH", str(api_root / "models" / "metadata.json"))
-
-    sys.path.insert(0, str(api_root))
-    sys.modules.pop("app.main", None)
-    sys.modules.pop("app.content", None)
-    sys.modules.pop("app.rag", None)
-    sys.modules.pop("app.seed_ranker", None)
-    return importlib.import_module("app.main").app
 
 
 def _genre_map() -> dict[int, list[str]]:
@@ -45,8 +23,8 @@ def _year_from_title(title: str) -> int | None:
     return int(matches[-1]) if matches else None
 
 
-def test_recommendations_filters_by_genre(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_recommendations_filters_by_genre(load_app):
+    client = TestClient(load_app)
     genres = _genre_map()
 
     response = client.post(
@@ -62,8 +40,8 @@ def test_recommendations_filters_by_genre(monkeypatch):
         assert "comedy" in movie_genres
 
 
-def test_recommendations_filters_by_year_range(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_recommendations_filters_by_year_range(load_app):
+    client = TestClient(load_app)
 
     response = client.post(
         "/recommendations",
@@ -79,8 +57,8 @@ def test_recommendations_filters_by_year_range(monkeypatch):
         assert 1990 <= year <= 1999
 
 
-def test_recommendations_combined_filters_use_any_genre(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_recommendations_combined_filters_use_any_genre(load_app):
+    client = TestClient(load_app)
     genres = _genre_map()
 
     response = client.post(
@@ -97,8 +75,8 @@ def test_recommendations_combined_filters_use_any_genre(monkeypatch):
         assert year is not None and 2000 <= year <= 2009
 
 
-def test_recommendations_returns_up_to_top_k(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_recommendations_returns_up_to_top_k(load_app):
+    client = TestClient(load_app)
 
     response = client.post("/recommendations", json={"seeds": [1, 2, 3]})
 
@@ -107,8 +85,8 @@ def test_recommendations_returns_up_to_top_k(monkeypatch):
     assert 0 < len(items) <= 24
 
 
-def test_recommendations_unmatchable_filter_returns_empty(monkeypatch):
-    client = TestClient(load_app(monkeypatch))
+def test_recommendations_unmatchable_filter_returns_empty(load_app):
+    client = TestClient(load_app)
 
     response = client.post(
         "/recommendations",
