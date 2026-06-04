@@ -9,6 +9,16 @@ _rag_sources: dict[str, int] = defaultdict(int)
 _rag_fallback_reasons: dict[str, int] = defaultdict(int)
 
 
+def reset() -> None:
+    """Clear in-memory counters (used by tests between app reloads)."""
+    _request_counts.clear()
+    _latency_counts.clear()
+    _latency_sums.clear()
+    _cache_events.clear()
+    _rag_sources.clear()
+    _rag_fallback_reasons.clear()
+
+
 def record_request(endpoint: str, status: int, latency_ms: float) -> None:
     labels = (endpoint, str(status))
     _request_counts[labels] += 1

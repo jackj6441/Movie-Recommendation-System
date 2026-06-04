@@ -5,6 +5,23 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 
+def _external_provider_payload(client: TestClient, seeds: list[int]) -> dict:
+    """Build provider JSON aligned with the current fusion ranking top items."""
+    explanations = client.post("/explanations", json={"seeds": seeds, "shuffle": False})
+    topk = explanations.json()["topk"][:3]
+    return {
+        "summary": "External provider summary",
+        "items": [
+            {
+                "movie_id": row["movie_id"],
+                "reason": f"External provider reason for {row['title']}.",
+                "evidence": ["seed_set", "content_signal", "fusion_score"],
+            }
+            for row in topk
+        ],
+    }
+
+
 def test_rag_explanations_returns_mock_structured_explanation_for_seed_set(load_app):
     client = TestClient(load_app)
 
@@ -401,32 +418,11 @@ def test_rag_explanations_uses_external_provider_response_from_backend_env(load_
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_PROVIDER_MODEL", "external-test-model")
+    client = TestClient(load_app)
     monkeypatch.setenv(
         "RAG_EXTERNAL_RESPONSE_JSON",
-        json.dumps(
-            {
-                "summary": "External provider summary",
-                "items": [
-                    {
-                        "movie_id": 239,
-                        "reason": "External provider reason for Goofy Movie.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                    {
-                        "movie_id": 39,
-                        "reason": "External provider reason for Clueless.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                    {
-                        "movie_id": 175,
-                        "reason": "External provider reason for Kids.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                ],
-            }
-        ),
+        json.dumps(_external_provider_payload(client, [1, 2, 3])),
     )
-    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 
@@ -434,7 +430,7 @@ def test_rag_explanations_uses_external_provider_response_from_backend_env(load_
     payload = response.json()
     assert payload["explanation_source"] == "rag"
     assert payload["summary"] == "External provider summary"
-    assert payload["items"][0]["reason"] == "External provider reason for Goofy Movie."
+    assert payload["items"][0]["reason"].startswith("External provider reason for")
 
 
 def test_rag_explanations_falls_back_when_external_provider_returns_invalid_json(load_app, monkeypatch):
@@ -483,32 +479,11 @@ def test_rag_explanations_allows_external_latency_within_timeout_policy(load_app
     monkeypatch.setenv("RAG_PROVIDER", "external")
     monkeypatch.setenv("RAG_PROVIDER_API_KEY", "sk-test-secret")
     monkeypatch.setenv("RAG_EXTERNAL_SIMULATED_LATENCY_SECONDS", "7.5")
+    client = TestClient(load_app)
     monkeypatch.setenv(
         "RAG_EXTERNAL_RESPONSE_JSON",
-        json.dumps(
-            {
-                "summary": "External provider summary",
-                "items": [
-                    {
-                        "movie_id": 239,
-                        "reason": "External provider reason for Goofy Movie.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                    {
-                        "movie_id": 39,
-                        "reason": "External provider reason for Clueless.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                    {
-                        "movie_id": 175,
-                        "reason": "External provider reason for Kids.",
-                        "evidence": ["seed_set", "content_signal", "fusion_score"],
-                    },
-                ],
-            }
-        ),
+        json.dumps(_external_provider_payload(client, [1, 2, 3])),
     )
-    client = TestClient(load_app)
 
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
 

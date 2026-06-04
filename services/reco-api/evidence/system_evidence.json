@@ -20,8 +20,8 @@
   },
   "generated_at": "2026-06-02T17:05:48+00:00",
   "model_truth": {
-    "product_ranking_path": "Seed Set recommendations driven by content embeddings",
-    "roadmap": "Multi-retriever fusion (content, SVD, item-CF) with optional LTR reranker"
+    "product_ranking_path": "Seed Set recommendations via multi-retriever fusion (content, SVD, item-CF, pop)",
+    "roadmap": "Optional LightGBM Lambdarank reranker after Phase 1 acceptance"
   },
   "rag": {
     "public_provider": "mock",

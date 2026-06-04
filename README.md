@@ -53,7 +53,7 @@ MovieLens data
 3. Generate top-10 recommendations.
 4. Inspect explanation, score breakdown, health, metrics, and benchmark evidence.
 
-Important model truth: the UI uses Seed Set recommendations driven by content embeddings. A multi-retriever fusion stack (content, SVD, item-CF) is planned next.
+Important model truth: the UI uses Seed Set recommendations via multi-retriever fusion (content, SVD, item-CF, popularity). Place `item_factors_svd.npz` and `item_neighbors.json` in `services/reco-api/models/` (built from MovieLens 32M) for full channel coverage.
 
 ## Stack
 

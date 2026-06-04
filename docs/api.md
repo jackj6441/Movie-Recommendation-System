@@ -18,7 +18,11 @@ Response:
   "num_items": 9724,
   "model_version": "dev",
   "candidate_pool": 500,
-  "ranking_mode": "content_seed",
+  "ranking_mode": "multi_retriever_fusion",
+  "fusion_ok": true,
+  "fusion_weights_ok": true,
+  "svd_ok": true,
+  "item_cf_ok": true,
   "poster_ok": true,
   "poster_count": 21000,
   "poster_coverage": 0.9

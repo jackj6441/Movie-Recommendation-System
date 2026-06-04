@@ -11,7 +11,28 @@ _APP_MODULES = [
     "app.seed_ranker",
     "app.metrics",
     "app.posters",
+    "app.artifacts",
+    "app.fusion",
+    "app.retrievers",
+    "app.retrievers.content_retriever",
+    "app.retrievers.svd",
+    "app.retrievers.item_cf",
+    "app.retrievers.popularity",
 ]
+
+
+@pytest.fixture(autouse=True)
+def reset_observability_state(api_root: Path) -> None:
+    """Isolate Prometheus and RAG cache counters across reload-heavy tests."""
+    sys.path.insert(0, str(api_root))
+    try:
+        importlib.import_module("app.metrics").reset()
+    except ModuleNotFoundError:
+        pass
+    try:
+        importlib.import_module("app.rag").RAG_CACHE.clear()
+    except (ModuleNotFoundError, AttributeError):
+        pass
 
 
 @pytest.fixture
@@ -41,7 +62,9 @@ def _reload_app(api_root: Path):
     sys.path.insert(0, str(api_root))
     for module_name in _APP_MODULES:
         sys.modules.pop(module_name, None)
-    return importlib.import_module("app.main").app
+    app = importlib.import_module("app.main").app
+    importlib.import_module("app.metrics").reset()
+    return app
 
 
 @pytest.fixture

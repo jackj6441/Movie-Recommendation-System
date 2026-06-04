@@ -18,7 +18,16 @@ def test_cors_allows_configured_ec2_frontend_origin(poster_load_app, monkeypatch
 
     api_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(api_root))
-    for module_name in ["app.main", "app.content", "app.rag", "app.seed_ranker", "app.metrics", "app.posters"]:
+    for module_name in [
+        "app.main",
+        "app.content",
+        "app.rag",
+        "app.seed_ranker",
+        "app.metrics",
+        "app.posters",
+        "app.artifacts",
+        "app.fusion",
+    ]:
         sys.modules.pop(module_name, None)
     app = importlib.import_module("app.main").app
     client = TestClient(app)

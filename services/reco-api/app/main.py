@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content, metrics, posters, rag, seed_ranker
+from app import artifacts, content, metrics, posters, rag, seed_ranker
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
@@ -157,6 +157,7 @@ catalog = seed_ranker.Catalog(
     candidate_pool=candidate_pool,
     movie_genres=movie_genres,
     movie_years=movie_years,
+    movie_popularity=movie_popularity,
 )
 
 
@@ -183,8 +184,9 @@ def serving_status() -> dict:
         "num_items": num_items,
         "model_version": model_version,
         "candidate_pool": candidate_pool,
-        "ranking_mode": "content_seed",
+        "ranking_mode": "multi_retriever_fusion",
     }
+    status.update(artifacts.fusion_health())
     status.update(
         posters.poster_health_fields(poster_lookup, poster_meta, len(movie_titles))
     )
@@ -203,8 +205,8 @@ def system_evidence_fallback(reason: str) -> dict:
         "evidence_error": reason,
         "serving": serving_status(),
         "model_truth": {
-            "product_ranking_path": "Seed Set recommendations driven by content embeddings",
-            "roadmap": "Multi-retriever fusion (content, SVD, item-CF) with optional LTR reranker",
+            "product_ranking_path": "Seed Set recommendations via multi-retriever fusion (content, SVD, item-CF, pop)",
+            "roadmap": "Optional LightGBM Lambdarank reranker after Phase 1 acceptance",
         },
         "rag": {
             "public_provider": os.getenv("RAG_PROVIDER", "mock"),
@@ -311,7 +313,7 @@ def recommendations(request: SeedsRequest):
 
     return {
         "items": [
-            movie_payload(item.movie_id, title=item.title, score=item.content_score)
+            movie_payload(item.movie_id, title=item.title, score=item.fusion_score)
             for item in result.items
         ],
         "seed_movies": [movie_payload(mid) for mid in result.seed_movie_ids],
@@ -344,7 +346,7 @@ def explanations(request: SeedsRequest):
             "movie_id": item.movie_id,
             "title": item.title,
             "content": item.content_score,
-            "final": item.content_score,
+            "final": item.fusion_score,
         }
         for item in result.items
     ]

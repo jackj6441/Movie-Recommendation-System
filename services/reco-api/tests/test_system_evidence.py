@@ -16,7 +16,7 @@ def test_system_evidence_returns_portfolio_summary(load_app):
     assert payload["deployment"]["ui_url"] == "http://34.228.75.214:3000"
     assert payload["serving"]["status"] == "ok"
     assert payload["serving"]["model_version"] == "dev"
-    assert "content" in payload["model_truth"]["product_ranking_path"].lower()
+    assert "fusion" in payload["model_truth"]["product_ranking_path"].lower()
     assert payload["evaluation"]["recall_at_k"] == 0.04
     assert payload["evaluation"]["popularity_baseline_recall_at_k"] == 0.03
     assert payload["evaluation"]["dataset"] == "MovieLens 32M (served catalog, min 20 ratings)"
@@ -32,7 +32,16 @@ def test_system_evidence_missing_artifact_returns_clear_fallback(monkeypatch, tm
 
     api_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(api_root))
-    for module_name in ["app.main", "app.content", "app.rag", "app.seed_ranker", "app.metrics", "app.posters"]:
+    for module_name in [
+        "app.main",
+        "app.content",
+        "app.rag",
+        "app.seed_ranker",
+        "app.metrics",
+        "app.posters",
+        "app.artifacts",
+        "app.fusion",
+    ]:
         sys.modules.pop(module_name, None)
     app = importlib.import_module("app.main").app
     client = TestClient(app)
@@ -45,4 +54,4 @@ def test_system_evidence_missing_artifact_returns_clear_fallback(monkeypatch, tm
     assert payload["evidence_available"] is False
     assert payload["evidence_error"] == "system evidence artifact not found"
     assert payload["serving"]["status"] == "ok"
-    assert "content" in payload["model_truth"]["product_ranking_path"].lower()
+    assert "fusion" in payload["model_truth"]["product_ranking_path"].lower()
