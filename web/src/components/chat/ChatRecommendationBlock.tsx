@@ -5,9 +5,16 @@ import { PosterTile } from "../results/PosterTile"
 type ChatRecommendationBlockProps = {
   data: RecommendationResponse
   onNewChat: () => void
+  onMoreLike?: (movieId: number, title: string) => void
+  moreLikeDisabled?: boolean
 }
 
-export function ChatRecommendationBlock({ data, onNewChat }: ChatRecommendationBlockProps) {
+export function ChatRecommendationBlock({
+  data,
+  onNewChat,
+  onMoreLike,
+  moreLikeDisabled = false,
+}: ChatRecommendationBlockProps) {
   const items = data.items
   if (items.length === 0) {
     return (
@@ -25,9 +32,21 @@ export function ChatRecommendationBlock({ data, onNewChat }: ChatRecommendationB
       <HeroPick
         item={hero}
         actions={
-          <button type="button" className="hero-secondary-action" onClick={onNewChat}>
-            New chat
-          </button>
+          <>
+            {onMoreLike && (
+              <button
+                type="button"
+                className="hero-secondary-action"
+                disabled={moreLikeDisabled}
+                onClick={() => onMoreLike(hero.movie_id, hero.title)}
+              >
+                More like this
+              </button>
+            )}
+            <button type="button" className="hero-secondary-action" onClick={onNewChat}>
+              Start over
+            </button>
+          </>
         }
       />
       {rest.length > 0 && (

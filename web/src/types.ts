@@ -28,11 +28,22 @@ export type RagChatContext = {
   year_max: number | null
 }
 
+export type DisambiguationCandidate = MoviePosters & {
+  movie_id: number
+  title: string
+  year?: number
+  genres?: string[]
+  match_score?: number
+}
+
 export type RagChatFinal = {
   session_id: string
   turn_id: string
   needs_clarification: boolean
+  needs_disambiguation: boolean
   clarification_reason?: string
+  disambiguation_candidates?: DisambiguationCandidate[]
+  warnings?: { code: string; movie_id?: number }[]
   context: RagChatContext
   recommendations: RecommendationResponse | null
   assistant_message: string

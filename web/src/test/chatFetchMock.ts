@@ -4,10 +4,21 @@ import type { RecommendationItem } from "../types"
 export type ChatMockConfig = {
   chatOk?: boolean
   needsClarification?: boolean
+  clarificationReason?: string
+  emptyRecommendations?: boolean
+  needsDisambiguation?: boolean
+  disambiguationCandidates?: {
+    movie_id: number
+    title: string
+    year?: number
+    genres?: string[]
+  }[]
   assistantMessage?: string
   items?: RecommendationItem[]
   seedMovies?: { movie_id: number; title: string }[]
   includeEvidence?: boolean
+  /** When true, SSE body has only a final event (no token stream). */
+  finalOnly?: boolean
 }
 
 const defaultItems: RecommendationItem[] = [
@@ -20,30 +31,50 @@ export function buildSseBody(config: ChatMockConfig): string {
   const assistantMessage =
     config.assistantMessage ??
     "Based on your Seed Set, here are movies that match your taste."
-  const tokens = assistantMessage.split(/(?=\s)/)
   let body = ""
-  for (const delta of tokens) {
-    body += `event: token\ndata: ${JSON.stringify({ delta })}\n\n`
+  if (!config.finalOnly) {
+    const tokens = assistantMessage.split(/(?=\s)/)
+    for (const delta of tokens) {
+      body += `event: token\ndata: ${JSON.stringify({ delta })}\n\n`
+    }
   }
   const final = {
     session_id: "sess-test-1",
     turn_id: "turn-test-1",
-    needs_clarification: config.needsClarification ?? false,
+    needs_clarification:
+      config.needsClarification ?? config.emptyRecommendations ?? false,
+    needs_disambiguation: config.needsDisambiguation ?? false,
+    clarification_reason: config.clarificationReason,
+    model_version: "test-model",
+    disambiguation_candidates: config.needsDisambiguation
+      ? (config.disambiguationCandidates ?? [
+          { movie_id: 50, title: "Candidate Movie (2000)", genres: ["Drama"] },
+        ])
+      : undefined,
     context: {
       seeds: defaultSeeds,
       genres: ["Comedy"],
       year_min: null,
       year_max: null,
     },
-    recommendations: config.needsClarification
-      ? null
-      : {
-          items: config.items ?? defaultItems,
-          seed_movies: config.seedMovies ?? defaultSeeds,
-          anchor_source: "seed",
-          model_version: "test-model",
-          ranking_mode: "multi_retriever_fusion",
-        },
+    recommendations:
+      config.emptyRecommendations
+        ? {
+            items: [],
+            seed_movies: config.seedMovies ?? defaultSeeds,
+            anchor_source: "seed",
+            model_version: "test-model",
+            ranking_mode: "multi_retriever_fusion",
+          }
+        : config.needsClarification && !config.emptyRecommendations
+          ? null
+          : {
+              items: config.items ?? defaultItems,
+              seed_movies: config.seedMovies ?? defaultSeeds,
+              anchor_source: "seed",
+              model_version: "test-model",
+              ranking_mode: "multi_retriever_fusion",
+            },
     assistant_message: assistantMessage,
     explanation_source: "rag",
   }

@@ -2,6 +2,9 @@ import json
 
 from fastapi.testclient import TestClient
 
+from app import rag_chat as rag_chat_service
+from app.seed_ranker import RankedList
+
 
 def parse_sse(body: str) -> list[tuple[str, dict]]:
     events: list[tuple[str, dict]] = []
@@ -26,6 +29,36 @@ def final_event(events: list[tuple[str, dict]]) -> dict:
     return finals[0]
 
 
+def assert_sse_final_contract(payload: dict) -> None:
+    """P0: every chat turn ends with a documented final payload shape."""
+    for key in (
+        "session_id",
+        "turn_id",
+        "needs_clarification",
+        "needs_disambiguation",
+        "context",
+        "assistant_message",
+        "model_version",
+        "explanation_source",
+    ):
+        assert key in payload, f"missing final field: {key}"
+    assert "seeds" in payload["context"]
+    assert "genres" in payload["context"]
+
+
+def test_rag_chat_ready_final_sse_contract(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "Toy Story", "genres": []}).text,
+        ),
+    )
+    assert_sse_final_contract(final_payload)
+    assert final_payload["needs_clarification"] is False
+    assert final_payload["needs_disambiguation"] is False
+    assert final_payload["recommendations"] is not None
+
+
 def test_rag_explanations_endpoint_removed(load_app):
     client = TestClient(load_app)
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3]})
@@ -36,15 +69,73 @@ def test_rag_chat_clarifies_without_genre_or_title(load_app):
     client = TestClient(load_app)
     response = client.post(
         "/rag/chat",
-        json={"message": "surprise me", "genres": []},
+        json={"message": "", "genres": []},
     )
     assert response.status_code == 200
     events = parse_sse(response.text)
     assert any(name == "token" for name, _ in events)
     final_payload = final_event(events)
+    assert_sse_final_contract(final_payload)
     assert final_payload["needs_clarification"] is True
+    assert final_payload["needs_disambiguation"] is False
     assert final_payload["recommendations"] is None
     assert final_payload["clarification_reason"] == "missing_genre_and_title"
+
+
+def test_rag_chat_disambiguation_final_sse_contract(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "zzzznotamovie", "genres": []}).text,
+        ),
+    )
+    assert_sse_final_contract(final_payload)
+    assert final_payload["needs_disambiguation"] is True
+    assert final_payload["clarification_reason"] == "no_resolvable_seeds"
+    assert final_payload["disambiguation_candidates"] is not None
+
+
+def test_rag_chat_disambiguation_when_title_unresolved(load_app):
+    client = TestClient(load_app)
+    response = client.post(
+        "/rag/chat",
+        json={"message": "zzzznotamovie", "genres": []},
+    )
+    assert response.status_code == 200
+    final_payload = final_event(parse_sse(response.text))
+    assert_sse_final_contract(final_payload)
+    assert final_payload["needs_disambiguation"] is True
+    assert final_payload["recommendations"] is None
+    candidates = final_payload["disambiguation_candidates"]
+    assert len(candidates) > 0
+    assert "movie_id" in candidates[0]
+    assert "title" in candidates[0]
+    assert final_payload["context"]["seeds"] == []
+
+
+def test_rag_chat_disambiguate_does_not_persist_candidates_as_seeds(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "zzzznotamovie", "genres": []}).text,
+        ),
+    )
+    candidate_ids = {row["movie_id"] for row in final_payload["disambiguation_candidates"]}
+    session_seed_ids = {seed["movie_id"] for seed in final_payload["context"]["seeds"]}
+    assert session_seed_ids.isdisjoint(candidate_ids)
+
+
+def test_rag_chat_bare_title_toy_story(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "Toy Story", "genres": []}).text,
+        ),
+    )
+    assert final_payload["needs_clarification"] is False
+    assert final_payload["recommendations"] is not None
+    seed_titles = [s["title"] for s in final_payload["context"]["seeds"]]
+    assert any("Toy Story" in title for title in seed_titles)
 
 
 def test_rag_chat_returns_recommendations_with_genre_chips(load_app):
@@ -105,6 +196,205 @@ def test_rag_chat_session_reuse(load_app):
         ),
     )
     assert second["session_id"] == session_id
+
+
+def test_rag_chat_clear_year_bounds_clears_session_years(load_app):
+    client = TestClient(load_app)
+    first = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "more from the 90s", "genres": ["Drama"]},
+            ).text,
+        ),
+    )
+    assert first["context"]["year_min"] == 1990
+    assert first["context"]["year_max"] == 1999
+    session_id = first["session_id"]
+
+    second = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "genres": ["Drama"],
+                    "session_id": session_id,
+                    "clear_year_bounds": True,
+                },
+            ).text,
+        ),
+    )
+    assert second["context"]["year_min"] is None
+    assert second["context"]["year_max"] is None
+    assert second["needs_clarification"] is False
+
+
+def test_rag_chat_explicit_seed_skips_disambiguation(load_app):
+    client = TestClient(load_app)
+    disambig = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "zzzznotamovie", "genres": []}).text,
+        ),
+    )
+    pick_id = disambig["disambiguation_candidates"][0]["movie_id"]
+    session_id = disambig["session_id"]
+
+    ready = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "session_id": session_id,
+                    "seed_movie_ids": [pick_id],
+                    "seed_update_mode": "replace",
+                    "genres": [],
+                },
+            ).text,
+        ),
+    )
+    assert ready["needs_disambiguation"] is False
+    assert ready["recommendations"] is not None
+    assert ready["context"]["seeds"][0]["movie_id"] == pick_id
+
+
+def test_rag_chat_empty_message_reuses_session_seeds(load_app):
+    client = TestClient(load_app)
+    first = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+        ),
+    )
+    session_id = first["session_id"]
+    prior_seed_ids = [seed["movie_id"] for seed in first["context"]["seeds"]]
+
+    second = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "", "genres": [], "session_id": session_id},
+            ).text,
+        ),
+    )
+    assert_sse_final_contract(second)
+    assert second["needs_clarification"] is False
+    assert second["recommendations"] is not None
+    assert [seed["movie_id"] for seed in second["context"]["seeds"]] == prior_seed_ids
+    assert second["context"]["genres"] == ["Comedy"]
+
+
+def test_rag_chat_reset_context_clears_session(load_app):
+    client = TestClient(load_app)
+    first = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "x", "genres": ["Drama"]}).text,
+        ),
+    )
+    session_id = first["session_id"]
+    assert first["context"]["genres"]
+
+    second = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "genres": ["Comedy"],
+                    "session_id": session_id,
+                    "reset_context": True,
+                },
+            ).text,
+        ),
+    )
+    assert second["context"]["genres"] == ["Comedy"]
+    assert second["context"]["seeds"]
+
+
+def test_rag_chat_warns_on_invalid_seed_movie_id(load_app):
+    client = TestClient(load_app)
+    seeded = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+        ),
+    )
+    valid_id = seeded["context"]["seeds"][0]["movie_id"]
+    final_payload = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "session_id": seeded["session_id"],
+                    "genres": ["Comedy"],
+                    "seed_movie_ids": [valid_id, 999999999],
+                    "seed_update_mode": "append",
+                },
+            ).text,
+        ),
+    )
+    assert any(
+        warning.get("code") == "invalid_seed_movie_id"
+        for warning in final_payload.get("warnings", [])
+    )
+    assert final_payload["needs_clarification"] is False
+
+
+def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
+    from app.seed_ranker import RankedItem
+
+    def many_rank(seed_ids, shuffle, catalog, **kwargs):
+        del shuffle, catalog, kwargs
+        items = [
+            RankedItem(
+                movie_id=1000 + index,
+                title=f"Movie {index}",
+                fusion_score=1.0 - index * 0.01,
+                content_score=0.5,
+            )
+            for index in range(15)
+        ]
+        anchor = seed_ids[0]
+        return RankedList(
+            items=items,
+            seed_movie_ids=list(seed_ids),
+            anchor_movie_id=anchor,
+            similar_movies=[],
+        )
+
+    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank", many_rank)
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+        ),
+    )
+    assert final_payload["needs_clarification"] is False
+    assert len(final_payload["recommendations"]["items"]) == 10
+
+
+def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
+    def empty_rank(*args, **kwargs):
+        seed_ids = kwargs.get("genres") and args[0] or args[0]
+        del kwargs
+        seeds = list(args[0]) if args else [1]
+        return RankedList(
+            items=[],
+            seed_movie_ids=seeds,
+            anchor_movie_id=seeds[0],
+            similar_movies=[],
+        )
+
+    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank", empty_rank)
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+        ),
+    )
+    assert final_payload["clarification_reason"] == "empty_recommendations"
+    assert final_payload["needs_clarification"] is True
+    assert final_payload["recommendations"]["items"] == []
 
 
 def test_rag_chat_provider_timeout_still_returns_recommendations(load_app, monkeypatch):

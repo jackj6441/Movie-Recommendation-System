@@ -54,7 +54,16 @@ class ResolveClarify:
     reason: str
 
 
-ResolveResult = ResolveReady | ResolveClarify
+@dataclass(frozen=True)
+class ResolveDisambiguate:
+    reason: str
+    candidates: list[ResolvedSeed]
+    context: ChatContext
+
+
+ResolveResult = ResolveReady | ResolveClarify | ResolveDisambiguate
+
+PopularMovieIdsFn = Callable[[int], list[int]]
 
 
 def resolve_context(
@@ -66,18 +75,33 @@ def resolve_context(
     genre_seed_ids: GenreSeedIdsFn,
     get_title: GetTitleFn,
     known_movie_ids: set[int] | None = None,
+    seed_movie_ids: list[int] | None = None,
+    seed_update_mode: str = "append",
+    popular_movie_ids: PopularMovieIdsFn | None = None,
+    known_genres: set[str] | None = None,
 ) -> ResolveResult:
     """Merge chips + message + session into the next ranker-ready context."""
     prior_context = prior or ChatContext()
-    chip_genres = normalize_genres(genres)
+    raw_genre_names = [genre.strip() for genre in (genres or []) if genre.strip()]
+    chip_genres = normalize_genres(genres, known_genres)
+    if raw_genre_names and not chip_genres:
+        if not message.strip() and not prior_context.seed_ids:
+            explicit_early = filter_known_seed_ids(seed_movie_ids, known_movie_ids)
+            if not explicit_early:
+                return ResolveClarify(reason="invalid_genre")
     parsed_ids = extract_movie_ids_from_message(message, search_movies, known_movie_ids)
     year_min, year_max = parse_year_bounds(message, prior_context.year_min, prior_context.year_max)
 
     merged_genres = chip_genres or list(prior_context.genres)
-    seed_ids = dedupe_preserve_order(
-        [*prior_context.seed_ids, *parsed_ids],
-        limit=MAX_SEEDS,
-    )
+    explicit_ids = filter_known_seed_ids(seed_movie_ids, known_movie_ids)
+    if seed_movie_ids is not None and seed_update_mode == "replace":
+        seed_ids = dedupe_preserve_order(explicit_ids, limit=MAX_SEEDS)
+    else:
+        seed_parts = list(prior_context.seed_ids)
+        if explicit_ids:
+            seed_parts.extend(explicit_ids)
+        seed_parts.extend(parsed_ids)
+        seed_ids = dedupe_preserve_order(seed_parts, limit=MAX_SEEDS)
 
     if not seed_ids and merged_genres:
         seed_ids = bootstrap_seed_ids(
@@ -87,11 +111,31 @@ def resolve_context(
             per_genre=DEFAULT_GENRE_BOOTSTRAP_PER_GENRE,
         )
 
-    if not merged_genres and not parsed_ids and not prior_context.seed_ids:
+    has_input_signal = bool(chip_genres) or bool(message.strip()) or bool(explicit_ids)
+    if not seed_ids and not has_input_signal and not prior_context.seed_ids:
         return ResolveClarify(reason="missing_genre_and_title")
 
     if not seed_ids:
-        return ResolveClarify(reason="no_resolvable_seeds")
+        candidates = build_disambiguation_candidates(
+            message=message,
+            merged_genres=merged_genres,
+            search_movies=search_movies,
+            genre_seed_ids=genre_seed_ids,
+            get_title=get_title,
+            popular_movie_ids=popular_movie_ids,
+            known_movie_ids=known_movie_ids,
+        )
+        context = ChatContext(
+            seed_ids=list(prior_context.seed_ids),
+            genres=merged_genres,
+            year_min=year_min,
+            year_max=year_max,
+        )
+        return ResolveDisambiguate(
+            reason="no_resolvable_seeds",
+            candidates=candidates,
+            context=context,
+        )
 
     context = ChatContext(
         seed_ids=seed_ids,
@@ -106,20 +150,38 @@ def resolve_context(
     return ResolveReady(context=context, seed_movies=seed_movies)
 
 
-def normalize_genres(genres: list[str] | None) -> list[str]:
+def normalize_genres(
+    genres: list[str] | None,
+    known_genres: set[str] | None = None,
+) -> list[str]:
     if not genres:
         return []
     seen: set[str] = set()
     ordered: list[str] = []
     for genre in genres:
         name = genre.strip()
-        if not name or name in seen:
+        if not name:
+            continue
+        if known_genres is not None:
+            canonical = match_known_genre(name, known_genres)
+            if canonical is None:
+                continue
+            name = canonical
+        if name in seen:
             continue
         seen.add(name)
         ordered.append(name)
         if len(ordered) >= MAX_GENRES:
             break
     return ordered
+
+
+def match_known_genre(name: str, known_genres: set[str]) -> str | None:
+    key = name.strip().lower()
+    for genre in known_genres:
+        if genre.lower() == key:
+            return genre
+    return None
 
 
 def extract_title_candidates(message: str) -> list[str]:
@@ -145,6 +207,12 @@ def extract_movie_ids_from_message(
         movie_id = resolve_title_candidate(candidate, search_movies, known_movie_ids)
         if movie_id is not None:
             resolved.append(movie_id)
+    if not resolved:
+        whole = message.strip()
+        if whole:
+            movie_id = resolve_title_candidate(whole, search_movies, known_movie_ids)
+            if movie_id is not None:
+                resolved.append(movie_id)
     return dedupe_preserve_order(resolved, limit=MAX_SEEDS)
 
 
@@ -222,6 +290,82 @@ def parse_year_bounds(
             return year, year
 
     return year_min, year_max
+
+
+def build_disambiguation_candidates(
+    *,
+    message: str,
+    merged_genres: list[str],
+    search_movies: SearchMoviesFn,
+    genre_seed_ids: GenreSeedIdsFn,
+    get_title: GetTitleFn,
+    popular_movie_ids: PopularMovieIdsFn | None,
+    known_movie_ids: set[int] | None,
+    limit: int = 10,
+) -> list[ResolvedSeed]:
+    collected: list[int] = []
+    stripped = message.strip()
+    if stripped:
+        for hit in search_movies(stripped):
+            if known_movie_ids is not None and hit.movie_id not in known_movie_ids:
+                continue
+            if hit.movie_id not in collected:
+                collected.append(hit.movie_id)
+            if len(collected) >= limit:
+                break
+    if not collected and merged_genres:
+        for genre in merged_genres:
+            for movie_id in genre_seed_ids(genre, limit):
+                if known_movie_ids is not None and movie_id not in known_movie_ids:
+                    continue
+                if movie_id not in collected:
+                    collected.append(movie_id)
+                if len(collected) >= limit:
+                    break
+            if len(collected) >= limit:
+                break
+    if not collected and popular_movie_ids is not None:
+        for movie_id in popular_movie_ids(limit):
+            if known_movie_ids is not None and movie_id not in known_movie_ids:
+                continue
+            if movie_id not in collected:
+                collected.append(movie_id)
+            if len(collected) >= limit:
+                break
+    return [
+        ResolvedSeed(movie_id=movie_id, title=get_title(movie_id))
+        for movie_id in collected[:limit]
+    ]
+
+
+def collect_seed_warnings(
+    seed_movie_ids: list[int] | None,
+    known_movie_ids: set[int],
+) -> list[dict[str, int | str]]:
+    if not seed_movie_ids:
+        return []
+    warnings: list[dict[str, int | str]] = []
+    for movie_id in seed_movie_ids:
+        if movie_id not in known_movie_ids:
+            warnings.append({"code": "invalid_seed_movie_id", "movie_id": movie_id})
+    return warnings
+
+
+def filter_known_seed_ids(
+    seed_movie_ids: list[int] | None,
+    known_movie_ids: set[int] | None,
+) -> list[int]:
+    if not seed_movie_ids:
+        return []
+    ordered: list[int] = []
+    for movie_id in seed_movie_ids:
+        if known_movie_ids is not None and movie_id not in known_movie_ids:
+            continue
+        if movie_id not in ordered:
+            ordered.append(movie_id)
+        if len(ordered) >= MAX_SEEDS:
+            break
+    return ordered
 
 
 def dedupe_preserve_order(values: list[int], *, limit: int) -> list[int]:

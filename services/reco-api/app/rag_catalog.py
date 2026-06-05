@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.rag_resolve import GenreSeedIdsFn, GetTitleFn, SearchMoviesFn
 
@@ -20,6 +20,7 @@ class CatalogServices:
     movie_genres: dict[int, list[str]]
     movie_popularity: dict[int, int]
     get_popular_movies: Callable[[list[int], int], list[int]]
+    known_genres: set[str] = field(default_factory=set)
 
     def search_movies(self, query: str) -> list[SearchHit]:
         q = query.strip().lower()
@@ -52,6 +53,9 @@ class CatalogServices:
 
     def known_movie_ids(self) -> set[int]:
         return set(self.movie_titles)
+
+    def popular_movie_ids(self, limit: int) -> list[int]:
+        return self.get_popular_movies(list(self.movie_titles.keys()), limit)
 
     def as_resolve_hooks(self) -> tuple[SearchMoviesFn, GenreSeedIdsFn, GetTitleFn]:
         return self.search_movies, self.genre_seed_ids, self.get_title

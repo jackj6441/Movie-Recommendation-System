@@ -172,19 +172,32 @@ Response:
 
 Server-sent events (`text/event-stream`) for a single chat turn. The backend resolves **Seed Set** and filters from the user message and genre chips, runs the same ranker as `POST /recommendations`, streams assistant prose, then emits a **final** event with optional **Recommendation List**. Ranking is never changed by the language model.
 
+Chat turns cap `recommendations.items` at **10** (`CHAT_TOP_K`); `POST /recommendations` may return more (default ranker `TOP_K`).
+
 Request:
 ```json
 {
   "session_id": null,
-  "message": "more 90s sci-fi",
+  "message": "Toy Story",
   "genres": ["Sci-Fi"],
+  "seed_movie_ids": [1],
+  "seed_update_mode": "append",
+  "reset_context": false,
+  "clear_year_bounds": false,
   "shuffle": false
 }
 ```
 
 - `session_id`: omit or `null` to start a session; pass the id from a prior `final` event to continue.
-- `genres`: up to 3 genre chip selections from the UI.
-- Clarification: when there are no genres, no resolvable movie titles in `message`, and no seeds in the session, the `final` event sets `needs_clarification: true` and omits `recommendations`.
+- `message`: optional when `genres`, `seed_movie_ids`, or session already has seeds (genre-only turns use `""`).
+- `genres`: up to 3 catalog-valid genre chips.
+- `seed_movie_ids`: 1–5 explicit **Seed Movies**; highest priority; invalid ids are ignored with `warnings`.
+- `seed_update_mode`: `append` (default) or `replace` (disambiguation picker uses `replace`).
+- `reset_context`: `true` clears session **Seed Set**, genres, and year filters before resolve.
+- `clear_year_bounds`: `true` clears `year_min` / `year_max` on the session.
+- Bare titles in `message` are resolved via whole-message catalog search (first hit wins).
+- `needs_clarification` reasons: `missing_genre_and_title`, `invalid_genre`, `empty_recommendations`, `no_resolvable_seeds` (with `needs_disambiguation: true` and up to 10 `disambiguation_candidates`).
+- Optional `debug` on `final` when `RAG_CHAT_DEBUG=true`.
 
 SSE events:
 
@@ -197,6 +210,7 @@ Example `final` (recommendations ready):
   "session_id": "uuid",
   "turn_id": "uuid",
   "needs_clarification": false,
+  "needs_disambiguation": false,
   "context": {
     "seeds": [{"movie_id": 1, "title": "Toy Story (1995)"}],
     "genres": ["Comedy"],

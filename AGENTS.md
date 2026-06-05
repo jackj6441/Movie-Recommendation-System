@@ -12,6 +12,10 @@ Primary docs:
 - `docs/architecture.md`: system components, offline/online data flow, artifacts, cache/config model.
 - `docs/api.md`: API contract and examples.
 
+## Communication
+
+- **Reply to the user in Chinese (简体中文)** for explanations, summaries, and status updates unless they ask for another language.
+
 ## Working rules
 
 - Before editing, form a complete todolist from the prompt.
