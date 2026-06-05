@@ -12,7 +12,7 @@
 2. **Serving (FastAPI)**
    - Seed-set product flow only (no `user_id`, no ONNX/NCF, no Redis).
    - Phase 1 ranking: four retrievers → union (cap 400) → weighted fusion → Top-24.
-   - RAG explanation layer (mock or external provider; unchanged in Phase 1).
+   - Conversational RAG (`POST /rag/chat`, SSE + session store; ranking unchanged).
 
 3. **Frontend (React)**
    - Wizard: genres → seeds → recommendations + evidence dashboard.

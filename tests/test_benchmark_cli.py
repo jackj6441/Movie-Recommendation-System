@@ -43,7 +43,7 @@ def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
         "GET /metrics",
         "POST /recommendations",
         "POST /explanations",
-        "POST /rag/explanations",
+        "POST /rag/chat",
     }
     assert report["serving"]["ranking_mode"] == "multi_retriever_fusion"
     for endpoint in endpoints.values():
@@ -56,7 +56,7 @@ def test_benchmark_cli_writes_json_and_markdown_reports(tmp_path):
     markdown = markdown_path.read_text(encoding="utf-8")
     assert "# API Benchmark Report" in markdown
     assert "GET /healthz" in markdown
-    assert "POST /rag/explanations" in markdown
+    assert "POST /rag/chat" in markdown
 
 
 def test_benchmark_sync_evidence_merges_latency_and_fusion_metrics(tmp_path):
@@ -145,6 +145,6 @@ def test_local_benchmark_report_artifact_is_published():
         "GET /metrics",
         "POST /recommendations",
         "POST /explanations",
-        "POST /rag/explanations",
+        "POST /rag/chat",
     }
     assert report.get("serving", {}).get("ranking_mode") == "multi_retriever_fusion"

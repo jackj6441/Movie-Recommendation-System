@@ -39,10 +39,10 @@ ENDPOINTS = [
         "timeout_sec": 60.0,
     },
     {
-        "name": "POST /rag/explanations",
+        "name": "POST /rag/chat",
         "method": "POST",
-        "path": "/rag/explanations",
-        "body": {"seeds": [1, 2, 3], "shuffle": False},
+        "path": "/rag/chat",
+        "body": {"message": "recommend comedies", "genres": ["Comedy"]},
         "timeout_sec": 15.0,
     },
 ]
@@ -187,7 +187,7 @@ def sync_system_evidence(
 
     rec_p95 = endpoint_p95(report, "POST /recommendations")
     explain_p95 = endpoint_p95(report, "POST /explanations")
-    rag_p95 = endpoint_p95(report, "POST /rag/explanations")
+    rag_p95 = endpoint_p95(report, "POST /rag/chat")
     benchmark = {
         "environment": report.get("environment"),
         "timestamp": report.get("timestamp"),
@@ -201,7 +201,7 @@ def sync_system_evidence(
     if explain_p95 is not None:
         benchmark["explanations_p95_ms"] = round(explain_p95, 3)
     if rag_p95 is not None:
-        benchmark["rag_explanations_p95_ms"] = round(rag_p95, 3)
+        benchmark["rag_chat_p95_ms"] = round(rag_p95, 3)
     evidence["benchmark"] = benchmark
 
     if fusion_metrics_path.exists():

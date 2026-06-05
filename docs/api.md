@@ -46,8 +46,8 @@ movie_reco_requests_total{endpoint="/healthz",status="200"} 1
 movie_reco_request_latency_ms_count{endpoint="/healthz",status="200"} 1
 movie_reco_request_latency_ms_sum{endpoint="/healthz",status="200"} 2.341
 movie_reco_cache_events_total{cache="redis",event="hit"} 1
-movie_reco_rag_explanations_total{source="rag"} 1
-movie_reco_rag_fallback_reasons_total{reason="invalid_json"} 1
+movie_reco_rag_chat_turns_total{outcome="success"} 1
+movie_reco_rag_chat_reasons_total{reason="provider_timeout"} 1
 movie_reco_rag_provider_mode{provider="mock"} 1
 ```
 
@@ -166,87 +166,69 @@ Response:
 }
 ```
 
-## RAG Explanations (Product)
+## Conversational RAG (Product)
 
-### POST /rag/explanations
+### POST /rag/chat
 
-Generates a structured natural-language explanation for an existing Recommendation List. The endpoint runs deterministic `/explanations` internally, builds RAG evidence from that result, and explains the top 3 of `topk` in order. RAG never changes ranking; it only describes recommendations that were already selected. v1 is English-only, non-streaming, top-3 item explanations, and uses structured project data only.
+Server-sent events (`text/event-stream`) for a single chat turn. The backend resolves **Seed Set** and filters from the user message and genre chips, runs the same ranker as `POST /recommendations`, streams assistant prose, then emits a **final** event with optional **Recommendation List**. Ranking is never changed by the language model.
 
-Body (same `SeedsRequest` as `/explanations`):
-```json
-{"seeds": [356, 260, 318, 1198, 1210], "shuffle": false}
-```
-
-Validation matches `/explanations`:
-
-- `400 {"detail": "seeds must be 1 to 5 items"}` when seeds is empty or has more than 5 items.
-- `400 {"detail": "no valid seeds"}` when no seed maps to a known movie.
-- `503 {"content_unavailable": true}` when content embeddings are unavailable.
-
-Success response (`explanation_source: "rag"`):
+Request:
 ```json
 {
-  "summary": "Based on your Seed Set (Forrest Gump (1994), ...), these Recommendations emphasize movies with similar content signals and strong fusion scores.",
-  "items": [
-    {
-      "movie_id": 356,
-      "reason": "Forrest Gump (1994) is recommended because it aligns with your Seed Set through content similarity and its fusion score.",
-      "evidence": ["seed_set", "content_signal", "fusion_score"]
-    }
-  ],
-  "model_version": "dev",
-  "rag_evidence_version": "structured-v1",
-  "evidence_hash": "sha256:...",
-  "prompt_version": "rag-chatgpt-v1",
-  "request_id": "5f1c...",
-  "explanation_source": "rag"
+  "session_id": null,
+  "message": "more 90s sci-fi",
+  "genres": ["Sci-Fi"],
+  "shuffle": false
 }
 ```
 
-Field and enum reference:
+- `session_id`: omit or `null` to start a session; pass the id from a prior `final` event to continue.
+- `genres`: up to 3 genre chip selections from the UI.
+- Clarification: when there are no genres, no resolvable movie titles in `message`, and no seeds in the session, the `final` event sets `needs_clarification: true` and omits `recommendations`.
 
-- `explanation_source`: one of `rag` (freshly generated), `rag_cache` (served from cache), `deterministic_fallback` (provider unavailable or output rejected).
-- `items[].evidence`: subset of `seed_set`, `content_signal`, `fusion_score`.
-- `items` preserve Recommendation List order and cover the top 3 of `topk` (fewer when fewer than 3 recommendations exist).
-- `rag_evidence_version`: evidence schema version, currently `structured-v1`.
-- `prompt_version`: prompt version and cache-key input, default `rag-chatgpt-v1` (override with `RAG_PROMPT_VERSION`).
-- `evidence_hash`: `sha256:` digest of the canonicalized deterministic explanation used for this request.
-- `request_id`: unique id per request, for log correlation.
-- `fallback_reason`: present only on fallback responses. Emitted values: `provider_timeout`, `provider_error`, `invalid_json`, `schema_validation_failed`, `disabled`, `unknown`.
+SSE events:
 
-Cache behavior: when `RAG_CACHE_ENABLED=true`, an equivalent request returns the same payload with `explanation_source: "rag_cache"`. The cache key combines model version, evidence hash, prompt version, provider, and provider model, so any change to those misses the cache.
+- `token`: `{"delta": "..."}` — streamed assistant text.
+- `final`: full turn payload (see below).
 
-Fallback response (`explanation_source: "deterministic_fallback"`), e.g. on provider timeout or schema validation failure:
+Example `final` (recommendations ready):
 ```json
 {
-  "summary": "These Recommendations are based on your Seed Set and existing scoring signals.",
-  "items": [
-    {
-      "movie_id": 356,
-      "reason": "This Recommendation is based on your Seed Set and existing scoring signals.",
-      "evidence": ["seed_set", "content_signal", "fusion_score"]
-    }
-  ],
-  "model_version": "dev",
-  "rag_evidence_version": "structured-v1",
-  "evidence_hash": "sha256:...",
-  "prompt_version": "rag-chatgpt-v1",
-  "request_id": "5f1c...",
-  "explanation_source": "deterministic_fallback",
-  "fallback_reason": "provider_timeout"
+  "session_id": "uuid",
+  "turn_id": "uuid",
+  "needs_clarification": false,
+  "context": {
+    "seeds": [{"movie_id": 1, "title": "Toy Story (1995)"}],
+    "genres": ["Comedy"],
+    "year_min": null,
+    "year_max": null
+  },
+  "recommendations": {
+    "items": [{"movie_id": 186, "title": "...", "score": 0.74}],
+    "seed_movies": [{"movie_id": 1, "title": "Toy Story (1995)"}],
+    "anchor_source": "seed",
+    "model_version": "dev",
+    "ranking_mode": "multi_retriever_fusion"
+  },
+  "assistant_message": "Based on your Seed Set ...",
+  "explanation_source": "rag",
+  "rag_chat_version": "conversational-v1",
+  "prompt_version": "rag-chat-v1"
 }
 ```
 
-Empty Recommendation List behavior: when there are no recommendations, `items` is an empty array and `summary` still returns. Under the default `mock` provider this comes back as `explanation_source: "rag"` with empty `items`.
+- `explanation_source`: `rag` or `deterministic_fallback` when the provider fails but ranking succeeded.
+- `chat_fallback_reason`: optional (`provider_timeout`, `provider_error`, …).
+- `503` / rank errors: `final` may include `rank_error: "content_unavailable"` and null `recommendations`.
 
-Configuration (backend environment only):
+Configuration:
 
-- `RAG_PROVIDER`: `mock` (default) or `external` for the real OpenAI provider. Additional `mock_*` failure modes exist for tests.
-- `RAG_PROVIDER_API_KEY`: required only when `RAG_PROVIDER=external`. Backend-only; never expose in frontend code or commit it.
-- `RAG_PROVIDER_MODEL`: provider model, default `mock` (for example `gpt-4o-mini`).
-- `RAG_CACHE_ENABLED`: `true`/`false`, default `false`.
-- `RAG_CACHE_TTL_SECONDS`: cache TTL, default `3600`.
-- External provider calls use an 8-second timeout; the endpoint targets 10 seconds or less overall.
+- `RAG_PROVIDER`: `mock` (default), `external`, or test modes (`mock_timeout`, `mock_provider_error`, …).
+- `RAG_PROVIDER_API_KEY`, `RAG_PROVIDER_MODEL`: backend-only for `external`.
+- `RAG_SESSION_TTL_SECONDS`: in-memory session TTL (default `3600`).
+- `RAG_PROMPT_VERSION`: overrides default `rag-chat-v1`.
+
+The legacy `POST /rag/explanations` endpoint has been removed.
 
 ## Debug Endpoints
 

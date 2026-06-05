@@ -7,10 +7,13 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import artifacts, content, ltr, metrics, posters, rag, seed_ranker
+from app import artifacts, content, ltr, metrics, posters, seed_ranker
+from app import rag_chat as rag_chat_service
+from app.rag_catalog import CatalogServices
+from app.rag_session import GLOBAL_SESSION_STORE
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
@@ -166,6 +169,14 @@ def get_popular_movies(movie_ids: list[int], limit: int) -> list[int]:
     return ranked[:limit]
 
 
+catalog_services = CatalogServices(
+    movie_titles=movie_titles,
+    movie_genres=movie_genres,
+    movie_popularity=movie_popularity,
+    get_popular_movies=get_popular_movies,
+)
+
+
 def get_title(movie_id: int) -> str:
     return movie_titles.get(movie_id, f"Movie {movie_id}")
 
@@ -290,6 +301,13 @@ class SeedsRequest(BaseModel):
     year_max: int | None = None
 
 
+class RagChatRequest(BaseModel):
+    session_id: str | None = None
+    message: str = ""
+    genres: list[str] | None = None
+    shuffle: bool = False
+
+
 @app.post("/recommendations")
 def recommendations(request: SeedsRequest):
     if not request.seeds or len(request.seeds) > 5:
@@ -371,14 +389,20 @@ def explanations(request: SeedsRequest):
     }
 
 
-@app.post("/rag/explanations")
-def rag_explanations(request: SeedsRequest):
-    deterministic = explanations(request)
-    if isinstance(deterministic, JSONResponse):
-        return deterministic
-
-    current_model_version = os.getenv("MODEL_VERSION", model_version)
-    return rag.build_mock_structured_explanation(deterministic, current_model_version)
+@app.post("/rag/chat")
+def rag_chat(request: RagChatRequest):
+    stream = rag_chat_service.run_chat_turn_sse(
+        session_store=GLOBAL_SESSION_STORE,
+        catalog_services=catalog_services,
+        catalog=catalog,
+        model_version=os.getenv("MODEL_VERSION", model_version),
+        movie_payload_fn=movie_payload,
+        message=request.message,
+        genres=request.genres,
+        session_id=request.session_id,
+        shuffle=request.shuffle,
+    )
+    return StreamingResponse(stream, media_type="text/event-stream")
 
 
 @app.get("/debug/similar")

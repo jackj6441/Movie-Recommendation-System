@@ -7,7 +7,11 @@ import pytest
 _APP_MODULES = [
     "app.main",
     "app.content",
-    "app.rag",
+    "app.rag_chat",
+    "app.rag_session",
+    "app.rag_resolve",
+    "app.rag_catalog",
+    "app.rag_evidence",
     "app.seed_ranker",
     "app.metrics",
     "app.posters",
@@ -31,7 +35,7 @@ def reset_observability_state(api_root: Path) -> None:
     except ModuleNotFoundError:
         pass
     try:
-        importlib.import_module("app.rag").RAG_CACHE.clear()
+        importlib.import_module("app.rag_session").GLOBAL_SESSION_STORE.clear()
     except (ModuleNotFoundError, AttributeError):
         pass
 

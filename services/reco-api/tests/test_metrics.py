@@ -1,6 +1,9 @@
+import importlib
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+
+from tests.conftest import _configure_test_env, _reload_app
 
 
 def test_metrics_endpoint_returns_prometheus_text(load_app):
@@ -13,7 +16,7 @@ def test_metrics_endpoint_returns_prometheus_text(load_app):
     body = response.text
     assert "movie_reco_requests_total" in body
     assert "movie_reco_request_latency_ms" in body
-    assert "movie_reco_rag_explanations_total" in body
+    assert "movie_reco_rag_chat_turns_total" in body
     assert "movie_reco_cache_events_total" in body
     assert "movie_reco_rag_provider_mode" in body
 
@@ -32,22 +35,27 @@ def test_metrics_record_request_count_and_latency(load_app):
     assert 'movie_reco_request_latency_ms_sum{endpoint="/healthz",status="200"}' in body
 
 
-def test_metrics_record_rag_source_and_fallback_reason(load_app, monkeypatch):
-    monkeypatch.setenv("RAG_PROVIDER", "mock_invalid_json")
-    client = TestClient(load_app)
+def test_metrics_record_rag_chat_fallback(monkeypatch, repo_root, api_root):
+    _configure_test_env(monkeypatch, repo_root, api_root)
+    monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
+    app = _reload_app(api_root)
+    metrics_module = importlib.import_module("app.metrics")
+    client = TestClient(app)
 
-    rag_response = client.post("/rag/explanations", json={"seeds": [1, 2, 3], "shuffle": False})
-    metrics_response = client.get("/metrics")
-
+    rag_response = client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]})
     assert rag_response.status_code == 200
-    assert rag_response.json()["explanation_source"] == "deterministic_fallback"
+    assert "event: final" in rag_response.text
+    assert metrics_module._rag_chat_outcomes.get("fallback") == 1
+    assert metrics_module._rag_chat_reasons.get("provider_timeout") == 1
+
+    metrics_response = client.get("/metrics")
     body = metrics_response.text
-    assert 'movie_reco_rag_explanations_total{source="deterministic_fallback"} 1' in body
-    assert 'movie_reco_rag_fallback_reasons_total{reason="invalid_json"} 1' in body
+    assert 'movie_reco_rag_chat_turns_total{outcome="fallback"}' in body
+    assert 'movie_reco_rag_chat_reasons_total{reason="provider_timeout"}' in body
 
 
-def test_api_docs_explain_healthz_and_metrics_roles():
-    docs = Path("docs/api.md").read_text(encoding="utf-8").lower()
+def test_api_docs_explain_healthz_and_metrics_roles(repo_root: Path):
+    docs = (repo_root / "docs" / "api.md").read_text(encoding="utf-8").lower()
 
     assert "/healthz" in docs
     assert "/metrics" in docs

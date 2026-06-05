@@ -20,5 +20,5 @@ FastAPI seed-based movie recommendation service with content embeddings and RAG 
 
 - `POST /recommendations` — seed-based ranking (content embeddings).
 - `POST /explanations` — deterministic score breakdown for RAG evidence.
-- `POST /rag/explanations` — structured natural-language explanations.
+- `POST /rag/chat` — conversational RAG (SSE tokens + final event with recommendations).
 - `GET /healthz`, `GET /metrics`, `GET /system/evidence`
