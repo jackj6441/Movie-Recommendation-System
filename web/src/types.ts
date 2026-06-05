@@ -40,17 +40,44 @@ export type ExplainResponse = {
   anchor_source?: string
 }
 
-export type RagExplanationItem = {
+export type ChatSeedRef = {
   movie_id: number
-  reason: string
-  evidence: string[]
+  title: string
 }
 
-export type RagExplanationResponse = {
-  summary: string
-  items: RagExplanationItem[]
-  explanation_source: "rag" | "rag_cache" | "deterministic_fallback"
-  fallback_reason?: string | null
+export type RagChatContext = {
+  seeds: ChatSeedRef[]
+  genres: string[]
+  year_min: number | null
+  year_max: number | null
+}
+
+export type RagChatFinal = {
+  session_id: string
+  turn_id: string
+  needs_clarification: boolean
+  clarification_reason?: string
+  context: RagChatContext
+  recommendations: RecommendationResponse | null
+  assistant_message: string
+  explanation_source: "rag" | "deterministic_fallback"
+  chat_fallback_reason?: string
+  model_version?: string
+  rank_error?: string
+}
+
+export type RagChatStreamResult = {
+  tokens: string
+  final: RagChatFinal
+  assistantMessage: string
+}
+
+export type ChatTurn = {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  streaming?: boolean
+  final?: RagChatFinal
 }
 
 export type MovieSuggestion = MoviePosters & {
@@ -85,7 +112,8 @@ export type SystemEvidence = {
   }
   benchmark: {
     recommendations_p95_ms: number
-    rag_explanations_p95_ms: number
+    rag_chat_p95_ms?: number
+    rag_explanations_p95_ms?: number
   }
   rag: {
     public_provider: string

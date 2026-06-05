@@ -173,8 +173,13 @@ export function EvidenceDashboard({ evidence, loading, error, onRetry }: Evidenc
                 <strong>{formatLatency(evidence.benchmark.recommendations_p95_ms)}</strong>
               </div>
               <div>
-                <span>RAG explanations p95</span>
-                <strong>{formatLatency(evidence.benchmark.rag_explanations_p95_ms)}</strong>
+                <span>RAG chat p95</span>
+                <strong>
+                  {formatLatency(
+                    evidence.benchmark.rag_chat_p95_ms ??
+                      evidence.benchmark.rag_explanations_p95_ms
+                  )}
+                </strong>
               </div>
             </div>
           </div>

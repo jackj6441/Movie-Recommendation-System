@@ -28,7 +28,7 @@ It packages a movie recommender as an operational ML system: offline artifact bu
   - `GET /system/evidence`
   - `POST /recommendations`
   - `POST /explanations`
-  - `POST /rag/explanations`
+  - `POST /rag/chat` (SSE)
 - System Evidence Dashboard: available from the UI tab, showing serving health, evaluation quality, current vs popularity baseline, latency benchmark, RAG safety, and AWS EC2 deployment proof.
 - Model documentation: `docs/model-card.md`
 - EC2 deployment guide: `docs/deployment-ec2.md`
@@ -103,7 +103,7 @@ Open:
 curl "http://localhost:8000/movies/search?q=toy"
 curl -X POST http://localhost:8000/recommendations -H "Content-Type: application/json" -d '{"seeds":[1,2,3,4,5]}'
 curl -X POST http://localhost:8000/explanations -H "Content-Type: application/json" -d '{"seeds":[1,2,3,4,5]}'
-curl -X POST http://localhost:8000/rag/explanations -H "Content-Type: application/json" -d '{"seeds":[1,2,3,4,5]}'
+curl -N -X POST http://localhost:8000/rag/chat -H "Content-Type: application/json" -d '{"message":"light comedies","genres":["Comedy"]}'
 ```
 
 ## Reproducible Evaluation

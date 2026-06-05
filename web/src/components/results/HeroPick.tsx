@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import type { RagExplanationItem, RecommendationItem } from "../../types"
+import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 
 const HERO_SCRIM = [
@@ -9,12 +9,10 @@ const HERO_SCRIM = [
 
 type HeroPickProps = {
   item: RecommendationItem
-  ragItem?: RagExplanationItem
-  ragLoading: boolean
   actions?: ReactNode
 }
 
-export function HeroPick({ item, ragItem, ragLoading, actions }: HeroPickProps) {
+export function HeroPick({ item, actions }: HeroPickProps) {
   const [posterHidden, setPosterHidden] = useState(false)
   const showPoster = Boolean(item.poster_url) && !posterHidden
 
@@ -39,17 +37,6 @@ export function HeroPick({ item, ragItem, ragLoading, actions }: HeroPickProps) 
         <span className="hero-rank">#1</span>
         <span className="hero-kicker">Tonight&apos;s strongest match</span>
         <h2 className="hero-title">{formatTitle(item.title)}</h2>
-        {ragItem ? (
-          <div className="hero-reason-block">
-            <span>Why it fits</span>
-            <p className="hero-reason">{ragItem.reason}</p>
-          </div>
-        ) : ragLoading ? (
-          <div className="hero-reason-skeleton" aria-hidden="true">
-            <span className="skeleton-dark hero-reason-line" />
-            <span className="skeleton-dark hero-reason-line short" />
-          </div>
-        ) : null}
         {actions && <div className="hero-actions">{actions}</div>}
       </div>
     </article>

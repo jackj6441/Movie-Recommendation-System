@@ -62,8 +62,8 @@ npm run build
 
 ## Product and API constraints
 
-- Current product flow: select 0-3 genres, pick 1-5 seed movies, get top-10 recommendations plus explanation.
-- Product endpoints are `POST /recommendations` and `POST /explanations`.
+- Current product flow: ChatGPT-style chat with genre chips, `POST /rag/chat` (SSE), and embedded recommendation cards (ranking via multi-retriever fusion / optional LTR).
+- Product endpoint: `POST /rag/chat`. `POST /recommendations` remains for tests; `POST /explanations` is debug-only.
 - Debug endpoint: `GET /debug/similar` (content similarity; not used by the UI).
 - Health check is `GET /healthz`.
 - Search is case-insensitive substring search by title.
