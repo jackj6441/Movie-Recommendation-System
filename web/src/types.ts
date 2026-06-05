@@ -16,30 +16,6 @@ export type RecommendationResponse = {
   model_version: string
 }
 
-export type ExplainItem = {
-  movie_id: number
-  title: string
-  content: number
-  final: number
-}
-
-export type SimilarMovie = {
-  movie_id: number
-  title: string
-  similarity: number
-}
-
-export type ExplainResponse = {
-  user_id: number | null
-  model_version: string
-  anchor_movie: { movie_id: number; title: string } | null
-  topk: ExplainItem[]
-  similar_movies: SimilarMovie[]
-  content_available: boolean
-  seed_movies?: { movie_id: number; title: string }[]
-  anchor_source?: string
-}
-
 export type ChatSeedRef = {
   movie_id: number
   title: string

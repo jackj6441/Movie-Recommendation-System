@@ -24,9 +24,9 @@ AI-powered Movie Recommendation System with hybrid ranking (NCF + content embedd
 
 ## Core Product Flow (Current)
 
-1. Select 0-3 genres.
-2. Pick 1-5 seed movies (search or recommended seeds).
-3. Get top-10 recommendations + explanation chart.
+1. Open the chat-first recommender UI.
+2. Optionally pick up to three genre chips and describe taste in natural language.
+3. Receive streaming assistant text plus up to 24 ranked recommendations (multi-retriever fusion).
 
 ## Functional Requirements
 

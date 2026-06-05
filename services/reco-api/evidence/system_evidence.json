@@ -1,7 +1,14 @@
 {
   "benchmark": {
-    "rag_explanations_p95_ms": 5.088,
-    "recommendations_p95_ms": 65.459
+    "environment": "local",
+    "explanations_p95_ms": 0.0,
+    "fusion_ok": true,
+    "item_cf_ok": false,
+    "rag_chat_p95_ms": 0.0,
+    "ranking_mode": "multi_retriever_fusion",
+    "recommendations_p95_ms": 0.0,
+    "svd_ok": false,
+    "timestamp": "2026-06-05T00:50:45.697016+00:00"
   },
   "deployment": {
     "api_url": "http://34.228.75.214:8000",
@@ -18,7 +25,7 @@
     "recommendation_coverage": 0.0171,
     "topk_diversity": 0.6298
   },
-  "generated_at": "2026-06-02T17:05:48+00:00",
+  "generated_at": "2026-06-05T00:50:45.698280+00:00",
   "model_truth": {
     "product_ranking_path": "Seed Set recommendations via multi-retriever fusion (content, SVD, item-CF, pop)",
     "roadmap": "Optional LightGBM Lambdarank reranker after Phase 1 acceptance"

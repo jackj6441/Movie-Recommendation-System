@@ -117,9 +117,9 @@ curl -X POST http://<ec2-public-ip>:8000/recommendations \
   -H "Content-Type: application/json" \
   -d '{"seeds":[1,2,3],"shuffle":false}'
 
-curl -X POST http://<ec2-public-ip>:8000/rag/explanations \
+curl -N -X POST http://<ec2-public-ip>:8000/rag/chat \
   -H "Content-Type: application/json" \
-  -d '{"seeds":[1,2,3],"shuffle":false}'
+  -d '{"message":"light comedies","genres":["Comedy"]}'
 ```
 
 Benchmark validation:

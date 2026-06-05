@@ -15,7 +15,7 @@
    - Conversational RAG (`POST /rag/chat`, SSE + session store; ranking unchanged).
 
 3. **Frontend (React)**
-   - Wizard: genres → seeds → recommendations + evidence dashboard.
+   - Chat-first recommender (`POST /rag/chat` SSE, genre chips, embedded cards) + System Evidence tab.
 
 4. **Evaluation & benchmarks**
    - `evaluation/eval_fusion.py`: Recall/NDCG @10 and @24.
@@ -52,7 +52,16 @@ POST /recommendations { seeds[1..5] }
   -> return Top-24 (API field score = fusion_score)
 ```
 
-`POST /explanations` runs the same ranker today (duplicate call; RAG refactor deferred).
+## Online product flow (conversational RAG)
+
+```text
+POST /rag/chat { message, genres[], session_id? }
+  -> SessionStore (TTL) + resolve_context (search, genre bootstrap, year hints)
+  -> seed_ranker.rank (same as POST /recommendations)
+  -> SSE: token deltas + final { assistant_message, recommendations, context }
+```
+
+`POST /explanations` remains for debug signal inspection only (not used by the UI).
 
 ## Key Artifacts (`services/reco-api/models/`)
 

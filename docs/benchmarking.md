@@ -1,6 +1,6 @@
 # Benchmarking
 
-Measure the recommendation API from a local or remote deployment. The harness sends HTTP requests to core product endpoints and writes JSON/Markdown reports. RAG behavior is not modified here—benchmarks only observe latency and success rate.
+Measure the recommendation API from a local or remote deployment. The harness sends HTTP requests to core product endpoints and writes JSON/Markdown reports.
 
 ## Command
 
@@ -12,7 +12,7 @@ python benchmarks/benchmark_api.py \
   --environment local
 ```
 
-Fusion ranking scans the full catalog for content/SVD channels, so `/recommendations` and `/explanations` use **60s** per-request timeouts by default (override with `--timeout 90` for all endpoints).
+Fusion ranking scans the full catalog for content/SVD channels, so `/recommendations` and `/explanations` use **60s** per-request timeouts by default. `POST /rag/chat` uses **15s** (override all endpoints with `--timeout 90`).
 
 Sync portfolio evidence (benchmark p95 + optional fusion eval metrics):
 
@@ -44,13 +44,13 @@ python benchmarks/benchmark_api.py \
 | `GET /healthz` | Captured once as `serving` snapshot (`ranking_mode`, `fusion_ok`, …) |
 | `GET /metrics` | Prometheus text; success = HTTP 200 |
 | `POST /recommendations` | Seed payload `[1,2,3]`; measures fusion path |
-| `POST /explanations` | Same ranker as recommendations (duplicate call today) |
-| `POST /rag/explanations` | Mock RAG by default; 15s timeout |
+| `POST /explanations` | Same ranker as recommendations (debug) |
+| `POST /rag/chat` | Product path; SSE body with `final` event; mock RAG by default |
 
-Stable POST body:
+Stable chat body:
 
 ```json
-{"seeds": [1, 2, 3], "shuffle": false}
+{"message": "recommend comedies", "genres": ["Comedy"]}
 ```
 
 ## Artifacts
@@ -58,7 +58,7 @@ Stable POST body:
 - `benchmarks/results/benchmark_report.json`
 - `benchmarks/results/benchmark_report.md`
 
-JSON includes `serving` from `/healthz` plus per-endpoint latency percentiles.
+JSON includes `serving` from `/healthz` plus per-endpoint latency percentiles. `--sync-evidence` writes `rag_chat_p95_ms` into `services/reco-api/evidence/system_evidence.json`.
 
 ## Metrics per endpoint
 

@@ -2,7 +2,7 @@
 
 - Base URL: `mock://local`
 - Environment: `local`
-- Timestamp: `2026-06-04T21:05:35.091121+00:00`
+- Timestamp: `2026-06-05T00:50:45.697016+00:00`
 - Requests per endpoint: `5`
 - Ranking mode: `multi_retriever_fusion`
 - Fusion ready: `True` (svd=`False`, item_cf=`False`)
@@ -13,4 +13,4 @@
 | GET /metrics | 1.00 | 0.000 | 0.000 | 0.000 | 10 | 5 |
 | POST /recommendations | 1.00 | 0.000 | 0.000 | 0.000 | 60 | 5 |
 | POST /explanations | 1.00 | 0.000 | 0.000 | 0.000 | 60 | 5 |
-| POST /rag/explanations | 1.00 | 0.000 | 0.000 | 0.000 | 15 | 5 |
+| POST /rag/chat | 1.00 | 0.000 | 0.000 | 0.000 | 15 | 5 |

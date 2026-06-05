@@ -128,7 +128,7 @@ The goal is not to build a more complex recommender algorithm. The goal is to pr
   - `GET /healthz`
   - `POST /recommendations`
   - `POST /explanations`
-  - `POST /rag/explanations`
+  - `POST /rag/chat`
 - Produce both machine-readable and human-readable artifacts:
   - JSON report
   - Markdown report
@@ -161,7 +161,7 @@ The goal is not to build a more complex recommender algorithm. The goal is to pr
 - Existing product endpoints remain stable:
   - `POST /recommendations`
   - `POST /explanations`
-  - `POST /rag/explanations`
+  - `POST /rag/chat`
 - Add:
   - `GET /metrics`
 - New documentation artifacts:
