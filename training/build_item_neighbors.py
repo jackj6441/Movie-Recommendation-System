@@ -143,6 +143,13 @@ def main() -> None:
     with open(output_path, "w", encoding="utf-8") as neighbors_file:
         json.dump(neighbors, neighbors_file, ensure_ascii=False)
 
+    reco_api = Path(__file__).resolve().parents[1] / "services" / "reco-api"
+    if str(reco_api) not in sys.path:
+        sys.path.insert(0, str(reco_api))
+    from app.artifact_manifest import record_artifact
+
+    record_artifact(args.models_dir, item_neighbors=Path(args.output).name)
+
     with_neighbors = sum(1 for value in neighbors.values() if value)
     print(f"catalog_items: {len(movie_ids)}")
     print(f"items_with_neighbors: {with_neighbors}")

@@ -1,16 +1,16 @@
 # Graph Report - Movie Recommandation Project  (2026-06-06)
 
 ## Corpus Check
-- 240 files · ~501,722 words
+- 242 files · ~502,687 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4331 nodes · 6673 edges · 214 communities (194 shown, 20 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 199 edges (avg confidence: 0.6)
+- 4365 nodes · 6753 edges · 214 communities (194 shown, 20 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 203 edges (avg confidence: 0.6)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b4c80a0a`
+- Built from commit: `fd53dd82`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -358,8 +358,8 @@ Cohesion: 0.09
 Nodes (24): buildAnnotationsForCapture(), buildPinElement(), captureAndEmit(), captureElementToBlob(), checkpointPayload(), collectFontCssText(), compileShader(), handleAccept() (+16 more)
 
 ### Community 14 - "Item Catalog Svd Matrix"
-Cohesion: 0.09
-Nodes (32): Counter, csr_matrix, Series, Path, Smoke tests for offline SVD and item-neighbor build scripts., test_catalog_load_order(), test_item_neighbors_scores(), test_svd_factors_shape_and_alignment() (+24 more)
+Cohesion: 0.06
+Nodes (59): ArtifactManifest, default_manifest(), load_catalog_movie_ids(), load_content_row_movie_ids(), manifest_path(), Artifact manifest for aligned serving and offline build paths., Return movie ids in embedding row order., Load served catalog ids in embedding row order using manifest paths when present (+51 more)
 
 ### Community 15 - "Design Parser Mjs Assesscoverage"
 Cohesion: 0.16
@@ -463,15 +463,15 @@ Nodes (14): appendOriginToDirective(), buildTagBlock(), commentClose(), commentO
 
 ### Community 41 - "Item Load Fusion Svd"
 Cohesion: 0.09
-Nodes (25): ArtifactBundle, FusionArtifacts, load_artifact_bundle(), load_artifact_bundle_from_env(), _load_fusion_artifacts(), _load_fusion_weights(), _load_ltr_artifacts(), LtrArtifacts (+17 more)
+Nodes (15): ArtifactBundle, ContentArtifacts, FusionArtifacts, load_artifact_bundle_from_env(), _load_content_artifacts(), _load_fusion_artifacts(), _load_fusion_weights(), _load_ltr_artifacts() (+7 more)
 
 ### Community 42 - "Applyparamdefaults Applyparamvalue Buildparamspanel Closedclippath"
 Cohesion: 0.19
 Nodes (16): applyParamDefaults(), applyParamValue(), buildParamsPanel(), closedClipPath(), closeTunePopover(), formatRangeValue(), getVisibleVariantEl(), hideParamsPanel() (+8 more)
 
 ### Community 43 - "Lambdarank Relevance Labels Training"
-Cohesion: 0.15
-Nodes (14): rating_to_relevance(), Graded relevance for offline labels: >=4 high, 3 medium, else low., Graded relevance for offline labels: >=4 high, 3 medium, else low., ServingCatalog, build_serving_catalog(), build_training_arrays(), ndarray, Build Lambdarank training rows from MovieLens ratings (same protocol as eval_fus (+6 more)
+Cohesion: 0.19
+Nodes (11): ServingCatalog, build_serving_catalog(), build_training_arrays(), ndarray, Build Lambdarank training rows from MovieLens ratings (same protocol as eval_fus, Return (features, labels, group_sizes) for LightGBM lambdarank., relevance_for_candidate(), main() (+3 more)
 
 ### Community 44 - "Live Mjs Parseargs Readserverinfo"
 Cohesion: 0.25
@@ -506,8 +506,8 @@ Cohesion: 0.31
 Nodes (11): kebab(), listSnapshotsForSlug(), main(), nowFilenameStamp(), parseFrontmatter(), readLatestSnapshot(), readTrend(), serializeFrontmatter() (+3 more)
 
 ### Community 52 - "Ltr Score Default Path"
-Cohesion: 0.26
-Nodes (12): default_meta_path(), default_model_path(), features_to_matrix(), load_ltr_model(), ltr_available(), ltr_health(), Phase 2 LightGBM Lambdarank scorer (optional; falls back to fusion when unavaila, Return (movie_id, ltr_score, channel_features) sorted by score descending. (+4 more)
+Cohesion: 0.15
+Nodes (17): default_meta_path(), default_model_path(), features_to_matrix(), load_ltr_model(), ltr_available(), ltr_health(), rating_to_relevance(), Phase 2 LightGBM Lambdarank scorer (optional; falls back to fusion when unavaila (+9 more)
 
 ### Community 53 - "Analyzevisualcontrast Analyzevisualcontrastcandidate Blendrgba Buildselectorsegment"
 Cohesion: 0.20
@@ -618,8 +618,8 @@ Cohesion: 0.18
 Nodes (16): Alpha Is A Design Smell, Building Functional Palettes, Color & Contrast, Color Spaces: Use OKLCH, Contrast & Accessibility, Dangerous Color Combinations, Dark Mode Is Not Inverted Light Mode, Color And Contrast (+8 more)
 
 ### Community 80 - "Color Accent Application Assess"
-Cohesion: 0.22
-Nodes (14): Accent Color Application, Assess Color Opportunity, Background & Surfaces, Borders & Accents, Data Visualization, Decorative Elements, Colorize, Introduce Color Strategically (+6 more)
+Cohesion: 0.16
+Nodes (18): Accent Color Application, Accessibility, Assess Color Opportunity, Background & Surfaces, Balance & Refinement, Borders & Accents, Cohesion, Data Visualization (+10 more)
 
 ### Community 81 - "Step Craft Production Flow"
 Cohesion: 0.30
@@ -706,8 +706,8 @@ Cohesion: 0.25
 Nodes (9): __dirname, findHarnessDirs(), generatePinnedSkill(), HARNESS_DIRS, loadCommandMetadata(), pin(), root, unpin() (+1 more)
 
 ### Community 103 - "Fusion Merge Candidate Ids"
-Cohesion: 0.08
-Nodes (19): feature_rows(), fuse(), merge_candidate_ids(), minmax_normalize(), Merge multi-retriever hits and compute weighted Phase 1 fusion scores., Min-max each channel's Top-K list to [0, 1]; ties at the max map to 1., Union retriever lists, dedupe, and cap by best raw score across channels., Per-candidate normalized channel features (same inputs as weighted fusion). (+11 more)
+Cohesion: 0.10
+Nodes (15): feature_rows(), fuse(), merge_candidate_ids(), minmax_normalize(), Min-max each channel's Top-K list to [0, 1]; ties at the max map to 1., Union retriever lists, dedupe, and cap by best raw score across channels., Per-candidate normalized channel features (same inputs as weighted fusion)., Return (movie_id, fusion_score, normalized_channel_scores) sorted by fusion desc (+7 more)
 
 ### Community 104 - "Results Anti Patterns Verdict"
 Cohesion: 0.33
@@ -770,8 +770,8 @@ Cohesion: 0.33
 Nodes (9): Build content embeddings, Build item–item neighbors (item-CF retriever), Build poster lookup (local only), Build serving stats, Build SVD item factors (Phase 1 retriever), Credentials in repo-root .env are loaded automatically when present., README, Phase 2: LightGBM Lambdarank (+1 more)
 
 ### Community 120 - "Embeddings Similarity Scores Content"
-Cohesion: 0.29
-Nodes (12): get_default_bundle(), filter_movie_ids(), get_embeddings_for_movies(), get_similar(), get_similarity_scores(), get_similarity_scores_from_vector(), _load_embeddings(), _normalize() (+4 more)
+Cohesion: 0.56
+Nodes (8): get_default_bundle(), filter_movie_ids(), get_embeddings_for_movies(), get_similar(), get_similarity_scores(), get_similarity_scores_from_vector(), _load_embeddings(), ndarray
 
 ### Community 121 - "Browserfindingsfrommap Checkhtmlpatterns Checkpagequalitydom Checkpagequalityfromdoc"
 Cohesion: 0.29
@@ -802,8 +802,8 @@ Cohesion: 0.39
 Nodes (5): _genre_map(), test_recommendations_combined_filters_use_any_genre(), test_recommendations_filters_by_genre(), test_recommendations_filters_by_year_range(), _year_from_title()
 
 ### Community 128 - "Ratings Min Content Embeddings"
-Cohesion: 0.39
-Nodes (7): filter_by_min_ratings(), load_movies(), main(), parse_args(), DataFrame, Namespace, Keep only movies with at least ``min_ratings`` ratings.      Capping the catalog
+Cohesion: 0.13
+Nodes (16): load_artifact_bundle(), fusion_health(), load_fusion_weights(), load_item_factors(), load_item_neighbors(), Load optional Phase 1 fusion artifacts (SVD factors, item neighbors, weights)., Merge multi-retriever hits and compute weighted Phase 1 fusion scores., Item–item CF retriever: aggregate neighbor scores from each seed. (+8 more)
 
 ### Community 129 - "Poster Load Lookup Posters"
 Cohesion: 0.33
@@ -882,16 +882,16 @@ Cohesion: 0.53
 Nodes (5): Conventions, Issue Tracker, Issue tracker: GitHub, When a skill says "fetch the relevant ticket", When a skill says "publish to the issue tracker"
 
 ### Community 148 - "Evidence Rag Grounded Ranker"
-Cohesion: 0.50
-Nodes (4): Accessibility, Balance & Refinement, Cohesion, Maintain Hierarchy
+Cohesion: 0.47
+Nodes (8): Path, Tests for artifact manifest read/write and row-order alignment., test_load_artifact_bundle_resolves_paths_from_manifest(), test_load_catalog_movie_ids_uses_manifest_paths(), test_load_catalog_movie_ids_without_manifest_falls_back(), test_record_artifact_merges_retrieval_outputs(), test_write_and_read_manifest_round_trip(), _write_tiny_models_dir()
 
 ### Community 149 - "Fusion Weights Json Content"
 Cohesion: 0.40
 Nodes (4): content, item_cf, pop, svd
 
 ### Community 150 - "Content Retriever Normalize Embedding"
-Cohesion: 0.22
-Nodes (3): ContentArtifacts, _load_content_artifacts(), ndarray
+Cohesion: 0.50
+Nodes (4): _normalize(), Content embedding retriever: cosine similarity to the seed anchor vector., retrieve(), ndarray
 
 ### Community 152 - "Serving Stats Parse Args"
 Cohesion: 0.50
@@ -990,7 +990,7 @@ Cohesion: 0.67
 Nodes (3): extract, argumentHint, description
 
 ### Community 179 - "Harden Argumenthint Description"
-Cohesion: 0.50
+Cohesion: 0.67
 Nodes (3): harden, argumentHint, description
 
 ### Community 180 - "Layout Argumenthint Description"
@@ -1018,7 +1018,7 @@ Cohesion: 0.67
 Nodes (3): polish, argumentHint, description
 
 ### Community 186 - "Quieter Argumenthint Description"
-Cohesion: 0.67
+Cohesion: 0.50
 Nodes (3): quieter, argumentHint, description
 
 ### Community 187 - "Shape Argumenthint Description"
@@ -1046,11 +1046,11 @@ Nodes (5): Tests for the serving ArtifactBundle (R1: load, capabilities, flat he
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `user_id_to_idx` connect `User Idx 100 101` to `Num Metadata Json Items`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Why does `SKILL` connect `Context Gathering Register Absolute` to `Load Cognitive Design Assessment`, `Adaptation Desktop Mobile Email`, `Animation Animations Assess Opportunities`, `Anti Patterns Audit Accessibility`, `Amplification Amplify Design Assess`, `Copy Text States Messages`, `Color Accent Application Assess`, `Step Craft Production Flow`, `Delight Appropriate Context Assess`, `Simplification Assess Current State`, `Step Auto Extract Language`, `Resilience Hardening Accessibility Assess`, `Layout Visual Assess Current`, `Read Then Screenshot Present`, `Onboarding Assess Needs Context`, `Performance Optimization Animation Assess`, `Assess What Extraordinary Means`, `Polish Color Contrast Content`, `Refinement Reduction Assess Current`, `Direction Interview Phase Anti`, `Step Teach Interview Mode`, `Product Bans Color Layout`, `Step Extract Flow Discover`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **What connects `PreToolUse`, `DEPRECATED_NAMES`, `HARNESS_DIRS` to the rest of the system?**
-  _2131 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2139 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Content Index Json Row` be split into smaller, more focused modules?**
   _Cohesion score 0.003992015968063872 - nodes in this community are weakly interconnected._
 - **Should `User Idx 100 101` be split into smaller, more focused modules?**

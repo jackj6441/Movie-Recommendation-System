@@ -1,6 +1,8 @@
 import argparse
 import json
 import os
+import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -99,6 +101,13 @@ def main() -> None:
     # The served catalog is exactly the embedded set so search, seeds, and
     # scoring stay consistent (no movie that cannot be scored is shown).
     movies[["movieId", "title", "genres"]].to_csv(catalog_path, index=False)
+
+    reco_api = Path(__file__).resolve().parents[1] / "services" / "reco-api"
+    if str(reco_api) not in sys.path:
+        sys.path.insert(0, str(reco_api))
+    from app.artifact_manifest import write_content_manifest
+
+    write_content_manifest(export_dir, row_count=embeddings.shape[0])
 
     print(f"N: {embeddings.shape[0]}, D: {embeddings.shape[1]}")
     print(f"npz_path: {npz_path}")

@@ -2,36 +2,22 @@
 
 from __future__ import annotations
 
-import json
+import sys
 from pathlib import Path
 
-import numpy as np
-
 DEFAULT_MODELS_DIR = Path("services") / "reco-api" / "models"
+_RECO_API_ROOT = Path(__file__).resolve().parents[1] / "services" / "reco-api"
 
 
-def load_catalog_movie_ids(models_dir: str | Path = DEFAULT_MODELS_DIR) -> np.ndarray:
-    """Return ``movieId`` values in the same order as ``content_embeddings.npz`` rows.
+def _ensure_reco_api_on_path() -> None:
+    api_path = str(_RECO_API_ROOT)
+    if api_path not in sys.path:
+        sys.path.insert(0, api_path)
 
-    Prefer the NPZ ``movie_ids`` array when present; otherwise reconstruct order from
-    ``content_index.json`` so offline factor/neighbor builds stay aligned with serving.
-    """
-    models_dir = Path(models_dir)
-    npz_path = models_dir / "content_embeddings.npz"
-    if npz_path.exists():
-        return np.load(npz_path)["movie_ids"].astype(np.int64)
 
-    index_path = models_dir / "content_index.json"
-    if not index_path.exists():
-        raise FileNotFoundError(
-            f"Need {npz_path} or {index_path} to resolve the served catalog"
-        )
+def load_catalog_movie_ids(models_dir: str | Path = DEFAULT_MODELS_DIR):
+    """Return ``movieId`` values in the same order as ``content_embeddings.npz`` rows."""
+    _ensure_reco_api_on_path()
+    from app.artifact_manifest import load_catalog_movie_ids as load_ids
 
-    with open(index_path, encoding="utf-8") as index_file:
-        movie_id_to_row = json.load(index_file)["movie_id_to_row"]
-
-    n = len(movie_id_to_row)
-    movie_ids = np.empty(n, dtype=np.int64)
-    for movie_id_str, row in movie_id_to_row.items():
-        movie_ids[int(row)] = int(movie_id_str)
-    return movie_ids
+    return load_ids(models_dir)

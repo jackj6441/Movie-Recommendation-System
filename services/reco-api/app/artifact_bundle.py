@@ -10,6 +10,8 @@ from typing import Any
 
 import numpy as np
 
+from app.artifact_manifest import resolve_bundle_paths
+
 DEFAULT_FUSION_WEIGHTS: dict[str, float] = {
     "content": 0.45,
     "svd": 0.20,
@@ -254,18 +256,30 @@ def load_artifact_bundle(
     ltr_model_path: str | None = None,
     ltr_meta_path: str | None = None,
 ) -> ArtifactBundle:
+    env_content = os.getenv("CONTENT_EMBEDDINGS_PATH")
+    models_dir = Path(content_embeddings_path or env_content or "models/content_embeddings.npz").parent
+    paths = resolve_bundle_paths(
+        models_dir,
+        content_embeddings_path=content_embeddings_path or env_content,
+        content_index_path=content_index_path or os.getenv("CONTENT_INDEX_PATH"),
+        fusion_weights_path=fusion_weights_path or os.getenv("FUSION_WEIGHTS_PATH"),
+        item_factors_svd_path=item_factors_svd_path or os.getenv("ITEM_FACTORS_SVD_PATH"),
+        item_neighbors_path=item_neighbors_path or os.getenv("ITEM_NEIGHBORS_PATH"),
+        ltr_model_path=ltr_model_path or os.getenv("LTR_MODEL_PATH"),
+        ltr_meta_path=ltr_meta_path or os.getenv("LTR_META_PATH"),
+    )
     content = _load_content_artifacts(
-        content_embeddings_path or os.getenv("CONTENT_EMBEDDINGS_PATH", "models/content_embeddings.npz"),
-        content_index_path or os.getenv("CONTENT_INDEX_PATH", "models/content_index.json"),
+        paths["content_embeddings_path"],
+        paths["content_index_path"],
     )
     fusion = _load_fusion_artifacts(
-        weights_path=fusion_weights_path or os.getenv("FUSION_WEIGHTS_PATH", "models/fusion_weights.json"),
-        item_factors_path=item_factors_svd_path or os.getenv("ITEM_FACTORS_SVD_PATH", "models/item_factors_svd.npz"),
-        item_neighbors_path=item_neighbors_path or os.getenv("ITEM_NEIGHBORS_PATH", "models/item_neighbors.json"),
+        weights_path=paths["fusion_weights_path"],
+        item_factors_path=paths["item_factors_svd_path"],
+        item_neighbors_path=paths["item_neighbors_path"],
     )
     ltr = _load_ltr_artifacts(
-        ltr_model_path or os.getenv("LTR_MODEL_PATH", "models/ltr_model.txt"),
-        ltr_meta_path or os.getenv("LTR_META_PATH", "models/ltr_meta.json"),
+        paths["ltr_model_path"],
+        paths["ltr_meta_path"],
     )
     return ArtifactBundle(content=content, fusion=fusion, ltr=ltr)
 

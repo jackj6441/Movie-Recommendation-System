@@ -30,6 +30,13 @@ def _write_tiny_catalog(models_dir: Path, movie_ids: list[int]) -> None:
     with open(models_dir / "content_index.json", "w", encoding="utf-8") as index_file:
         json.dump({"movie_id_to_row": movie_id_to_row}, index_file)
 
+    reco_api = REPO_ROOT / "services" / "reco-api"
+    if str(reco_api) not in sys.path:
+        sys.path.insert(0, str(reco_api))
+    from app.artifact_manifest import write_content_manifest
+
+    write_content_manifest(models_dir, row_count=len(movie_ids))
+
 
 def test_catalog_load_order(tmp_path: Path) -> None:
     movie_ids = [10, 20, 30]

@@ -147,6 +147,13 @@ def main() -> None:
         factors=factors.astype(np.float32),
     )
 
+    reco_api = Path(__file__).resolve().parents[1] / "services" / "reco-api"
+    if str(reco_api) not in sys.path:
+        sys.path.insert(0, str(reco_api))
+    from app.artifact_manifest import record_artifact
+
+    record_artifact(args.models_dir, item_factors_svd=Path(args.output).name)
+
     nonzero = int(np.count_nonzero(rated_items))
     print(f"catalog_items: {len(movie_ids)}")
     print(f"rated_in_matrix: {nonzero}")
