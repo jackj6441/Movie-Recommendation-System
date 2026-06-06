@@ -20,6 +20,7 @@ class CatalogServices:
     movie_genres: dict[int, list[str]]
     movie_popularity: dict[int, int]
     get_popular_movies: Callable[[list[int], int], list[int]]
+    movie_years: dict[int, int] = field(default_factory=dict)
     known_genres: set[str] = field(default_factory=set)
 
     def search_movies(self, query: str) -> list[SearchHit]:
@@ -34,7 +35,13 @@ class CatalogServices:
                     break
         return hits
 
-    def genre_seed_ids(self, genre: str, limit: int) -> list[int]:
+    def genre_seed_ids(
+        self,
+        genre: str,
+        limit: int,
+        *,
+        year_min: int | None = None,
+    ) -> list[int]:
         genre_key = genre.strip().lower()
         if not genre_key:
             return []
@@ -45,6 +52,12 @@ class CatalogServices:
                 movie_id
                 for movie_id, genres in self.movie_genres.items()
                 if any(g.lower() == genre_key for g in genres)
+            ]
+        if year_min is not None:
+            movie_ids = [
+                movie_id
+                for movie_id in movie_ids
+                if self.movie_years.get(movie_id, 0) >= year_min
             ]
         return self.get_popular_movies(movie_ids, limit)
 

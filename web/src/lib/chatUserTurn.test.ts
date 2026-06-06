@@ -14,6 +14,13 @@ describe("chatUserTurn", () => {
     )
   })
 
+  it("allows send with session genres and empty composer", () => {
+    expect(canSendChatTurn("", [], { hasSessionGenres: true })).toBe(true)
+    expect(buildUserTurnContent("", [], { hasSessionGenres: true })).toBe(
+      "Show more recommendations."
+    )
+  })
+
   it("blocks send while loading", () => {
     expect(canSendChatTurn("hi", ["Comedy"], { chatLoading: true })).toBe(false)
   })

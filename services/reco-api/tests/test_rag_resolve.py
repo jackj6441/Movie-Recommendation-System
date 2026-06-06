@@ -2,9 +2,11 @@ from dataclasses import dataclass
 
 from app.rag_resolve import (
     ChatContext,
+    ResolveClarify,
     ResolveDisambiguate,
     ResolveReady,
     resolve_context,
+    resolve_genre_disambiguation_pick,
 )
 
 
@@ -27,7 +29,8 @@ def _search_factory(catalog: dict[str, int]):
 
 
 def _genre_seeds_factory(mapping: dict[str, list[int]]):
-    def genre_seed_ids(genre: str, limit: int) -> list[int]:
+    def genre_seed_ids(genre: str, limit: int, year_min: int | None = None) -> list[int]:
+        del year_min
         return mapping.get(genre, [])[:limit]
 
     return genre_seed_ids
@@ -74,7 +77,8 @@ def test_invalid_genre_skipped_when_message_has_title():
         get_title=lambda mid: next(k for k, v in catalog.items() if v == mid),
         known_genres={"Comedy"},
     )
-    assert result.context.seed_ids == [1]
+    assert isinstance(result, ResolveDisambiguate)
+    assert result.reason == "ambiguous_message"
 
 
 def test_clarify_when_no_genre_no_title_no_prior_seeds():
@@ -103,7 +107,7 @@ def test_message_without_seeds_disambiguates_not_missing_input():
     assert isinstance(result, ResolveDisambiguate)
 
 
-def test_genre_only_empty_message_bootstraps_seeds():
+def test_genre_only_empty_message_bootstraps_ranking_seeds_not_explicit():
     result = resolve_context(
         message="",
         genres=["Comedy"],
@@ -112,8 +116,57 @@ def test_genre_only_empty_message_bootstraps_seeds():
         genre_seed_ids=_genre_seeds_factory({"Comedy": [10, 11, 12]}),
         get_title=lambda mid: f"Title {mid}",
     )
-    assert result.context.seed_ids == [10, 11, 12]
+    assert isinstance(result, ResolveReady)
+    assert result.context.explicit_seed_ids == []
+    assert result.ranking_seed_ids == [10, 11, 12]
     assert result.context.genres == ["Comedy"]
+    assert result.resolve_reason == "genre_bootstrap"
+
+
+def test_genre_only_applies_default_recency_year_min():
+    result = resolve_context(
+        message="",
+        genres=["Comedy"],
+        prior=None,
+        search_movies=_search_factory({}),
+        genre_seed_ids=_genre_seeds_factory({"Comedy": [10, 11, 12]}),
+        get_title=lambda mid: f"Title {mid}",
+    )
+    assert isinstance(result, ResolveReady)
+    assert result.context.year_min == 2005
+    assert result.context.year_max is None
+
+
+def test_explicit_seed_skips_default_recency_year_min():
+    catalog = {"Toy Story (1995)": 1}
+    result = resolve_context(
+        message="",
+        genres=[],
+        prior=None,
+        search_movies=_search_factory(catalog),
+        genre_seed_ids=_genre_seeds_factory({}),
+        get_title=lambda mid: next(k for k, v in catalog.items() if v == mid),
+        seed_movie_ids=[1],
+        seed_update_mode="replace",
+    )
+    assert isinstance(result, ResolveReady)
+    assert result.context.explicit_seed_ids == [1]
+    assert result.context.year_min is None
+    assert result.resolve_reason == "explicit_seed"
+
+
+def test_recency_opt_out_skips_default_year_min():
+    result = resolve_context(
+        message="",
+        genres=["Comedy"],
+        prior=ChatContext(recency_opt_out=True),
+        search_movies=_search_factory({}),
+        genre_seed_ids=_genre_seeds_factory({"Comedy": [10, 11, 12]}),
+        get_title=lambda mid: f"Title {mid}",
+    )
+    assert isinstance(result, ResolveReady)
+    assert result.context.year_min is None
+    assert result.context.recency_opt_out is True
 
 
 def test_genre_only_bootstraps_seeds():
@@ -126,23 +179,24 @@ def test_genre_only_bootstraps_seeds():
         get_title=lambda mid: f"Title {mid}",
     )
     assert hasattr(result, "context")
-    assert result.context.seed_ids == [10, 11, 12]
+    assert result.context.explicit_seed_ids == []
+    assert result.ranking_seed_ids == [10, 11, 12]
     assert result.context.genres == ["Comedy"]
-    assert len(result.seed_movies) == 3
+    assert len(result.seed_movies) == 0
 
 
 def test_explicit_seed_replace_mode_drops_prior_seeds():
     result = resolve_context(
         message="",
         genres=[],
-        prior=ChatContext(seed_ids=[1], genres=["Drama"]),
+        prior=ChatContext(explicit_seed_ids=[1], genres=["Drama"]),
         search_movies=_search_factory({}),
         genre_seed_ids=_genre_seeds_factory({}),
         get_title=lambda mid: f"Title {mid}",
         seed_movie_ids=[42],
         seed_update_mode="replace",
     )
-    assert result.context.seed_ids == [42]
+    assert result.context.explicit_seed_ids == [42]
 
 
 def test_explicit_seed_ids_win_over_conflicting_message():
@@ -158,14 +212,14 @@ def test_explicit_seed_ids_win_over_conflicting_message():
         seed_update_mode="replace",
     )
     assert isinstance(result, ResolveReady)
-    assert result.context.seed_ids == [99]
+    assert result.context.explicit_seed_ids == [99]
 
 
 def test_replace_with_empty_seed_list_clears_prior_for_genre_bootstrap():
     result = resolve_context(
         message="",
         genres=["Comedy"],
-        prior=ChatContext(seed_ids=[7], genres=["Drama"]),
+        prior=ChatContext(explicit_seed_ids=[7], genres=["Drama"]),
         search_movies=_search_factory({}),
         genre_seed_ids=_genre_seeds_factory({"Comedy": [10, 11, 12]}),
         get_title=lambda mid: f"Title {mid}",
@@ -173,8 +227,9 @@ def test_replace_with_empty_seed_list_clears_prior_for_genre_bootstrap():
         seed_update_mode="replace",
     )
     assert isinstance(result, ResolveReady)
-    assert result.context.seed_ids == [10, 11, 12]
-    assert 7 not in result.context.seed_ids
+    assert result.context.explicit_seed_ids == []
+    assert result.ranking_seed_ids == [10, 11, 12]
+    assert 7 not in result.ranking_seed_ids
 
 
 def test_explicit_seed_ids_ready_with_empty_message():
@@ -187,10 +242,10 @@ def test_explicit_seed_ids_ready_with_empty_message():
         get_title=lambda mid: f"Title {mid}",
         seed_movie_ids=[42],
     )
-    assert result.context.seed_ids == [42]
+    assert result.context.explicit_seed_ids == [42]
 
 
-def test_bare_title_resolves_via_whole_message_search():
+def test_bare_title_disambiguates_instead_of_silent_seed():
     catalog = {"Toy Story (1995)": 1, "Toy Story 2 (1999)": 2}
     result = resolve_context(
         message="Toy Story",
@@ -200,11 +255,13 @@ def test_bare_title_resolves_via_whole_message_search():
         genre_seed_ids=_genre_seeds_factory({}),
         get_title=lambda mid: next(k for k, v in catalog.items() if v == mid),
     )
-    assert result.context.seed_ids[0] == 1
-    assert len(result.context.seed_ids) == 1
+    assert isinstance(result, ResolveDisambiguate)
+    assert result.reason == "ambiguous_message"
+    assert result.context.explicit_seed_ids == []
+    assert {candidate.movie_id for candidate in result.candidates} == {1, 2}
 
 
-def test_quoted_title_resolves_via_search():
+def test_quoted_title_disambiguates_instead_of_silent_seed():
     catalog = {"Toy Story (1995)": 1, "Toy Story 2 (1999)": 2}
     result = resolve_context(
         message='I liked "Toy Story"',
@@ -213,21 +270,76 @@ def test_quoted_title_resolves_via_search():
         search_movies=_search_factory(catalog),
         genre_seed_ids=_genre_seeds_factory({"Animation": [99]}),
         get_title=lambda mid: catalog.get(next(k for k, v in catalog.items() if v == mid), f"Movie {mid}"),
+        known_genres={"Animation"},
     )
-    assert result.context.seed_ids[0] == 1
+    assert isinstance(result, ResolveDisambiguate)
+    assert result.reason == "ambiguous_message"
+    assert result.context.explicit_seed_ids == []
     assert "Animation" in result.context.genres
+    assert result.pending_genres == ("Animation",)
+
+
+def test_drama_message_disambiguates_with_genre_option():
+    catalog = {
+        "Confessions of a Teenage Drama Queen (2004)": 7316,
+        "Drama/Mystery Film (2010)": 42,
+    }
+    result = resolve_context(
+        message="drama",
+        genres=[],
+        prior=None,
+        search_movies=_search_factory(catalog),
+        genre_seed_ids=_genre_seeds_factory({"Drama": [10, 11, 12]}),
+        get_title=lambda mid: next(k for k, v in catalog.items() if v == mid),
+        known_genres={"Drama", "Comedy"},
+    )
+    assert isinstance(result, ResolveDisambiguate)
+    assert result.reason == "ambiguous_message"
+    assert result.context.explicit_seed_ids == []
+    assert result.disambiguation_genre_options == ("Drama",)
+    assert 7316 in {candidate.movie_id for candidate in result.candidates}
+
+
+def test_genre_disambiguation_pick_merges_pending_and_chip_genres():
+    result = resolve_genre_disambiguation_pick(
+        prior=ChatContext(genres=["Comedy"]),
+        pending_genres=["Action"],
+        chip_genres=[],
+        disambiguation_genre="Drama",
+        genre_seed_ids=_genre_seeds_factory({"Drama": [20, 21, 22]}),
+        get_title=lambda mid: f"Title {mid}",
+        known_genres={"Comedy", "Action", "Drama"},
+    )
+    assert isinstance(result, ResolveReady)
+    assert result.context.genres == ["Comedy", "Action", "Drama"]
+    assert result.context.explicit_seed_ids == []
+    assert result.resolve_reason == "genre_disambiguation_pick"
+
+
+def test_genre_disambiguation_pick_rejects_unknown_genre():
+    result = resolve_genre_disambiguation_pick(
+        prior=ChatContext(),
+        pending_genres=[],
+        chip_genres=[],
+        disambiguation_genre="NotARealGenre",
+        genre_seed_ids=_genre_seeds_factory({}),
+        get_title=lambda mid: f"Title {mid}",
+        known_genres={"Drama"},
+    )
+    assert isinstance(result, ResolveClarify)
+    assert result.reason == "invalid_genre"
 
 
 def test_prior_seeds_kept_when_message_only_adds_years():
     result = resolve_context(
         message="more from the 90s",
         genres=[],
-        prior=ChatContext(seed_ids=[5], genres=["Drama"]),
+        prior=ChatContext(explicit_seed_ids=[5], genres=["Drama"]),
         search_movies=_search_factory({}),
         genre_seed_ids=_genre_seeds_factory({}),
         get_title=lambda mid: f"Movie {mid}",
     )
-    assert result.context.seed_ids == [5]
+    assert result.context.explicit_seed_ids == [5]
     assert result.context.year_min == 1990
     assert result.context.year_max == 1999
 
@@ -251,7 +363,7 @@ def test_merge_dedupes_and_caps_seeds():
     result = resolve_context(
         message='add "Alpha" and "Beta"',
         genres=[],
-        prior=ChatContext(seed_ids=[1]),
+        prior=ChatContext(explicit_seed_ids=[1]),
         search_movies=_search_factory(
             {
                 "Alpha (2000)": 1,
@@ -265,5 +377,6 @@ def test_merge_dedupes_and_caps_seeds():
         genre_seed_ids=_genre_seeds_factory({}),
         get_title=lambda mid: f"Movie {mid}",
     )
-    assert len(result.context.seed_ids) <= 5
-    assert result.context.seed_ids[0] == 1
+    assert isinstance(result, ResolveDisambiguate)
+    assert result.context.explicit_seed_ids == [1]
+    assert {candidate.movie_id for candidate in result.candidates} >= {1, 2}

@@ -1,12 +1,13 @@
 import type { ChatTurn } from "../../types"
+import { ChatDebugPanel } from "./ChatDebugPanel"
 import { ChatRecommendationBlock } from "./ChatRecommendationBlock"
 import { DisambiguationPicker } from "./DisambiguationPicker"
 
 type ChatThreadProps = {
   turns: ChatTurn[]
-  onNewChat: () => void
   onMoreLike?: (movieId: number, title: string) => void
   onDisambiguationSubmit?: (movieIds: number[]) => void
+  onDisambiguationGenrePick?: (genre: string) => void
   pickerDisabled?: boolean
   moreLikeDisabled?: boolean
 }
@@ -16,6 +17,7 @@ export function ChatThread({
   onNewChat,
   onMoreLike,
   onDisambiguationSubmit,
+  onDisambiguationGenrePick,
   pickerDisabled = false,
   moreLikeDisabled = false,
 }: ChatThreadProps) {
@@ -24,6 +26,7 @@ export function ChatThread({
       {turns.map((turn) => (
         <article
           key={turn.id}
+          data-turn-id={turn.id}
           className={`chat-bubble chat-bubble--${turn.role}${turn.streaming ? " is-streaming" : ""}`}
         >
           <span className="chat-bubble-label">{turn.role === "user" ? "You" : "Assistant"}</span>
@@ -31,17 +34,21 @@ export function ChatThread({
           {turn.role === "assistant" && turn.final?.needs_disambiguation && turn.final.disambiguation_candidates && onDisambiguationSubmit && (
             <DisambiguationPicker
               candidates={turn.final.disambiguation_candidates}
+              genreOptions={turn.final.disambiguation_genre_options}
               disabled={pickerDisabled}
               onSubmit={onDisambiguationSubmit}
+              onGenrePick={onDisambiguationGenrePick}
             />
           )}
           {turn.role === "assistant" && turn.final?.recommendations && (
             <ChatRecommendationBlock
               data={turn.final.recommendations}
-              onNewChat={onNewChat}
               onMoreLike={onMoreLike}
               moreLikeDisabled={moreLikeDisabled}
             />
+          )}
+          {turn.role === "assistant" && turn.final?.debug && (
+            <ChatDebugPanel debug={turn.final.debug} />
           )}
         </article>
       ))}

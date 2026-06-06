@@ -8,6 +8,8 @@ _latency_sums: dict[tuple[str, str], float] = defaultdict(float)
 _cache_events: dict[tuple[str, str], int] = defaultdict(int)
 _rag_chat_outcomes: dict[str, int] = defaultdict(int)
 _rag_chat_reasons: dict[str, int] = defaultdict(int)
+_disambiguation_candidate_counts: dict[str, int] = defaultdict(int)
+_disambiguation_candidate_sum: int = 0
 
 
 def reset() -> None:
@@ -18,6 +20,9 @@ def reset() -> None:
     _cache_events.clear()
     _rag_chat_outcomes.clear()
     _rag_chat_reasons.clear()
+    _disambiguation_candidate_counts.clear()
+    global _disambiguation_candidate_sum
+    _disambiguation_candidate_sum = 0
 
 
 def record_request(endpoint: str, status: int, latency_ms: float) -> None:
@@ -46,10 +51,18 @@ def record_rag_chat_turn(outcome: str, reason: str | None = None) -> None:
         reasons[reason] += 1
 
 
+def record_disambiguation_candidate_count(count: int) -> None:
+    mod = sys.modules.get(__name__)
+    if mod is None:
+        return
+    mod._disambiguation_candidate_counts[str(count)] += 1
+    mod._disambiguation_candidate_sum += count
+
+
 def record_rag_outcome(source: str, fallback_reason: str | None = None) -> None:
     """Deprecated alias for legacy call sites; maps to chat turn metrics."""
     if source in {"rag", "rag_cache"}:
-        record_rag_chat_turn("success")
+        record_rag_chat_turn("ready")
     else:
         record_rag_chat_turn("fallback", fallback_reason)
 
@@ -65,6 +78,13 @@ def _cache_label_text(cache: str, event: str) -> str:
 def prometheus_text() -> str:
     provider = os.getenv("RAG_PROVIDER", "mock")
     chat_outcomes, chat_reasons = _metrics_state()
+    mod = sys.modules.get(__name__)
+    disambig_observations = (
+        sum(mod._disambiguation_candidate_counts.values())
+        if mod is not None
+        else sum(_disambiguation_candidate_counts.values())
+    )
+    disambig_sum = mod._disambiguation_candidate_sum if mod is not None else _disambiguation_candidate_sum
     lines = [
         "# HELP movie_reco_requests_total Total HTTP requests observed by the API.",
         "# TYPE movie_reco_requests_total counter",
@@ -100,6 +120,10 @@ def prometheus_text() -> str:
             f'movie_reco_rag_chat_reasons_total{{reason="{reason}"}} {count}'
             for reason, count in sorted(chat_reasons.items())
         ],
+        "# HELP movie_reco_rag_chat_disambiguation_candidates Disambiguation list sizes observed per turn.",
+        "# TYPE movie_reco_rag_chat_disambiguation_candidates summary",
+        f"movie_reco_rag_chat_disambiguation_candidates_count {disambig_observations}",
+        f"movie_reco_rag_chat_disambiguation_candidates_sum {disambig_sum}",
         "# HELP movie_reco_rag_provider_mode Current configured RAG provider mode.",
         "# TYPE movie_reco_rag_provider_mode gauge",
         f'movie_reco_rag_provider_mode{{provider="{provider}"}} 1',

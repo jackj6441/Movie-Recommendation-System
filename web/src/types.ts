@@ -26,6 +26,7 @@ export type RagChatContext = {
   genres: string[]
   year_min: number | null
   year_max: number | null
+  recency_opt_out?: boolean
 }
 
 export type DisambiguationCandidate = MoviePosters & {
@@ -36,6 +37,14 @@ export type DisambiguationCandidate = MoviePosters & {
   match_score?: number
 }
 
+export type RagChatDebug = {
+  resolve_outcome: string
+  seed_source?: string
+  normalized_genres?: string[]
+  candidate_count?: number
+  ranking_mode?: string
+}
+
 export type RagChatFinal = {
   session_id: string
   turn_id: string
@@ -43,7 +52,10 @@ export type RagChatFinal = {
   needs_disambiguation: boolean
   clarification_reason?: string
   disambiguation_candidates?: DisambiguationCandidate[]
+  disambiguation_genre_options?: string[]
+  pending_genres?: string[]
   warnings?: { code: string; movie_id?: number }[]
+  debug?: RagChatDebug
   context: RagChatContext
   recommendations: RecommendationResponse | null
   assistant_message: string

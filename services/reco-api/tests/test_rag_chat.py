@@ -50,7 +50,7 @@ def test_rag_chat_ready_final_sse_contract(load_app):
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
-            client.post("/rag/chat", json={"message": "Toy Story", "genres": []}).text,
+            client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]}).text,
         ),
     )
     assert_sse_final_contract(final_payload)
@@ -125,17 +125,67 @@ def test_rag_chat_disambiguate_does_not_persist_candidates_as_seeds(load_app):
     assert session_seed_ids.isdisjoint(candidate_ids)
 
 
-def test_rag_chat_bare_title_toy_story(load_app):
+def test_rag_chat_bare_title_toy_story_disambiguates(load_app):
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
             client.post("/rag/chat", json={"message": "Toy Story", "genres": []}).text,
         ),
     )
-    assert final_payload["needs_clarification"] is False
-    assert final_payload["recommendations"] is not None
-    seed_titles = [s["title"] for s in final_payload["context"]["seeds"]]
-    assert any("Toy Story" in title for title in seed_titles)
+    assert final_payload["needs_disambiguation"] is True
+    assert final_payload["clarification_reason"] == "ambiguous_message"
+    assert final_payload["recommendations"] is None
+    assert final_payload["context"]["seeds"] == []
+    assert len(final_payload["disambiguation_candidates"]) > 0
+    assert any("Toy Story" in row["title"] for row in final_payload["disambiguation_candidates"])
+
+
+def test_rag_chat_drama_message_disambiguates_with_genre_option(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "drama", "genres": []}).text,
+        ),
+    )
+    assert final_payload["needs_disambiguation"] is True
+    assert final_payload["clarification_reason"] == "ambiguous_message"
+    assert final_payload["disambiguation_genre_options"] == ["Drama"]
+    assert final_payload["context"]["seeds"] == []
+    candidate_titles = [row["title"] for row in final_payload["disambiguation_candidates"]]
+    assert any("Drama Queen" in title for title in candidate_titles)
+
+
+def test_rag_chat_disambiguation_genre_pick_appends_genre(load_app):
+    client = TestClient(load_app)
+    disambig = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "drama", "genres": ["Action"]},
+            ).text,
+        ),
+    )
+    assert disambig["pending_genres"] == ["Action"]
+    session_id = disambig["session_id"]
+
+    ready = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "session_id": session_id,
+                    "disambiguation_genre": "Drama",
+                    "genres": [],
+                },
+            ).text,
+        ),
+    )
+    assert ready["needs_disambiguation"] is False
+    assert ready["needs_clarification"] is False
+    assert ready["context"]["genres"] == ["Action", "Drama"]
+    assert ready["context"]["seeds"] == []
+    assert ready["recommendations"] is not None
 
 
 def test_rag_chat_returns_recommendations_with_genre_chips(load_app):
@@ -156,9 +206,25 @@ def test_rag_chat_returns_recommendations_with_genre_chips(load_app):
 
 def test_rag_chat_recommendations_match_direct_endpoint(load_app):
     client = TestClient(load_app)
+    disambig = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": 'I enjoy "Toy Story (1995)"', "genres": ["Animation"]},
+            ).text,
+        ),
+    )
+    pick_id = disambig["disambiguation_candidates"][0]["movie_id"]
+    session_id = disambig["session_id"]
     chat_response = client.post(
         "/rag/chat",
-        json={"message": 'I enjoy "Toy Story (1995)"', "genres": ["Animation"]},
+        json={
+            "message": "",
+            "genres": ["Animation"],
+            "session_id": session_id,
+            "seed_movie_ids": [pick_id],
+            "seed_update_mode": "replace",
+        },
     )
     chat_final = final_event(parse_sse(chat_response.text))
     seed_ids = [seed["movie_id"] for seed in chat_final["context"]["seeds"]]
@@ -196,6 +262,123 @@ def test_rag_chat_session_reuse(load_app):
         ),
     )
     assert second["session_id"] == session_id
+
+
+def test_rag_chat_genre_only_visible_context_excludes_bootstrap_seeds(load_app):
+    client = TestClient(load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "", "genres": ["Comedy"]},
+            ).text,
+        ),
+    )
+    assert final_payload["needs_clarification"] is False
+    assert final_payload["context"]["seeds"] == []
+    assert final_payload["context"]["genres"] == ["Comedy"]
+    assert final_payload["context"]["year_min"] == 2005
+    assert final_payload["context"]["recency_opt_out"] is False
+    assert final_payload["recommendations"] is not None
+    assert len(final_payload["recommendations"]["items"]) > 0
+
+
+def test_rag_chat_clear_year_bounds_sets_recency_opt_out(load_app):
+    client = TestClient(load_app)
+    genre_only = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "", "genres": ["Comedy"]},
+            ).text,
+        ),
+    )
+    assert genre_only["context"]["year_min"] == 2005
+    session_id = genre_only["session_id"]
+
+    cleared = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "genres": ["Comedy"],
+                    "session_id": session_id,
+                    "clear_year_bounds": True,
+                },
+            ).text,
+        ),
+    )
+    assert cleared["context"]["year_min"] is None
+    assert cleared["context"]["year_max"] is None
+    assert cleared["context"]["recency_opt_out"] is True
+    assert cleared["needs_clarification"] is False
+
+
+def test_rag_chat_explicit_year_bounds_from_request(load_app):
+    client = TestClient(load_app)
+    genre_only = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "", "genres": ["Comedy"]},
+            ).text,
+        ),
+    )
+    assert genre_only["context"]["year_min"] == 2005
+    session_id = genre_only["session_id"]
+
+    ranged = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "genres": ["Comedy"],
+                    "session_id": session_id,
+                    "year_min": 1990,
+                    "year_max": 2004,
+                },
+            ).text,
+        ),
+    )
+    assert ranged["context"]["year_min"] == 1990
+    assert ranged["context"]["year_max"] == 2004
+    assert ranged["context"]["recency_opt_out"] is False
+    assert ranged["needs_clarification"] is False
+    assert ranged["recommendations"] is not None
+
+
+def test_rag_chat_clear_year_bounds_overrides_explicit_years(load_app):
+    client = TestClient(load_app)
+    genre_only = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={"message": "", "genres": ["Comedy"]},
+            ).text,
+        ),
+    )
+    session_id = genre_only["session_id"]
+
+    cleared = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "",
+                    "genres": ["Comedy"],
+                    "session_id": session_id,
+                    "year_min": 1990,
+                    "year_max": 2004,
+                    "clear_year_bounds": True,
+                },
+            ).text,
+        ),
+    )
+    assert cleared["context"]["year_min"] is None
+    assert cleared["context"]["year_max"] is None
+    assert cleared["context"]["recency_opt_out"] is True
 
 
 def test_rag_chat_clear_year_bounds_clears_session_years(load_app):
@@ -308,17 +491,17 @@ def test_rag_chat_reset_context_clears_session(load_app):
         ),
     )
     assert second["context"]["genres"] == ["Comedy"]
-    assert second["context"]["seeds"]
+    assert second["recommendations"] is not None
 
 
 def test_rag_chat_warns_on_invalid_seed_movie_id(load_app):
     client = TestClient(load_app)
     seeded = final_event(
         parse_sse(
-            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+            client.post("/rag/chat", json={"message": "Toy Story", "genres": []}).text,
         ),
     )
-    valid_id = seeded["context"]["seeds"][0]["movie_id"]
+    valid_id = seeded["disambiguation_candidates"][0]["movie_id"]
     final_payload = final_event(
         parse_sse(
             client.post(
@@ -366,7 +549,7 @@ def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
-            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+            client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]}).text,
         ),
     )
     assert final_payload["needs_clarification"] is False
@@ -389,7 +572,7 @@ def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
-            client.post("/rag/chat", json={"message": "go", "genres": ["Comedy"]}).text,
+            client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]}).text,
         ),
     )
     assert final_payload["clarification_reason"] == "empty_recommendations"
@@ -397,12 +580,45 @@ def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
     assert final_payload["recommendations"]["items"] == []
 
 
+def test_rag_chat_includes_debug_when_enabled(monkeypatch, repo_root, api_root):
+    from tests.conftest import _configure_test_env, _reload_app
+
+    _configure_test_env(monkeypatch, repo_root, api_root)
+    monkeypatch.setenv("RAG_CHAT_DEBUG", "true")
+    client = TestClient(_reload_app(api_root))
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]}).text,
+        ),
+    )
+    assert "debug" in final_payload
+    assert final_payload["debug"]["resolve_outcome"] == "ready"
+    assert final_payload["debug"]["seed_source"] == "genre_bootstrap"
+    assert final_payload["debug"]["normalized_genres"] == ["Comedy"]
+    assert final_payload["debug"]["ranking_mode"]
+
+
+def test_rag_chat_omits_debug_in_production(monkeypatch, repo_root, api_root):
+    from tests.conftest import _configure_test_env, _reload_app
+
+    _configure_test_env(monkeypatch, repo_root, api_root)
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("RAG_CHAT_DEBUG", raising=False)
+    client = TestClient(_reload_app(api_root))
+    final_payload = final_event(
+        parse_sse(
+            client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]}).text,
+        ),
+    )
+    assert "debug" not in final_payload
+
+
 def test_rag_chat_provider_timeout_still_returns_recommendations(load_app, monkeypatch):
     monkeypatch.setenv("RAG_PROVIDER", "mock_timeout")
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
-            client.post("/rag/chat", json={"message": "go", "genres": ["Action"]}).text,
+            client.post("/rag/chat", json={"message": "", "genres": ["Action"]}).text,
         ),
     )
     assert final_payload["explanation_source"] == "deterministic_fallback"

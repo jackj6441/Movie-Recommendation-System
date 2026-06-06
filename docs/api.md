@@ -184,6 +184,9 @@ Request:
   "seed_update_mode": "append",
   "reset_context": false,
   "clear_year_bounds": false,
+  "year_min": null,
+  "year_max": null,
+  "disambiguation_genre": null,
   "shuffle": false
 }
 ```
@@ -193,10 +196,12 @@ Request:
 - `genres`: up to 3 catalog-valid genre chips.
 - `seed_movie_ids`: 1–5 explicit **Seed Movies**; highest priority; invalid ids are ignored with `warnings`.
 - `seed_update_mode`: `append` (default) or `replace` (disambiguation picker uses `replace`).
+- `disambiguation_genre`: follow-up after `ambiguous_message` disambiguation; merges `pending_genres` + session genres + request chips + picked genre (cap 3) and re-ranks without adding movie seeds.
 - `reset_context`: `true` clears session **Seed Set**, genres, and year filters before resolve.
-- `clear_year_bounds`: `true` clears `year_min` / `year_max` on the session.
-- Bare titles in `message` are resolved via whole-message catalog search (first hit wins).
-- `needs_clarification` reasons: `missing_genre_and_title`, `invalid_genre`, `empty_recommendations`, `no_resolvable_seeds` (with `needs_disambiguation: true` and up to 10 `disambiguation_candidates`).
+- `clear_year_bounds`: `true` clears `year_min` / `year_max` on the session and sets `recency_opt_out: true` (Any year). Takes precedence over `year_min` / `year_max` when both are sent.
+- `year_min` / `year_max`: optional explicit release-year bounds applied before resolve on that turn; sets `recency_opt_out: false`. Use with `message: ""` for taste-rail slider updates.
+- When `message` (or quoted / like-title fragments) yields **≥1** catalog search hit and no explicit `seed_movie_ids` are sent, the turn returns `needs_disambiguation: true` with `clarification_reason: ambiguous_message` (no silent first-hit seed). Movie candidates are search hits only (up to 10). If the whole message also maps to a catalog genre, `disambiguation_genre_options` includes that genre (e.g. `drama` → `["Drama"]`). `pending_genres` echoes normalized chips from the triggering request.
+- `needs_clarification` reasons: `missing_genre_and_title`, `invalid_genre`, `empty_recommendations`, `no_resolvable_seeds`, `ambiguous_message` (with `needs_disambiguation: true` and up to 10 `disambiguation_candidates`).
 - Optional `debug` on `final` when `RAG_CHAT_DEBUG=true`.
 
 SSE events:

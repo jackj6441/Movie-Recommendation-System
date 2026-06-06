@@ -7,16 +7,24 @@ const POSTER_OVERLAY = "linear-gradient(180deg, rgba(20, 18, 16, 0.05), rgba(20,
 
 type DisambiguationPickerProps = {
   candidates: DisambiguationCandidate[]
+  genreOptions?: string[]
   disabled?: boolean
   onSubmit: (movieIds: number[]) => void
+  onGenrePick?: (genre: string) => void
 }
 
 export function DisambiguationPicker({
   candidates,
+  genreOptions = [],
   disabled = false,
   onSubmit,
+  onGenrePick,
 }: DisambiguationPickerProps) {
   const [selected, setSelected] = useState<number[]>([])
+  const hasGenreOptions = genreOptions.length > 0 && onGenrePick != null
+  const leadCopy = hasGenreOptions
+    ? "Your message could mean a genre or specific movies. Pick a genre, or select 1–5 movies as your Seed Set—these are possible matches, not your final recommendations."
+    : "Which movie did you mean? Select 1–5 movies to start from. These are possible matches—not your final recommendations."
 
   const toggle = (movieId: number) => {
     if (disabled) return
@@ -32,11 +40,23 @@ export function DisambiguationPicker({
   }
 
   return (
-    <div className="disambiguation-picker" role="group" aria-label="Pick seed movies">
-      <p className="disambiguation-picker-lead">
-        Which movie did you mean? Select 1–5 movies to start from. These are possible
-        matches—not your final recommendations.
-      </p>
+    <div className="disambiguation-picker" role="group" aria-label="Pick seed movies or genre">
+      <p className="disambiguation-picker-lead">{leadCopy}</p>
+      {hasGenreOptions && (
+        <div className="disambiguation-genre-row" role="group" aria-label="Genre options">
+          {genreOptions.map((genre) => (
+            <button
+              key={genre}
+              type="button"
+              className="disambiguation-genre-pill"
+              disabled={disabled || selected.length > 0}
+              onClick={() => onGenrePick(genre)}
+            >
+              Use genre: {genre}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="disambiguation-picker-grid">
         {candidates.map((candidate) => {
           const isSelected = selected.includes(candidate.movie_id)

@@ -1,17 +1,15 @@
 import type { RecommendationResponse } from "../../types"
 import { HeroPick } from "../results/HeroPick"
-import { PosterTile } from "../results/PosterTile"
+import { MoreMoviesStrip } from "./MoreMoviesStrip"
 
 type ChatRecommendationBlockProps = {
   data: RecommendationResponse
-  onNewChat: () => void
   onMoreLike?: (movieId: number, title: string) => void
   moreLikeDisabled?: boolean
 }
 
 export function ChatRecommendationBlock({
   data,
-  onNewChat,
   onMoreLike,
   moreLikeDisabled = false,
 }: ChatRecommendationBlockProps) {
@@ -32,37 +30,19 @@ export function ChatRecommendationBlock({
       <HeroPick
         item={hero}
         actions={
-          <>
-            {onMoreLike && (
-              <button
-                type="button"
-                className="hero-secondary-action"
-                disabled={moreLikeDisabled}
-                onClick={() => onMoreLike(hero.movie_id, hero.title)}
-              >
-                More like this
-              </button>
-            )}
-            <button type="button" className="hero-secondary-action" onClick={onNewChat}>
-              Start over
+          onMoreLike ? (
+            <button
+              type="button"
+              className="hero-secondary-action"
+              disabled={moreLikeDisabled}
+              onClick={() => onMoreLike(hero.movie_id, hero.title)}
+            >
+              More like this
             </button>
-          </>
+          ) : undefined
         }
       />
-      {rest.length > 0 && (
-        <>
-          <h3 className="subsection-title">More movies you might like</h3>
-          <div className="more-movies-grid">
-            {rest.map((item, index) => (
-              <PosterTile
-                key={item.movie_id}
-                item={item}
-                rank={index < 2 ? index + 2 : undefined}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      {rest.length > 0 && <MoreMoviesStrip items={rest} />}
     </div>
   )
 }

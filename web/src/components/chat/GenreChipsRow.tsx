@@ -5,6 +5,7 @@ type GenreChipsRowProps = {
   selected: string[]
   loading?: boolean
   disabled?: boolean
+  ariaLabel?: string
   onToggle: (genre: string) => void
 }
 
@@ -13,6 +14,7 @@ export function GenreChipsRow({
   selected,
   loading = false,
   disabled = false,
+  ariaLabel = "Genre filters",
   onToggle,
 }: GenreChipsRowProps) {
   const visible = genres.slice(0, 12)
@@ -21,7 +23,7 @@ export function GenreChipsRow({
     <div
       className="chat-genre-row"
       role="group"
-      aria-label="Genre filters"
+      aria-label={ariaLabel}
       aria-busy={loading}
     >
       {loading ? (

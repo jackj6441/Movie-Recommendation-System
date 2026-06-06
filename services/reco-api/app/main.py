@@ -174,6 +174,7 @@ catalog_services = CatalogServices(
     movie_genres=movie_genres,
     movie_popularity=movie_popularity,
     get_popular_movies=get_popular_movies,
+    movie_years=movie_years,
     known_genres=all_genres,
 )
 
@@ -310,6 +311,9 @@ class RagChatRequest(BaseModel):
     seed_update_mode: str = "append"
     reset_context: bool = False
     clear_year_bounds: bool = False
+    year_min: int | None = None
+    year_max: int | None = None
+    disambiguation_genre: str | None = None
     shuffle: bool = False
 
 
@@ -410,6 +414,9 @@ def rag_chat(request: RagChatRequest):
         seed_update_mode=request.seed_update_mode,
         reset_context=request.reset_context,
         clear_year_bounds=request.clear_year_bounds,
+        year_min=request.year_min,
+        year_max=request.year_max,
+        disambiguation_genre=request.disambiguation_genre,
     )
     return StreamingResponse(stream, media_type="text/event-stream")
 

@@ -10,6 +10,9 @@ export type RagChatRequest = {
   seed_update_mode?: "append" | "replace"
   reset_context?: boolean
   clear_year_bounds?: boolean
+  year_min?: number | null
+  year_max?: number | null
+  disambiguation_genre?: string
   shuffle?: boolean
 }
 
@@ -25,6 +28,9 @@ export async function postRagChat(request: RagChatRequest): Promise<RagChatStrea
       seed_update_mode: request.seed_update_mode,
       reset_context: request.reset_context ?? false,
       clear_year_bounds: request.clear_year_bounds ?? false,
+      year_min: request.year_min ?? null,
+      year_max: request.year_max ?? null,
+      disambiguation_genre: request.disambiguation_genre,
       shuffle: request.shuffle ?? false,
     }),
   })

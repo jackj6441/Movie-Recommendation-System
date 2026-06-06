@@ -13,9 +13,23 @@ export type ChatMockConfig = {
     year?: number
     genres?: string[]
   }[]
+  disambiguationGenreOptions?: string[]
+  pendingGenres?: string[]
   assistantMessage?: string
   items?: RecommendationItem[]
   seedMovies?: { movie_id: number; title: string }[]
+  contextSeeds?: { movie_id: number; title: string }[]
+  contextGenres?: string[]
+  yearMin?: number | null
+  yearMax?: number | null
+  recencyOptOut?: boolean
+  debug?: {
+    resolve_outcome: string
+    seed_source?: string
+    normalized_genres?: string[]
+    candidate_count?: number
+    ranking_mode?: string
+  }
   includeEvidence?: boolean
   /** When true, SSE body has only a final event (no token stream). */
   finalOnly?: boolean
@@ -51,11 +65,16 @@ export function buildSseBody(config: ChatMockConfig): string {
           { movie_id: 50, title: "Candidate Movie (2000)", genres: ["Drama"] },
         ])
       : undefined,
+    disambiguation_genre_options: config.needsDisambiguation
+      ? config.disambiguationGenreOptions
+      : undefined,
+    pending_genres: config.needsDisambiguation ? config.pendingGenres : undefined,
     context: {
-      seeds: defaultSeeds,
-      genres: ["Comedy"],
-      year_min: null,
-      year_max: null,
+      seeds: config.contextSeeds ?? defaultSeeds,
+      genres: config.contextGenres ?? ["Comedy"],
+      year_min: config.yearMin !== undefined ? config.yearMin : null,
+      year_max: config.yearMax !== undefined ? config.yearMax : null,
+      recency_opt_out: config.recencyOptOut ?? false,
     },
     recommendations:
       config.emptyRecommendations
@@ -77,6 +96,7 @@ export function buildSseBody(config: ChatMockConfig): string {
             },
     assistant_message: assistantMessage,
     explanation_source: "rag",
+    debug: config.debug,
   }
   body += `event: final\ndata: ${JSON.stringify(final)}\n\n`
   return body

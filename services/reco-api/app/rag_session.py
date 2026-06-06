@@ -27,6 +27,7 @@ class ChatSession:
     updated_at: float
     messages: list[ChatMessage] = field(default_factory=list)
     context: ChatContext = field(default_factory=ChatContext)
+    pending_genres: list[str] = field(default_factory=list)
 
 
 class SessionStore:

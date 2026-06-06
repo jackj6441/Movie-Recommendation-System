@@ -54,6 +54,43 @@ def test_metrics_record_rag_chat_fallback(monkeypatch, repo_root, api_root):
     assert 'movie_reco_rag_chat_reasons_total{reason="provider_timeout"}' in body
 
 
+def test_metrics_record_genre_bootstrap_reason(monkeypatch, repo_root, api_root):
+    _configure_test_env(monkeypatch, repo_root, api_root)
+    monkeypatch.setenv("RAG_PROVIDER", "mock")
+    app = _reload_app(api_root)
+    metrics_module = importlib.import_module("app.metrics")
+    client = TestClient(app)
+
+    response = client.post("/rag/chat", json={"message": "", "genres": ["Comedy"]})
+    assert response.status_code == 200
+
+    assert metrics_module._rag_chat_outcomes.get("ready") == 1
+    assert metrics_module._rag_chat_reasons.get("genre_bootstrap") == 1
+
+    metrics_response = client.get("/metrics")
+    body = metrics_response.text
+    assert 'movie_reco_rag_chat_turns_total{outcome="ready"}' in body
+    assert 'movie_reco_rag_chat_reasons_total{reason="genre_bootstrap"}' in body
+
+
+def test_metrics_record_disambiguation_candidate_count(monkeypatch, repo_root, api_root):
+    _configure_test_env(monkeypatch, repo_root, api_root)
+    app = _reload_app(api_root)
+    metrics_module = importlib.import_module("app.metrics")
+    client = TestClient(app)
+
+    response = client.post("/rag/chat", json={"message": "zzzznotamovie", "genres": []})
+    assert response.status_code == 200
+
+    assert metrics_module._rag_chat_outcomes.get("disambiguation") == 1
+    assert metrics_module._disambiguation_candidate_sum > 0
+
+    metrics_response = client.get("/metrics")
+    body = metrics_response.text
+    assert "movie_reco_rag_chat_disambiguation_candidates_count" in body
+    assert "movie_reco_rag_chat_disambiguation_candidates_sum" in body
+
+
 def test_api_docs_explain_healthz_and_metrics_roles(repo_root: Path):
     docs = (repo_root / "docs" / "api.md").read_text(encoding="utf-8").lower()
 

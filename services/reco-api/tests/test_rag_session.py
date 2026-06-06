@@ -10,7 +10,7 @@ def test_create_and_get_session():
     loaded = store.get(session.session_id)
     assert loaded is not None
     assert loaded.session_id == session.session_id
-    assert loaded.context.seed_ids == []
+    assert loaded.context.explicit_seed_ids == []
 
 
 def test_session_expires_after_ttl():
@@ -24,7 +24,7 @@ def test_session_expires_after_ttl():
 def test_append_message_updates_context():
     store = SessionStore(ttl_seconds=3600)
     session = store.create()
-    session.context = ChatContext(seed_ids=[1], genres=["Comedy"])
+    session.context = ChatContext(explicit_seed_ids=[1], genres=["Comedy"])
     store.save(session)
     store.append_message(session, "user", "more sci-fi", turn_id="t1")
     loaded = store.get(session.session_id)
@@ -32,7 +32,7 @@ def test_append_message_updates_context():
     assert len(loaded.messages) == 1
     assert loaded.messages[0].role == "user"
     assert loaded.messages[0].content == "more sci-fi"
-    assert loaded.context.seed_ids == [1]
+    assert loaded.context.explicit_seed_ids == [1]
 
 
 def test_clear_removes_all_sessions():
