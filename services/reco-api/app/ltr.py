@@ -2,18 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import os
-from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from app.artifact_bundle import get_default_bundle, load_artifact_bundle
 from app.fusion import CHANNELS
-
-_booster: Any | None = None
-_feature_names: list[str] | None = None
-_meta: dict[str, Any] | None = None
 
 
 def default_model_path() -> str:
@@ -37,32 +32,16 @@ def load_ltr_model(
     model_path: str | None = None,
     meta_path: str | None = None,
 ) -> tuple[Any | None, list[str], dict[str, Any]]:
-    global _booster, _feature_names, _meta
+    if model_path is None and meta_path is None:
+        ltr = get_default_bundle().ltr
+        return ltr.booster, list(ltr.feature_names), dict(ltr.meta)
 
-    if _booster is not None and _feature_names is not None and _meta is not None:
-        return _booster, _feature_names, _meta
-
-    try:
-        import lightgbm as lgb
-    except (ImportError, OSError):  # pragma: no cover - missing lib or OpenMP
-        return None, list(CHANNELS), {}
-
-    model_file = Path(model_path or default_model_path())
-    meta_file = Path(meta_path or default_meta_path())
-    if not model_file.exists():
-        return None, list(CHANNELS), {}
-
-    booster = lgb.Booster(model_file=str(model_file))
-    meta: dict[str, Any] = {}
-    if meta_file.exists():
-        with open(meta_file, encoding="utf-8") as meta_handle:
-            meta = json.load(meta_handle)
-
-    feature_names = list(meta.get("feature_names", CHANNELS))
-    _booster = booster
-    _feature_names = feature_names
-    _meta = meta
-    return booster, feature_names, meta
+    bundle = load_artifact_bundle(
+        ltr_model_path=model_path or default_model_path(),
+        ltr_meta_path=meta_path or default_meta_path(),
+    )
+    ltr = bundle.ltr
+    return ltr.booster, list(ltr.feature_names), dict(ltr.meta)
 
 
 def ltr_available() -> bool:
@@ -101,10 +80,10 @@ def score_candidates(
 
 
 def ltr_health() -> dict[str, Any]:
-    booster, feature_names, meta = load_ltr_model()
+    health = get_default_bundle().health()
     return {
-        "ltr_ok": booster is not None,
-        "ltr_model_path": default_model_path(),
-        "ltr_feature_names": feature_names,
-        "ltr_trained_at": meta.get("trained_at"),
+        "ltr_ok": health["ltr_ok"],
+        "ltr_model_path": health["ltr_model_path"],
+        "ltr_feature_names": health["ltr_feature_names"],
+        "ltr_trained_at": health["ltr_trained_at"],
     }

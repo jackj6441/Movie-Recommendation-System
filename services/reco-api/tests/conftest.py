@@ -6,6 +6,7 @@ import pytest
 
 _APP_MODULES = [
     "app.main",
+    "app.artifact_bundle",
     "app.content",
     "app.rag_chat",
     "app.rag_session",

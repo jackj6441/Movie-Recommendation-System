@@ -10,8 +10,9 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import artifacts, content, ltr, metrics, posters, seed_ranker
+from app import content, metrics, posters, seed_ranker
 from app import rag_chat as rag_chat_service
+from app.artifact_bundle import get_default_bundle
 from app.rag_catalog import CatalogServices
 from app.rag_session import GLOBAL_SESSION_STORE
 
@@ -67,8 +68,8 @@ num_items = int(os.getenv("NUM_ITEMS", "0"))
 
 content_ok = False
 try:
-    content._load_embeddings()
-    content_ok = True
+    get_default_bundle()
+    content_ok = get_default_bundle().health()["content_ok"]
 except Exception:
     print("Warning: content embeddings unavailable at startup")
 
@@ -199,8 +200,7 @@ def serving_status() -> dict:
         "candidate_pool": candidate_pool,
         "ranking_mode": seed_ranker.active_ranking_mode_label(),
     }
-    status.update(artifacts.fusion_health())
-    status.update(ltr.ltr_health())
+    status.update(get_default_bundle().health())
     status.update(
         posters.poster_health_fields(poster_lookup, poster_meta, len(movie_titles))
     )

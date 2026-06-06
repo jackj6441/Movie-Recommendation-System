@@ -10,8 +10,6 @@ from typing import Any
 
 import numpy as np
 
-from app.fusion import CHANNELS
-
 DEFAULT_FUSION_WEIGHTS: dict[str, float] = {
     "content": 0.45,
     "svd": 0.20,
@@ -210,12 +208,16 @@ def _load_ltr_artifacts(model_path: str, meta_path: str) -> LtrArtifacts:
     try:
         import lightgbm as lgb
     except (ImportError, OSError):  # pragma: no cover - missing lib or OpenMP
+        from app.fusion import CHANNELS
+
         return LtrArtifacts(
             booster=None,
             feature_names=list(CHANNELS),
             meta={},
             model_path=model_path,
         )
+
+    from app.fusion import CHANNELS
 
     model_file = Path(model_path)
     meta_file = Path(meta_path)

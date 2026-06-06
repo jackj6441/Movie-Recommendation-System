@@ -28,6 +28,7 @@ Primary docs:
 - After each meaningful checkpoint, **commit automatically** once tests pass (see `.cursor/rules/auto-commit.mdc`). Do not push unless asked.
 - During TDD work, commit after each completed red-green-refactor step once tests pass.
 - After changing code, explain the change, especially every new or modified function and why it exists.
+- If requirements, scope, or design trade-offs are unclear, invoke `/grill-me` and resolve them one decision at a time before implementing.
 
 ## Repo layout
 
