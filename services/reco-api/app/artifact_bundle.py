@@ -284,3 +284,9 @@ def get_default_bundle() -> ArtifactBundle:
 def reset_default_bundle() -> None:
     global _default_bundle
     _default_bundle = None
+
+
+def set_default_bundle(bundle: ArtifactBundle) -> None:
+    """Install a pre-loaded bundle for serving, evaluation, or tests."""
+    global _default_bundle
+    _default_bundle = bundle

@@ -35,9 +35,10 @@ def main() -> None:
         raise SystemExit(f"LTR model not found: {args.ltr_model}. Run training/train_lambdarank.py first.")
 
     os.environ["RANKING_MODE"] = "ltr"
-    os.environ["LTR_MODEL_PATH"] = args.ltr_model
-    os.environ["LTR_META_PATH"] = args.ltr_meta
-    configure_artifact_paths()
+    configure_artifact_paths(
+        ltr_model=args.ltr_model,
+        ltr_meta=args.ltr_meta,
+    )
 
     ltr_args = fusion_parse_args([])
     ltr_args.ratings = args.ratings

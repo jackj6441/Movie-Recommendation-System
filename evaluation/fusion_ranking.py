@@ -5,18 +5,23 @@ from __future__ import annotations
 import csv
 import importlib
 import json
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RECO_API_ROOT = REPO_ROOT / "services" / "reco-api"
 MODELS_DIR = RECO_API_ROOT / "models"
 
+if TYPE_CHECKING:
+    from app.artifact_bundle import ArtifactBundle
+
 _APP_MODULES = (
+    "app.artifact_bundle",
     "app.content",
     "app.artifacts",
+    "app.ltr",
     "app.fusion",
     "app.retrievers.content_retriever",
     "app.retrievers.svd",
@@ -32,7 +37,7 @@ def _ensure_api_on_path() -> None:
         sys.path.insert(0, api_path)
 
 
-def _reload_ranking_modules():
+def _reload_ranking_modules() -> None:
     _ensure_api_on_path()
     for module_name in _APP_MODULES:
         sys.modules.pop(module_name, None)
@@ -45,22 +50,24 @@ def configure_artifact_paths(
     item_factors_svd: str | Path | None = None,
     item_neighbors: str | Path | None = None,
     fusion_weights: str | Path | None = None,
-) -> None:
-    """Point serving loaders at evaluation artifacts and clear import caches."""
+    ltr_model: str | Path | None = None,
+    ltr_meta: str | Path | None = None,
+) -> ArtifactBundle:
+    """Load serving artifacts into an in-memory bundle and install it as the default."""
     _reload_ranking_modules()
-    os.environ["CONTENT_EMBEDDINGS_PATH"] = str(
-        content_embeddings or MODELS_DIR / "content_embeddings.npz"
+    artifact_bundle = importlib.import_module("app.artifact_bundle")
+    artifact_bundle.reset_default_bundle()
+    bundle = artifact_bundle.load_artifact_bundle(
+        content_embeddings_path=str(content_embeddings or MODELS_DIR / "content_embeddings.npz"),
+        content_index_path=str(content_index or MODELS_DIR / "content_index.json"),
+        item_factors_svd_path=str(item_factors_svd or MODELS_DIR / "item_factors_svd.npz"),
+        item_neighbors_path=str(item_neighbors or MODELS_DIR / "item_neighbors.json"),
+        fusion_weights_path=str(fusion_weights or MODELS_DIR / "fusion_weights.json"),
+        ltr_model_path=str(ltr_model or MODELS_DIR / "ltr_model.txt"),
+        ltr_meta_path=str(ltr_meta or MODELS_DIR / "ltr_meta.json"),
     )
-    os.environ["CONTENT_INDEX_PATH"] = str(content_index or MODELS_DIR / "content_index.json")
-    os.environ["ITEM_FACTORS_SVD_PATH"] = str(
-        item_factors_svd or MODELS_DIR / "item_factors_svd.npz"
-    )
-    os.environ["ITEM_NEIGHBORS_PATH"] = str(
-        item_neighbors or MODELS_DIR / "item_neighbors.json"
-    )
-    os.environ["FUSION_WEIGHTS_PATH"] = str(
-        fusion_weights or MODELS_DIR / "fusion_weights.json"
-    )
+    artifact_bundle.set_default_bundle(bundle)
+    return bundle
 
 
 @dataclass(frozen=True)
