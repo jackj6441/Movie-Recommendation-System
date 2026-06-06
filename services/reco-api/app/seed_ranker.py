@@ -39,6 +39,27 @@ class Catalog:
     movie_popularity: dict[int, int] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class RankFilters:
+    """Optional ranking constraints applied after candidate generation."""
+
+    genres: Optional[list[str]] = None
+    year_min: Optional[int] = None
+    year_max: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class RankRequest:
+    """Ranker-owned request shape for turning a Seed Set into a Ranked List."""
+
+    seed_movie_ids: list[int]
+    catalog: Catalog
+    filters: RankFilters = field(default_factory=RankFilters)
+    top_k: int = TOP_K
+    fusion_weights: Optional[dict[str, float]] = None
+    ranking_mode: Optional[str] = None
+
+
 @dataclass
 class RankedItem:
     movie_id: int
@@ -126,21 +147,10 @@ def _filter_candidate_ids(
     ]
 
 
-def rank(
-    seeds: list[int],
-    shuffle: bool,
-    catalog: Catalog,
-    genres: Optional[list[str]] = None,
-    year_min: Optional[int] = None,
-    year_max: Optional[int] = None,
-    fusion_weights: Optional[dict[str, float]] = None,
-    top_k: int = TOP_K,
-    ranking_mode: Optional[str] = None,
-) -> RankedList:
+def rank_seed_set(request: RankRequest) -> RankedList:
     """Run multi-retriever retrieval then fusion or LTR scoring."""
-    del shuffle
-
-    valid_seeds = [mid for mid in seeds if mid in catalog.movie_titles]
+    catalog = request.catalog
+    valid_seeds = [mid for mid in request.seed_movie_ids if mid in catalog.movie_titles]
     valid_seeds = content.filter_movie_ids(valid_seeds)
     if not valid_seeds:
         raise InvalidSeedsError("no valid seeds after content filtering")
@@ -153,8 +163,15 @@ def rank(
     channel_hits = collect_channel_hits(valid_seeds, exclude, catalog)
 
     merged_ids = merge_candidate_ids(channel_hits)
-    genre_set = {g.lower() for g in genres} if genres else set()
-    filtered_ids = _filter_candidate_ids(merged_ids, catalog, genre_set, year_min, year_max)
+    filters = request.filters
+    genre_set = {g.lower() for g in filters.genres} if filters.genres else set()
+    filtered_ids = _filter_candidate_ids(
+        merged_ids,
+        catalog,
+        genre_set,
+        filters.year_min,
+        filters.year_max,
+    )
 
     if not filtered_ids:
         return RankedList(
@@ -166,7 +183,7 @@ def rank(
         )
 
     content_raw = {mid: score for mid, score in channel_hits["content"]}
-    mode = ranking_mode or resolve_ranking_mode()
+    mode = request.ranking_mode or resolve_ranking_mode()
     scored: list[tuple[int, float, dict[str, float]]]
 
     if mode == "ltr":
@@ -174,14 +191,14 @@ def rank(
         scored = ltr_ranker.score_candidates(rows)
         if not scored:
             mode = "fusion"
-            weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
+            weights = request.fusion_weights if request.fusion_weights is not None else load_fusion_weights()
             scored = fuse(filtered_ids, channel_hits, weights)
     else:
-        weights = fusion_weights if fusion_weights is not None else load_fusion_weights()
+        weights = request.fusion_weights if request.fusion_weights is not None else load_fusion_weights()
         scored = fuse(filtered_ids, channel_hits, weights)
 
     items: list[RankedItem] = []
-    for movie_id, final_score, breakdown in scored[:top_k]:
+    for movie_id, final_score, breakdown in scored[: request.top_k]:
         items.append(
             RankedItem(
                 movie_id=movie_id,
@@ -205,4 +222,33 @@ def rank(
         anchor_movie_id=anchor_movie_id,
         similar_movies=similar_movies,
         ranking_mode=label,
+    )
+
+
+def rank(
+    seeds: list[int],
+    shuffle: bool,
+    catalog: Catalog,
+    genres: Optional[list[str]] = None,
+    year_min: Optional[int] = None,
+    year_max: Optional[int] = None,
+    fusion_weights: Optional[dict[str, float]] = None,
+    top_k: int = TOP_K,
+    ranking_mode: Optional[str] = None,
+) -> RankedList:
+    """Compatibility shim for callers that still use the old rank Interface."""
+    del shuffle
+    return rank_seed_set(
+        RankRequest(
+            seed_movie_ids=seeds,
+            catalog=catalog,
+            filters=RankFilters(
+                genres=genres,
+                year_min=year_min,
+                year_max=year_max,
+            ),
+            top_k=top_k,
+            fusion_weights=fusion_weights,
+            ranking_mode=ranking_mode,
+        )
     )

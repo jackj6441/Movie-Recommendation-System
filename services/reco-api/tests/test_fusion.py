@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib
 import sys
 from pathlib import Path
 
@@ -68,6 +69,73 @@ def test_explanations_final_differs_from_content_only_when_fusion_active(load_ap
     for row in topk:
         assert "content" in row
         assert "final" in row
+
+
+def test_rank_seed_set_matches_legacy_rank_shim(load_app):
+    del load_app
+    app_main = importlib.import_module("app.main")
+    seed_ranker = importlib.import_module("app.seed_ranker")
+
+    request = seed_ranker.RankRequest(
+        seed_movie_ids=[1, 2, 3],
+        catalog=app_main.catalog,
+        filters=seed_ranker.RankFilters(genres=["Comedy"], year_min=1990, year_max=2009),
+    )
+
+    direct = seed_ranker.rank_seed_set(request)
+    shim = seed_ranker.rank(
+        [1, 2, 3],
+        False,
+        app_main.catalog,
+        genres=["Comedy"],
+        year_min=1990,
+        year_max=2009,
+    )
+
+    assert [item.movie_id for item in direct.items] == [item.movie_id for item in shim.items]
+    assert direct.seed_movie_ids == shim.seed_movie_ids
+    assert direct.anchor_movie_id == shim.anchor_movie_id
+    assert direct.ranking_mode == shim.ranking_mode
+
+
+def test_rank_seed_set_applies_request_top_k(load_app):
+    del load_app
+    app_main = importlib.import_module("app.main")
+    seed_ranker = importlib.import_module("app.seed_ranker")
+
+    result = seed_ranker.rank_seed_set(
+        seed_ranker.RankRequest(
+            seed_movie_ids=[1, 2, 3],
+            catalog=app_main.catalog,
+            top_k=3,
+        )
+    )
+
+    assert len(result.items) == 3
+
+
+def test_rank_seed_set_applies_rank_filters(load_app):
+    del load_app
+    app_main = importlib.import_module("app.main")
+    seed_ranker = importlib.import_module("app.seed_ranker")
+
+    result = seed_ranker.rank_seed_set(
+        seed_ranker.RankRequest(
+            seed_movie_ids=[1, 2, 3],
+            catalog=app_main.catalog,
+            filters=seed_ranker.RankFilters(
+                genres=["Comedy"],
+                year_min=1990,
+                year_max=1999,
+            ),
+        )
+    )
+
+    assert result.items
+    for item in result.items:
+        assert "Comedy" in app_main.catalog.movie_genres[item.movie_id]
+        year = app_main.catalog.movie_years[item.movie_id]
+        assert 1990 <= year <= 1999
 
 
 def _write_retrieval_fixtures() -> None:

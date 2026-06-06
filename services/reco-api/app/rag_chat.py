@@ -525,13 +525,16 @@ def try_rank(
 ) -> tuple[RankedList | None, str | None]:
     del shuffle
     try:
-        result = seed_ranker.rank(
-            ranking_seed_ids,
-            False,
-            catalog,
-            genres=context.genres or None,
-            year_min=context.year_min,
-            year_max=context.year_max,
+        result = seed_ranker.rank_seed_set(
+            seed_ranker.RankRequest(
+                seed_movie_ids=ranking_seed_ids,
+                catalog=catalog,
+                filters=seed_ranker.RankFilters(
+                    genres=context.genres or None,
+                    year_min=context.year_min,
+                    year_max=context.year_max,
+                ),
+            )
         )
         return result, None
     except seed_ranker.ContentUnavailableError:

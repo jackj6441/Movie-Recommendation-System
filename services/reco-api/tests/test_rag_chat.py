@@ -526,8 +526,7 @@ def test_rag_chat_warns_on_invalid_seed_movie_id(load_app):
 def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
     from app.seed_ranker import RankedItem
 
-    def many_rank(seed_ids, shuffle, catalog, **kwargs):
-        del shuffle, catalog, kwargs
+    def many_rank(request):
         items = [
             RankedItem(
                 movie_id=1000 + index,
@@ -537,15 +536,15 @@ def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
             )
             for index in range(15)
         ]
-        anchor = seed_ids[0]
+        anchor = request.seed_movie_ids[0]
         return RankedList(
             items=items,
-            seed_movie_ids=list(seed_ids),
+            seed_movie_ids=list(request.seed_movie_ids),
             anchor_movie_id=anchor,
             similar_movies=[],
         )
 
-    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank", many_rank)
+    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank_seed_set", many_rank)
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(
@@ -557,10 +556,8 @@ def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
 
 
 def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
-    def empty_rank(*args, **kwargs):
-        seed_ids = kwargs.get("genres") and args[0] or args[0]
-        del kwargs
-        seeds = list(args[0]) if args else [1]
+    def empty_rank(request):
+        seeds = list(request.seed_movie_ids)
         return RankedList(
             items=[],
             seed_movie_ids=seeds,
@@ -568,7 +565,7 @@ def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
             similar_movies=[],
         )
 
-    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank", empty_rank)
+    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank_seed_set", empty_rank)
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(

@@ -323,13 +323,16 @@ def recommendations(request: SeedsRequest):
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
     try:
-        result = seed_ranker.rank(
-            request.seeds,
-            request.shuffle,
-            catalog,
-            genres=request.genres,
-            year_min=request.year_min,
-            year_max=request.year_max,
+        result = seed_ranker.rank_seed_set(
+            seed_ranker.RankRequest(
+                seed_movie_ids=request.seeds,
+                catalog=catalog,
+                filters=seed_ranker.RankFilters(
+                    genres=request.genres,
+                    year_min=request.year_min,
+                    year_max=request.year_max,
+                ),
+            )
         )
     except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
@@ -356,13 +359,16 @@ def explanations(request: SeedsRequest):
         return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
 
     try:
-        result = seed_ranker.rank(
-            request.seeds,
-            request.shuffle,
-            catalog,
-            genres=request.genres,
-            year_min=request.year_min,
-            year_max=request.year_max,
+        result = seed_ranker.rank_seed_set(
+            seed_ranker.RankRequest(
+                seed_movie_ids=request.seeds,
+                catalog=catalog,
+                filters=seed_ranker.RankFilters(
+                    genres=request.genres,
+                    year_min=request.year_min,
+                    year_max=request.year_max,
+                ),
+            )
         )
     except seed_ranker.InvalidSeedsError:
         return JSONResponse(status_code=400, content={"detail": "no valid seeds"})
