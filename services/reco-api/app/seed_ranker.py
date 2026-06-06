@@ -10,8 +10,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-from app import content
-from app.artifacts import load_fusion_weights
+from app.artifact_bundle import get_default_bundle
 from app.fusion import CHANNELS, feature_rows, fuse, merge_candidate_ids
 from app import ltr as ltr_ranker
 from app.retrievers import content_retriever, item_cf, popularity, svd
@@ -150,12 +149,14 @@ def _filter_candidate_ids(
 def rank_seed_set(request: RankRequest) -> RankedList:
     """Run multi-retriever retrieval then fusion or LTR scoring."""
     catalog = request.catalog
+    bundle = get_default_bundle()
+    content_artifacts = bundle.content
     valid_seeds = [mid for mid in request.seed_movie_ids if mid in catalog.movie_titles]
-    valid_seeds = content.filter_movie_ids(valid_seeds)
+    valid_seeds = content_artifacts.filter_movie_ids(valid_seeds)
     if not valid_seeds:
         raise InvalidSeedsError("no valid seeds after content filtering")
 
-    if not content.get_embeddings_for_movies(valid_seeds):
+    if not content_artifacts.get_embeddings_for_movies(valid_seeds):
         raise ContentUnavailableError("content embeddings unavailable for seeds")
 
     exclude = set(valid_seeds)
@@ -191,10 +192,10 @@ def rank_seed_set(request: RankRequest) -> RankedList:
         scored = ltr_ranker.score_candidates(rows)
         if not scored:
             mode = "fusion"
-            weights = request.fusion_weights if request.fusion_weights is not None else load_fusion_weights()
+            weights = request.fusion_weights if request.fusion_weights is not None else dict(bundle.fusion.weights)
             scored = fuse(filtered_ids, channel_hits, weights)
     else:
-        weights = request.fusion_weights if request.fusion_weights is not None else load_fusion_weights()
+        weights = request.fusion_weights if request.fusion_weights is not None else dict(bundle.fusion.weights)
         scored = fuse(filtered_ids, channel_hits, weights)
 
     items: list[RankedItem] = []
@@ -211,7 +212,7 @@ def rank_seed_set(request: RankRequest) -> RankedList:
 
     similar_movies: list[tuple[int, float]] = []
     try:
-        similar_movies = list(content.get_similar(anchor_movie_id, topn=3))
+        similar_movies = list(content_artifacts.get_similar(anchor_movie_id, topn=3))
     except Exception:
         similar_movies = []
 

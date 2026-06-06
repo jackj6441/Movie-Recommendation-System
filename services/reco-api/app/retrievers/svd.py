@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from app.artifacts import load_item_factors
+from app.artifact_bundle import get_default_bundle
 from app.fusion import RETRIEVER_TOP_K
 
 
@@ -18,7 +18,7 @@ def retrieve(
     exclude: set[int],
     top_k: int = RETRIEVER_TOP_K,
 ) -> list[tuple[int, float]]:
-    factors, movie_ids, id_to_row = load_item_factors()
+    factors, movie_ids, id_to_row = get_default_bundle().fusion.item_factors()
     if factors is None or id_to_row is None or movie_ids is None:
         return []
 

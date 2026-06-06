@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from app.artifacts import load_item_neighbors
+from app.artifact_bundle import get_default_bundle
 from app.fusion import RETRIEVER_TOP_K
 
 
@@ -13,7 +13,7 @@ def retrieve(
     exclude: set[int],
     top_k: int = RETRIEVER_TOP_K,
 ) -> list[tuple[int, float]]:
-    neighbors = load_item_neighbors()
+    neighbors = get_default_bundle().fusion.item_neighbors
     if not neighbors:
         return []
 

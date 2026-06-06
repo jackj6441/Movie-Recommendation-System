@@ -5928,7 +5928,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L141",
       "id": "scripts_live_browser_writescrolly",
-      "community": 59,
+      "community": 57,
       "norm_label": "writescrolly()"
     },
     {
@@ -5982,7 +5982,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L198",
       "id": "scripts_live_browser_id8",
-      "community": 59,
+      "community": 57,
       "norm_label": "id8()"
     },
     {
@@ -6198,7 +6198,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L778",
       "id": "scripts_live_browser_extractcontext",
-      "community": 59,
+      "community": 57,
       "norm_label": "extractcontext()"
     },
     {
@@ -6567,7 +6567,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1964",
       "id": "scripts_live_browser_startscrolllock",
-      "community": 59,
+      "community": 28,
       "norm_label": "startscrolllock()"
     },
     {
@@ -6576,7 +6576,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2071",
       "id": "scripts_live_browser_stopscrolllock",
-      "community": 59,
+      "community": 28,
       "norm_label": "stopscrolllock()"
     },
     {
@@ -6585,7 +6585,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2085",
       "id": "scripts_live_browser_startvariantobserver",
-      "community": 59,
+      "community": 57,
       "norm_label": "startvariantobserver()"
     },
     {
@@ -6711,7 +6711,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2525",
       "id": "scripts_live_browser_handlego",
-      "community": 59,
+      "community": 57,
       "norm_label": "handlego()"
     },
     {
@@ -6963,7 +6963,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3567",
       "id": "scripts_live_browser_updateglobalbarstate",
-      "community": 45,
+      "community": 13,
       "norm_label": "updateglobalbarstate()"
     },
     {
@@ -6999,7 +6999,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3656",
       "id": "scripts_live_browser_ondetectmessage",
-      "community": 45,
+      "community": 13,
       "norm_label": "ondetectmessage()"
     },
     {
@@ -7962,7 +7962,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L1",
       "id": "scripts_live_session_store",
-      "community": 60,
+      "community": 44,
       "norm_label": "live-session-store.mjs"
     },
     {
@@ -7971,7 +7971,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L5",
       "id": "scripts_live_session_store_completed_phases",
-      "community": 60,
+      "community": 44,
       "norm_label": "completed_phases"
     },
     {
@@ -7989,7 +7989,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L82",
       "id": "scripts_live_session_store_normalizeevent",
-      "community": 60,
+      "community": 44,
       "norm_label": "normalizeevent()"
     },
     {
@@ -7998,7 +7998,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L90",
       "id": "scripts_live_session_store_getjournalpath",
-      "community": 60,
+      "community": 44,
       "norm_label": "getjournalpath()"
     },
     {
@@ -8007,7 +8007,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L94",
       "id": "scripts_live_session_store_getsnapshotpath",
-      "community": 60,
+      "community": 44,
       "norm_label": "getsnapshotpath()"
     },
     {
@@ -8016,7 +8016,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L98",
       "id": "scripts_live_session_store_safesessionid",
-      "community": 60,
+      "community": 44,
       "norm_label": "safesessionid()"
     },
     {
@@ -8025,7 +8025,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L103",
       "id": "scripts_live_session_store_basesnapshot",
-      "community": 60,
+      "community": 44,
       "norm_label": "basesnapshot()"
     },
     {
@@ -8034,7 +8034,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L126",
       "id": "scripts_live_session_store_rebuildsnapshotfromjournal",
-      "community": 60,
+      "community": 44,
       "norm_label": "rebuildsnapshotfromjournal()"
     },
     {
@@ -8043,7 +8043,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L153",
       "id": "scripts_live_session_store_applyevent",
-      "community": 60,
+      "community": 44,
       "norm_label": "applyevent()"
     },
     {
@@ -8052,7 +8052,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L240",
       "id": "scripts_live_session_store_topendingevent",
-      "community": 60,
+      "community": 44,
       "norm_label": "topendingevent()"
     },
     {
@@ -8061,7 +8061,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L246",
       "id": "scripts_live_session_store_upsertartifact",
-      "community": 60,
+      "community": 44,
       "norm_label": "upsertartifact()"
     },
     {
@@ -8070,7 +8070,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L252",
       "id": "scripts_live_session_store_writesnapshot",
-      "community": 60,
+      "community": 44,
       "norm_label": "writesnapshot()"
     },
     {
@@ -10428,7 +10428,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L1",
       "id": "app_fusion",
-      "community": 35,
+      "community": 103,
       "norm_label": "fusion.py"
     },
     {
@@ -10455,7 +10455,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L41",
       "id": "app_fusion_feature_rows",
-      "community": 35,
+      "community": 103,
       "norm_label": "feature_rows()"
     },
     {
@@ -10473,7 +10473,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L1",
       "id": "app_fusion_rationale_1",
-      "community": 35,
+      "community": 103,
       "norm_label": "merge multi-retriever hits and compute weighted phase 1 fusion scores."
     },
     {
@@ -10500,7 +10500,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L45",
       "id": "app_fusion_rationale_45",
-      "community": 35,
+      "community": 103,
       "norm_label": "per-candidate normalized channel features (same inputs as weighted fusion)."
     },
     {
@@ -12138,7 +12138,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L1",
       "id": "retrievers_popularity",
-      "community": 35,
+      "community": 103,
       "norm_label": "popularity.py"
     },
     {
@@ -12147,7 +12147,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L8",
       "id": "retrievers_popularity_retrieve",
-      "community": 35,
+      "community": 103,
       "norm_label": "retrieve()"
     },
     {
@@ -12156,7 +12156,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L1",
       "id": "retrievers_popularity_rationale_1",
-      "community": 35,
+      "community": 103,
       "norm_label": "popularity retriever: top-rated catalog movies by offline rating counts."
     },
     {
@@ -12165,7 +12165,7 @@
       "source_file": "services/reco-api/app/retrievers/svd.py",
       "source_location": "L1",
       "id": "retrievers_svd",
-      "community": 35,
+      "community": 41,
       "norm_label": "svd.py"
     },
     {
@@ -12174,7 +12174,7 @@
       "source_file": "services/reco-api/app/retrievers/svd.py",
       "source_location": "L11",
       "id": "retrievers_svd_normalize",
-      "community": 35,
+      "community": 41,
       "norm_label": "_normalize()"
     },
     {
@@ -12183,7 +12183,7 @@
       "source_file": "services/reco-api/app/retrievers/svd.py",
       "source_location": "L11",
       "id": "services_reco_api_app_retrievers_svd_py_ndarray",
-      "community": 35,
+      "community": 41,
       "norm_label": "ndarray"
     },
     {
@@ -12192,7 +12192,7 @@
       "source_file": "services/reco-api/app/retrievers/svd.py",
       "source_location": "L16",
       "id": "retrievers_svd_retrieve",
-      "community": 35,
+      "community": 41,
       "norm_label": "retrieve()"
     },
     {
@@ -12201,7 +12201,7 @@
       "source_file": "services/reco-api/app/retrievers/svd.py",
       "source_location": "L1",
       "id": "retrievers_svd_rationale_1",
-      "community": 35,
+      "community": 41,
       "norm_label": "svd item-factor retriever: dot product with mean seed factor vector."
     },
     {
@@ -12217,7 +12217,7 @@
       "label": "InvalidSeedsError",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L22",
+      "source_location": "L21",
       "id": "app_seed_ranker_invalidseedserror",
       "community": 36,
       "norm_label": "invalidseedserror"
@@ -12226,7 +12226,7 @@
       "label": "ContentUnavailableError",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L26",
+      "source_location": "L25",
       "id": "app_seed_ranker_contentunavailableerror",
       "community": 36,
       "norm_label": "contentunavailableerror"
@@ -12235,7 +12235,7 @@
       "label": "Catalog",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L31",
+      "source_location": "L30",
       "id": "app_seed_ranker_catalog",
       "community": 36,
       "norm_label": "catalog"
@@ -12244,7 +12244,7 @@
       "label": "RankFilters",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L43",
+      "source_location": "L42",
       "id": "app_seed_ranker_rankfilters",
       "community": 36,
       "norm_label": "rankfilters"
@@ -12253,7 +12253,7 @@
       "label": "RankRequest",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L52",
+      "source_location": "L51",
       "id": "app_seed_ranker_rankrequest",
       "community": 36,
       "norm_label": "rankrequest"
@@ -12262,7 +12262,7 @@
       "label": "RankedItem",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L64",
+      "source_location": "L63",
       "id": "app_seed_ranker_rankeditem",
       "community": 36,
       "norm_label": "rankeditem"
@@ -12271,7 +12271,7 @@
       "label": "RankedList",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L73",
+      "source_location": "L72",
       "id": "app_seed_ranker_rankedlist",
       "community": 18,
       "norm_label": "rankedlist"
@@ -12280,7 +12280,7 @@
       "label": "resolve_ranking_mode()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L81",
+      "source_location": "L80",
       "id": "app_seed_ranker_resolve_ranking_mode",
       "community": 36,
       "norm_label": "resolve_ranking_mode()"
@@ -12289,7 +12289,7 @@
       "label": "active_ranking_mode_label()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L89",
+      "source_location": "L88",
       "id": "app_seed_ranker_active_ranking_mode_label",
       "community": 36,
       "norm_label": "active_ranking_mode_label()"
@@ -12298,7 +12298,7 @@
       "label": "collect_channel_hits()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L95",
+      "source_location": "L94",
       "id": "app_seed_ranker_collect_channel_hits",
       "community": 36,
       "norm_label": "collect_channel_hits()"
@@ -12307,7 +12307,7 @@
       "label": "_passes_filters()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L112",
+      "source_location": "L111",
       "id": "app_seed_ranker_passes_filters",
       "community": 36,
       "norm_label": "_passes_filters()"
@@ -12316,7 +12316,7 @@
       "label": "_filter_candidate_ids()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L134",
+      "source_location": "L133",
       "id": "app_seed_ranker_filter_candidate_ids",
       "community": 36,
       "norm_label": "_filter_candidate_ids()"
@@ -12325,7 +12325,7 @@
       "label": "rank_seed_set()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L150",
+      "source_location": "L149",
       "id": "app_seed_ranker_rank_seed_set",
       "community": 36,
       "norm_label": "rank_seed_set()"
@@ -12334,7 +12334,7 @@
       "label": "rank()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L228",
+      "source_location": "L229",
       "id": "app_seed_ranker_rank",
       "community": 36,
       "norm_label": "rank()"
@@ -12352,8 +12352,8 @@
       "label": "Raised when the seed list is empty or no seeds survive content filtering.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L23",
-      "id": "app_seed_ranker_rationale_23",
+      "source_location": "L22",
+      "id": "app_seed_ranker_rationale_22",
       "community": 36,
       "norm_label": "raised when the seed list is empty or no seeds survive content filtering."
     },
@@ -12361,8 +12361,8 @@
       "label": "Raised when content embeddings cannot be retrieved for the validated seeds.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L27",
-      "id": "app_seed_ranker_rationale_27",
+      "source_location": "L26",
+      "id": "app_seed_ranker_rationale_26",
       "community": 36,
       "norm_label": "raised when content embeddings cannot be retrieved for the validated seeds."
     },
@@ -12370,8 +12370,8 @@
       "label": "Immutable snapshot of the movie catalog needed for ranking.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L32",
-      "id": "app_seed_ranker_rationale_32",
+      "source_location": "L31",
+      "id": "app_seed_ranker_rationale_31",
       "community": 36,
       "norm_label": "immutable snapshot of the movie catalog needed for ranking."
     },
@@ -12379,8 +12379,8 @@
       "label": "Optional ranking constraints applied after candidate generation.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L44",
-      "id": "app_seed_ranker_rationale_44",
+      "source_location": "L43",
+      "id": "app_seed_ranker_rationale_43",
       "community": 36,
       "norm_label": "optional ranking constraints applied after candidate generation."
     },
@@ -12388,8 +12388,8 @@
       "label": "Ranker-owned request shape for turning a Seed Set into a Ranked List.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L53",
-      "id": "app_seed_ranker_rationale_53",
+      "source_location": "L52",
+      "id": "app_seed_ranker_rationale_52",
       "community": 36,
       "norm_label": "ranker-owned request shape for turning a seed set into a ranked list."
     },
@@ -12397,8 +12397,8 @@
       "label": "Return active ranker: ``ltr`` only when model is loaded and env requests it.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L82",
-      "id": "app_seed_ranker_rationale_82",
+      "source_location": "L81",
+      "id": "app_seed_ranker_rationale_81",
       "community": 36,
       "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it."
     },
@@ -12406,8 +12406,8 @@
       "label": "Run multi-retriever retrieval then fusion or LTR scoring.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L151",
-      "id": "app_seed_ranker_rationale_151",
+      "source_location": "L150",
+      "id": "app_seed_ranker_rationale_150",
       "community": 36,
       "norm_label": "run multi-retriever retrieval then fusion or ltr scoring."
     },
@@ -12415,8 +12415,8 @@
       "label": "Compatibility shim for callers that still use the old rank Interface.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L239",
-      "id": "app_seed_ranker_rationale_239",
+      "source_location": "L240",
+      "id": "app_seed_ranker_rationale_240",
       "community": 36,
       "norm_label": "compatibility shim for callers that still use the old rank interface."
     },
@@ -27613,6 +27613,87 @@
       "norm_label": "test_recommendations_unmatchable_filter_returns_empty()"
     },
     {
+      "label": "test_retrievers.py",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L1",
+      "id": "tests_test_retrievers",
+      "community": 60,
+      "norm_label": "test_retrievers.py"
+    },
+    {
+      "label": "reset_bundle_singleton()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L24",
+      "id": "tests_test_retrievers_reset_bundle_singleton",
+      "community": 60,
+      "norm_label": "reset_bundle_singleton()"
+    },
+    {
+      "label": "_write_retrieval_fixtures()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L30",
+      "id": "tests_test_retrievers_write_retrieval_fixtures",
+      "community": 60,
+      "norm_label": "_write_retrieval_fixtures()"
+    },
+    {
+      "label": "_load_test_bundle()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L53",
+      "id": "tests_test_retrievers_load_test_bundle",
+      "community": 60,
+      "norm_label": "_load_test_bundle()"
+    },
+    {
+      "label": "test_svd_retriever_reads_fusion_artifacts_from_bundle()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L62",
+      "id": "tests_test_retrievers_test_svd_retriever_reads_fusion_artifacts_from_bundle",
+      "community": 60,
+      "norm_label": "test_svd_retriever_reads_fusion_artifacts_from_bundle()"
+    },
+    {
+      "label": "test_item_cf_retriever_reads_neighbors_from_bundle()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L69",
+      "id": "tests_test_retrievers_test_item_cf_retriever_reads_neighbors_from_bundle",
+      "community": 60,
+      "norm_label": "test_item_cf_retriever_reads_neighbors_from_bundle()"
+    },
+    {
+      "label": "test_content_retriever_reads_embeddings_from_bundle()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L77",
+      "id": "tests_test_retrievers_test_content_retriever_reads_embeddings_from_bundle",
+      "community": 60,
+      "norm_label": "test_content_retriever_reads_embeddings_from_bundle()"
+    },
+    {
+      "label": "test_svd_retriever_does_not_call_artifacts_shim()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L84",
+      "id": "tests_test_retrievers_test_svd_retriever_does_not_call_artifacts_shim",
+      "community": 60,
+      "norm_label": "test_svd_retriever_does_not_call_artifacts_shim()"
+    },
+    {
+      "label": "Tests that retrievers read fusion/content artifacts from the bundle.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L1",
+      "id": "tests_test_retrievers_rationale_1",
+      "community": 60,
+      "norm_label": "tests that retrievers read fusion/content artifacts from the bundle."
+    },
+    {
       "label": "test_system_evidence.py",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_system_evidence.py",
@@ -27855,7 +27936,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L1",
       "id": "tests_test_ltr_ranking",
-      "community": 35,
+      "community": 103,
       "norm_label": "test_ltr_ranking.py"
     },
     {
@@ -27864,7 +27945,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L20",
       "id": "tests_test_ltr_ranking_test_rating_to_relevance_grades",
-      "community": 35,
+      "community": 103,
       "norm_label": "test_rating_to_relevance_grades()"
     },
     {
@@ -27873,7 +27954,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L26",
       "id": "tests_test_ltr_ranking_test_feature_rows_aligns_with_channels",
-      "community": 35,
+      "community": 103,
       "norm_label": "test_feature_rows_aligns_with_channels()"
     },
     {
@@ -27882,7 +27963,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L39",
       "id": "tests_test_ltr_ranking_test_train_lambdarank_cli_smoke",
-      "community": 35,
+      "community": 103,
       "norm_label": "test_train_lambdarank_cli_smoke()"
     },
     {
@@ -27891,7 +27972,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L1",
       "id": "tests_test_ltr_ranking_rationale_1",
-      "community": 35,
+      "community": 103,
       "norm_label": "tests for phase 2 ltr training and serving hooks."
     },
     {
@@ -32517,7 +32598,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L240",
       "id": "reference_document_step_4b_write_impeccable_design_json_sidecar_extensions_only",
-      "community": 84,
+      "community": 214,
       "norm_label": "step 4b: write .impeccable/design.json sidecar (extensions only)"
     },
     {
@@ -32526,7 +32607,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L246",
       "id": "reference_document_schema",
-      "community": 84,
+      "community": 214,
       "norm_label": "schema"
     },
     {
@@ -32535,7 +32616,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L294",
       "id": "reference_document_component_translation_rules",
-      "community": 84,
+      "community": 214,
       "norm_label": "component translation rules"
     },
     {
@@ -32544,7 +32625,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L305",
       "id": "reference_document_what_to_include",
-      "community": 84,
+      "community": 214,
       "norm_label": "what to include"
     },
     {
@@ -32553,7 +32634,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L315",
       "id": "reference_document_tonal_ramps",
-      "community": 84,
+      "community": 214,
       "norm_label": "tonal ramps"
     },
     {
@@ -32562,7 +32643,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L319",
       "id": "reference_document_narrative_mapping",
-      "community": 84,
+      "community": 214,
       "norm_label": "narrative mapping"
     },
     {
@@ -32580,7 +32661,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L338",
       "id": "reference_document_seed_mode",
-      "community": 84,
+      "community": 215,
       "norm_label": "seed mode"
     },
     {
@@ -32589,7 +32670,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L342",
       "id": "reference_document_step_1_confirm_seed_mode",
-      "community": 84,
+      "community": 215,
       "norm_label": "step 1: confirm seed mode"
     },
     {
@@ -32598,7 +32679,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L348",
       "id": "reference_document_step_2_five_questions",
-      "community": 84,
+      "community": 215,
       "norm_label": "step 2: five questions"
     },
     {
@@ -32607,7 +32688,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L376",
       "id": "reference_document_step_3_write_seed_design_md",
-      "community": 84,
+      "community": 215,
       "norm_label": "step 3: write seed design.md"
     },
     {
@@ -32616,7 +32697,7 @@
       "source_file": ".cursor/skills/impeccable/reference/document.md",
       "source_location": "L397",
       "id": "reference_document_step_4_confirm_and_refresh_session_cache",
-      "community": 84,
+      "community": 215,
       "norm_label": "step 4: confirm and refresh session cache"
     },
     {
@@ -38693,6 +38774,78 @@
       "id": "web_readme_web",
       "community": 206,
       "norm_label": "web"
+    },
+    {
+      "label": "Raised when the seed list is empty or no seeds survive content filtering.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L23",
+      "community": 36,
+      "norm_label": "raised when the seed list is empty or no seeds survive content filtering.",
+      "id": "app_seed_ranker_rationale_23"
+    },
+    {
+      "label": "Raised when content embeddings cannot be retrieved for the validated seeds.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L27",
+      "community": 36,
+      "norm_label": "raised when content embeddings cannot be retrieved for the validated seeds.",
+      "id": "app_seed_ranker_rationale_27"
+    },
+    {
+      "label": "Immutable snapshot of the movie catalog needed for ranking.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L32",
+      "community": 36,
+      "norm_label": "immutable snapshot of the movie catalog needed for ranking.",
+      "id": "app_seed_ranker_rationale_32"
+    },
+    {
+      "label": "Optional ranking constraints applied after candidate generation.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L44",
+      "community": 36,
+      "norm_label": "optional ranking constraints applied after candidate generation.",
+      "id": "app_seed_ranker_rationale_44"
+    },
+    {
+      "label": "Ranker-owned request shape for turning a Seed Set into a Ranked List.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L53",
+      "community": 36,
+      "norm_label": "ranker-owned request shape for turning a seed set into a ranked list.",
+      "id": "app_seed_ranker_rationale_53"
+    },
+    {
+      "label": "Return active ranker: ``ltr`` only when model is loaded and env requests it.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L82",
+      "community": 36,
+      "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it.",
+      "id": "app_seed_ranker_rationale_82"
+    },
+    {
+      "label": "Run multi-retriever retrieval then fusion or LTR scoring.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L151",
+      "community": 36,
+      "norm_label": "run multi-retriever retrieval then fusion or ltr scoring.",
+      "id": "app_seed_ranker_rationale_151"
+    },
+    {
+      "label": "Compatibility shim for callers that still use the old rank Interface.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L239",
+      "community": 36,
+      "norm_label": "compatibility shim for callers that still use the old rank interface.",
+      "id": "app_seed_ranker_rationale_239"
     },
     {
       "label": "Graded relevance for offline labels: >=4 high, 3 medium, else low.",
@@ -63059,9 +63212,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L118",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_artifactbundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_artifactbundle"
     },
     {
       "relation": "contains",
@@ -63069,9 +63222,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_contentartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts"
     },
     {
       "relation": "contains",
@@ -63079,9 +63232,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_fusionartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_fusionartifacts"
     },
     {
       "relation": "contains",
@@ -63089,9 +63242,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L277",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_get_default_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_get_default_bundle"
     },
     {
       "relation": "contains",
@@ -63099,9 +63252,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_artifact_bundle"
     },
     {
       "relation": "contains",
@@ -63109,9 +63262,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L273",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_artifact_bundle_from_env",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_artifact_bundle_from_env"
     },
     {
       "relation": "contains",
@@ -63119,9 +63272,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_content_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_content_artifacts"
     },
     {
       "relation": "contains",
@@ -63129,9 +63282,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_fusion_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_fusion_artifacts"
     },
     {
       "relation": "contains",
@@ -63139,9 +63292,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L163",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_fusion_weights",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_fusion_weights"
     },
     {
       "relation": "contains",
@@ -63149,9 +63302,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_load_ltr_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_ltr_artifacts"
     },
     {
       "relation": "contains",
@@ -63159,9 +63312,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_ltrartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_ltrartifacts"
     },
     {
       "relation": "contains",
@@ -63169,9 +63322,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L284",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle",
-      "target": "app_artifact_bundle_reset_default_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_reset_default_bundle"
     },
     {
       "relation": "rationale_for",
@@ -63179,9 +63332,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_rationale_1",
-      "target": "app_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle"
     },
     {
       "relation": "imports_from",
@@ -63190,9 +63343,9 @@
       "source_file": "services/reco-api/app/artifacts.py",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifacts",
-      "target": "app_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle"
     },
     {
       "relation": "imports_from",
@@ -63201,9 +63354,9 @@
       "source_file": "services/reco-api/app/content.py",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_content",
-      "target": "app_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle"
     },
     {
       "relation": "imports_from",
@@ -63212,9 +63365,9 @@
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_ltr",
-      "target": "app_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle"
     },
     {
       "relation": "imports_from",
@@ -63223,7 +63376,51 @@
       "source_file": "services/reco-api/app/main.py",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_main",
+      "target": "app_artifact_bundle"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_seed_ranker",
+      "target": "app_artifact_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/retrievers/content_retriever.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "retrievers_content_retriever",
+      "target": "app_artifact_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/retrievers/item_cf.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "retrievers_item_cf",
+      "target": "app_artifact_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/retrievers/svd.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "retrievers_svd",
       "target": "app_artifact_bundle",
       "confidence_score": 1.0
     },
@@ -63233,9 +63430,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_filter_movie_ids",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_filter_movie_ids"
     },
     {
       "relation": "method",
@@ -63243,9 +63440,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_get_embeddings_for_movies",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_get_embeddings_for_movies"
     },
     {
       "relation": "method",
@@ -63253,9 +63450,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_get_similar",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_get_similar"
     },
     {
       "relation": "method",
@@ -63263,9 +63460,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_get_similarity_scores",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_get_similarity_scores"
     },
     {
       "relation": "method",
@@ -63273,9 +63470,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_get_similarity_scores_from_vector",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_get_similarity_scores_from_vector"
     },
     {
       "relation": "method",
@@ -63283,9 +63480,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts",
-      "target": "app_artifact_bundle_contentartifacts_ok",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts_ok"
     },
     {
       "relation": "references",
@@ -63294,9 +63491,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_content_artifacts",
-      "target": "app_artifact_bundle_contentartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_contentartifacts"
     },
     {
       "relation": "references",
@@ -63305,9 +63502,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts_get_embeddings_for_movies",
-      "target": "services_reco_api_app_artifact_bundle_py_ndarray",
-      "confidence_score": 1.0
+      "target": "services_reco_api_app_artifact_bundle_py_ndarray"
     },
     {
       "relation": "references",
@@ -63316,9 +63513,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_contentartifacts_get_similarity_scores_from_vector",
-      "target": "services_reco_api_app_artifact_bundle_py_ndarray",
-      "confidence_score": 1.0
+      "target": "services_reco_api_app_artifact_bundle_py_ndarray"
     },
     {
       "relation": "references",
@@ -63327,9 +63524,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_fusionartifacts_item_factors",
-      "target": "services_reco_api_app_artifact_bundle_py_ndarray",
-      "confidence_score": 1.0
+      "target": "services_reco_api_app_artifact_bundle_py_ndarray"
     },
     {
       "relation": "method",
@@ -63337,9 +63534,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_fusionartifacts",
-      "target": "app_artifact_bundle_fusionartifacts_item_cf_ok",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_fusionartifacts_item_cf_ok"
     },
     {
       "relation": "method",
@@ -63347,9 +63544,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_fusionartifacts",
-      "target": "app_artifact_bundle_fusionartifacts_item_factors",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_fusionartifacts_item_factors"
     },
     {
       "relation": "method",
@@ -63357,9 +63554,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L94",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_fusionartifacts",
-      "target": "app_artifact_bundle_fusionartifacts_svd_ok",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_fusionartifacts_svd_ok"
     },
     {
       "relation": "references",
@@ -63368,9 +63565,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_fusion_artifacts",
-      "target": "app_artifact_bundle_fusionartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_fusionartifacts"
     },
     {
       "relation": "references",
@@ -63379,9 +63576,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_ltr_artifacts",
-      "target": "app_artifact_bundle_ltrartifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_ltrartifacts"
     },
     {
       "relation": "method",
@@ -63389,9 +63586,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_ltrartifacts",
-      "target": "app_artifact_bundle_ltrartifacts_ok",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_ltrartifacts_ok"
     },
     {
       "relation": "method",
@@ -63399,9 +63596,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_artifactbundle",
-      "target": "app_artifact_bundle_artifactbundle_health",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_artifactbundle_health"
     },
     {
       "relation": "references",
@@ -63410,9 +63607,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L277",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_get_default_bundle",
-      "target": "app_artifact_bundle_artifactbundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_artifactbundle"
     },
     {
       "relation": "references",
@@ -63421,9 +63618,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle",
-      "target": "app_artifact_bundle_artifactbundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_artifactbundle"
     },
     {
       "relation": "references",
@@ -63432,9 +63629,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L273",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle_from_env",
-      "target": "app_artifact_bundle_artifactbundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_artifactbundle"
     },
     {
       "relation": "references",
@@ -63443,9 +63640,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_artifactbundle_health",
-      "target": "services_reco_api_app_artifact_bundle_py_any",
-      "confidence_score": 1.0
+      "target": "services_reco_api_app_artifact_bundle_py_any"
     },
     {
       "relation": "calls",
@@ -63454,9 +63651,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L257",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle",
-      "target": "app_artifact_bundle_load_content_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_content_artifacts"
     },
     {
       "relation": "calls",
@@ -63465,9 +63662,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L182",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_fusion_artifacts",
-      "target": "app_artifact_bundle_load_fusion_weights",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_fusion_weights"
     },
     {
       "relation": "calls",
@@ -63476,9 +63673,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L261",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle",
-      "target": "app_artifact_bundle_load_fusion_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_fusion_artifacts"
     },
     {
       "relation": "calls",
@@ -63487,9 +63684,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L266",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle",
-      "target": "app_artifact_bundle_load_ltr_artifacts",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_ltr_artifacts"
     },
     {
       "relation": "calls",
@@ -63498,9 +63695,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L274",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_load_artifact_bundle_from_env",
-      "target": "app_artifact_bundle_load_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_artifact_bundle"
     },
     {
       "relation": "calls",
@@ -63553,9 +63750,9 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L280",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_artifact_bundle_get_default_bundle",
-      "target": "app_artifact_bundle_load_artifact_bundle_from_env",
-      "confidence_score": 1.0
+      "target": "app_artifact_bundle_load_artifact_bundle_from_env"
     },
     {
       "relation": "calls",
@@ -63698,6 +63895,50 @@
       "source_location": "L203",
       "weight": 1.0,
       "source": "app_main_serving_status",
+      "target": "app_artifact_bundle_get_default_bundle"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rank_seed_set",
+      "target": "app_artifact_bundle_get_default_bundle"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "services/reco-api/app/retrievers/content_retriever.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "retrievers_content_retriever_retrieve",
+      "target": "app_artifact_bundle_get_default_bundle"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "services/reco-api/app/retrievers/item_cf.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "retrievers_item_cf_retrieve",
+      "target": "app_artifact_bundle_get_default_bundle"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "services/reco-api/app/retrievers/svd.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "retrievers_svd_retrieve",
       "target": "app_artifact_bundle_get_default_bundle"
     },
     {
@@ -64513,9 +64754,9 @@
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_ltr_rationale_23",
-      "target": "app_ltr_rating_to_relevance",
-      "confidence_score": 1.0
+      "target": "app_ltr_rating_to_relevance"
     },
     {
       "relation": "rationale_for",
@@ -64632,9 +64873,9 @@
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_ltr_rationale_67",
-      "target": "app_ltr_score_candidates",
-      "confidence_score": 1.0
+      "target": "app_ltr_score_candidates"
     },
     {
       "relation": "rationale_for",
@@ -69850,6 +70091,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_22",
+      "target": "app_seed_ranker_invalidseedserror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L23",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -69877,6 +70128,16 @@
       "confidence_score": 1.0,
       "source": "app_seed_ranker_rank_seed_set",
       "target": "app_seed_ranker_contentunavailableerror"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_26",
+      "target": "app_seed_ranker_contentunavailableerror",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -69936,6 +70197,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_31",
+      "target": "app_seed_ranker_catalog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L32",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -69977,6 +70248,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_43",
+      "target": "app_seed_ranker_rankfilters",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L44",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -70004,6 +70285,16 @@
       "confidence_score": 1.0,
       "source": "app_seed_ranker_rank_seed_set",
       "target": "app_seed_ranker_rankrequest"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_52",
+      "target": "app_seed_ranker_rankrequest",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -70101,6 +70392,16 @@
       "confidence_score": 1.0,
       "source": "app_seed_ranker_rationale_61",
       "target": "app_seed_ranker_resolve_ranking_mode"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_81",
+      "target": "app_seed_ranker_resolve_ranking_mode",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -70215,6 +70516,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L150",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_150",
+      "target": "app_seed_ranker_rank_seed_set",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L151",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -70240,6 +70551,16 @@
       "confidence_score": 1.0,
       "source": "app_seed_ranker_rationale_239",
       "target": "app_seed_ranker_rank"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L240",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_240",
+      "target": "app_seed_ranker_rank",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -85748,9 +86069,9 @@
       "source_file": "services/reco-api/tests/conftest.py",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_conftest_rationale_32",
-      "target": "tests_conftest_reset_observability_state",
-      "confidence_score": 1.0
+      "target": "tests_conftest_reset_observability_state"
     },
     {
       "relation": "references",
@@ -86153,9 +86474,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_reset_bundle_singleton",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_reset_bundle_singleton"
     },
     {
       "relation": "contains",
@@ -86163,9 +86484,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L76",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_bundle_health_exposes_flat_compatible_keys",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_bundle_health_exposes_flat_compatible_keys"
     },
     {
       "relation": "contains",
@@ -86173,9 +86494,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_content_get_similar_returns_ranked_neighbors",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_content_get_similar_returns_ranked_neighbors"
     },
     {
       "relation": "contains",
@@ -86183,9 +86504,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L108",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_get_default_bundle_caches_until_reset",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_get_default_bundle_caches_until_reset"
     },
     {
       "relation": "contains",
@@ -86193,9 +86514,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L97",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_from_env_uses_monkeypatched_paths",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_from_env_uses_monkeypatched_paths"
     },
     {
       "relation": "contains",
@@ -86203,9 +86524,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_reads_content_and_fusion_defaults",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_reads_content_and_fusion_defaults"
     },
     {
       "relation": "contains",
@@ -86213,9 +86534,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_reads_svd_and_item_cf_fixtures",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_load_artifact_bundle_reads_svd_and_item_cf_fixtures"
     },
     {
       "relation": "contains",
@@ -86223,9 +86544,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L119",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_test_missing_content_embeddings_raises",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_test_missing_content_embeddings_raises"
     },
     {
       "relation": "contains",
@@ -86233,9 +86554,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle",
-      "target": "tests_test_artifact_bundle_write_retrieval_fixtures",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_write_retrieval_fixtures"
     },
     {
       "relation": "rationale_for",
@@ -86243,9 +86564,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle_rationale_1",
-      "target": "tests_test_artifact_bundle",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle"
     },
     {
       "relation": "calls",
@@ -86254,9 +86575,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle_test_bundle_health_exposes_flat_compatible_keys",
-      "target": "tests_test_artifact_bundle_write_retrieval_fixtures",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_write_retrieval_fixtures"
     },
     {
       "relation": "calls",
@@ -86265,9 +86586,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle_test_load_artifact_bundle_from_env_uses_monkeypatched_paths",
-      "target": "tests_test_artifact_bundle_write_retrieval_fixtures",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_write_retrieval_fixtures"
     },
     {
       "relation": "calls",
@@ -86276,9 +86597,9 @@
       "source_file": "services/reco-api/tests/test_artifact_bundle.py",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_artifact_bundle_test_load_artifact_bundle_reads_svd_and_item_cf_fixtures",
-      "target": "tests_test_artifact_bundle_write_retrieval_fixtures",
-      "confidence_score": 1.0
+      "target": "tests_test_artifact_bundle_write_retrieval_fixtures"
     },
     {
       "relation": "contains",
@@ -88407,6 +88728,141 @@
       "confidence_score": 1.0,
       "source": "tests_test_recommendations_filters_test_recommendations_filters_by_year_range",
       "target": "tests_test_recommendations_filters_year_from_title"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_load_test_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_reset_bundle_singleton",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_test_content_retriever_reads_embeddings_from_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_test_item_cf_retriever_reads_neighbors_from_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_test_svd_retriever_does_not_call_artifacts_shim",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_test_svd_retriever_reads_fusion_artifacts_from_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "tests_test_retrievers",
+      "target": "tests_test_retrievers_write_retrieval_fixtures",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_rationale_1",
+      "target": "tests_test_retrievers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_load_test_bundle",
+      "target": "tests_test_retrievers_write_retrieval_fixtures",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_test_content_retriever_reads_embeddings_from_bundle",
+      "target": "tests_test_retrievers_load_test_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_test_item_cf_retriever_reads_neighbors_from_bundle",
+      "target": "tests_test_retrievers_load_test_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_test_svd_retriever_does_not_call_artifacts_shim",
+      "target": "tests_test_retrievers_load_test_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_retrievers.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "tests_test_retrievers_test_svd_retriever_reads_fusion_artifacts_from_bundle",
+      "target": "tests_test_retrievers_load_test_bundle",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -108901,5 +109357,5 @@
       "source_file": "docs/agents/issue-tracker.md"
     }
   ],
-  "built_at_commit": "9f7efcbe947b3591e1e080b12eaeb0f9897ec2e8"
+  "built_at_commit": "c333f153b23b9b1f384977a4afa6cc50f87038cd"
 }
