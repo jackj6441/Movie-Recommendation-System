@@ -68,7 +68,7 @@ export function ChatRecommender() {
       setTurns(active.turns)
       if (active.turns.length > 0) {
         const activeGenres =
-          active.turns.findLast((turn) => turn.final)?.final?.context.genres ?? []
+          active.turns.findLast((turn) => turn.view)?.view?.context.genres ?? []
         setSelectedGenres(activeGenres)
       }
     }
@@ -91,7 +91,7 @@ export function ChatRecommender() {
   )
 
   const hasThread = turns.length > 0
-  const sessionContext = turns.findLast((turn) => turn.final)?.final?.context
+  const sessionContext = turns.findLast((turn) => turn.view)?.view?.context
   const hasSessionSeeds = (sessionContext?.seeds.length ?? 0) > 0
   const hasSessionGenres = (sessionContext?.genres.length ?? 0) > 0
   const composerGenres = hasThread ? [] : selectedGenres
@@ -165,9 +165,9 @@ export function ChatRecommender() {
         year_max: options.year_max,
         disambiguation_genre: options.disambiguation_genre,
       })
-      const apiSessionId = result.final.session_id
+      const apiSessionId = result.view.sessionId
       setSessionId(apiSessionId)
-      const nextGenres = result.final.context.genres
+      const nextGenres = result.view.context.genres
       setSelectedGenres(nextGenres)
       const nextTurns = pendingTurns.map((turn) =>
         turn.id === assistantId
@@ -175,7 +175,7 @@ export function ChatRecommender() {
               ...turn,
               content: result.assistantMessage,
               streaming: false,
-              final: result.final,
+              view: result.view,
             }
           : turn
       )
@@ -341,7 +341,7 @@ export function ChatRecommender() {
     setSessionId(session.apiSessionId)
     setTurns(session.turns)
     const activeGenres =
-      session.turns.findLast((turn) => turn.final)?.final?.context.genres ?? []
+      session.turns.findLast((turn) => turn.view)?.view?.context.genres ?? []
     setSelectedGenres(activeGenres)
     resetComposer()
   }
@@ -371,8 +371,8 @@ export function ChatRecommender() {
   const submitDisambiguation = async (movieIds: number[]) => {
     const lastAssistant = [...turns]
       .reverse()
-      .find((turn) => turn.role === "assistant" && turn.final?.disambiguation_candidates)
-    const candidates = lastAssistant?.final?.disambiguation_candidates ?? []
+      .find((turn) => turn.role === "assistant" && turn.view?.disambiguation)
+    const candidates = lastAssistant?.view?.disambiguation?.candidates ?? []
     const titles = movieIds.map(
       (id) => candidates.find((row) => row.movie_id === id)?.title ?? `Movie ${id}`
     )

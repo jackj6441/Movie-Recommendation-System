@@ -108,7 +108,7 @@ def rank_seed_set(
         result = seed_ranker.rank_seed_set(
             seed_ranker.RankRequest(
                 seed_movie_ids=seed_ids,
-                catalog=catalog.for_ranking(),
+                catalog=catalog,
                 top_k=top_k,
                 fusion_weights=fusion_weights,
                 shuffle=False,

@@ -77,7 +77,7 @@ def test_ranked_list_explanation_topk_uses_content_and_final_scores(load_app):
     seed_ranker = importlib.import_module("app.seed_ranker")
 
     result = seed_ranker.rank_seed_set(
-        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.catalog)
+        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.runtime_catalog)
     )
     assert result.items
     rows = result.explanation_topk()
@@ -104,14 +104,14 @@ def test_rank_seed_set_shuffle_calls_random_shuffle(load_app, monkeypatch):
     )
 
     seed_ranker.rank_seed_set(
-        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.catalog)
+        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.runtime_catalog)
     )
     assert shuffled_lengths == []
 
     result = seed_ranker.rank_seed_set(
         seed_ranker.RankRequest(
             seed_movie_ids=[1, 2, 3],
-            catalog=app_main.catalog,
+            catalog=app_main.runtime_catalog,
             shuffle=True,
         )
     )
@@ -128,7 +128,7 @@ def test_rank_seed_set_applies_request_top_k(load_app):
     result = seed_ranker.rank_seed_set(
         seed_ranker.RankRequest(
             seed_movie_ids=[1, 2, 3],
-            catalog=app_main.catalog,
+            catalog=app_main.runtime_catalog,
             top_k=3,
         )
     )
@@ -144,7 +144,7 @@ def test_rank_seed_set_applies_rank_filters(load_app):
     result = seed_ranker.rank_seed_set(
         seed_ranker.RankRequest(
             seed_movie_ids=[1, 2, 3],
-            catalog=app_main.catalog,
+            catalog=app_main.runtime_catalog,
             filters=seed_ranker.RankFilters(
                 genres=["Comedy"],
                 year_min=1990,
@@ -155,8 +155,8 @@ def test_rank_seed_set_applies_rank_filters(load_app):
 
     assert result.items
     for item in result.items:
-        assert "Comedy" in app_main.catalog.movie_genres[item.movie_id]
-        year = app_main.catalog.movie_years[item.movie_id]
+        assert "Comedy" in app_main.runtime_catalog.movie_genres[item.movie_id]
+        year = app_main.runtime_catalog.movie_years[item.movie_id]
         assert 1990 <= year <= 1999
 
 

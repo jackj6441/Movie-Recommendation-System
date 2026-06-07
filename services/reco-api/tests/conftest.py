@@ -10,6 +10,8 @@ _APP_MODULES = [
     "app.runtime_catalog",
     "app.content",
     "app.rag_chat",
+    "app.rag_chat_events",
+    "app.rag_chat_sse",
     "app.rag_session",
     "app.rag_resolve",
     "app.rag_evidence",

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import inspect
 import sys
 from pathlib import Path
 
@@ -14,7 +13,7 @@ sys.path.insert(0, str(API_ROOT))
 
 from app import rag_chat as rag_chat_service  # noqa: E402
 from app.rag_resolve import ChatContext  # noqa: E402
-from app.runtime_catalog import RuntimeCatalog, load_runtime_catalog  # noqa: E402
+from app.runtime_catalog import load_runtime_catalog  # noqa: E402
 
 
 def _write_movies_csv(path: Path) -> None:
@@ -25,14 +24,7 @@ def _write_movies_csv(path: Path) -> None:
         writer.writerow([2, "Jumanji (1995)", "Adventure|Comedy"])
 
 
-def test_run_chat_turn_sse_accepts_runtime_catalog_only():
-    params = inspect.signature(rag_chat_service.run_chat_turn_sse).parameters
-    assert "catalog" in params
-    assert "catalog_services" not in params
-    assert params["catalog"].annotation in (RuntimeCatalog, "RuntimeCatalog")
-
-
-def test_try_rank_uses_runtime_catalog_view(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+def test_try_rank_passes_runtime_catalog_to_ranker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     movies = tmp_path / "movies.csv"
     _write_movies_csv(movies)
     catalog = load_runtime_catalog(
@@ -56,4 +48,4 @@ def test_try_rank_uses_runtime_catalog_view(monkeypatch: pytest.MonkeyPatch, tmp
         catalog=catalog,
     )
 
-    assert seen["catalog"] == catalog.for_ranking()
+    assert seen["catalog"] is catalog

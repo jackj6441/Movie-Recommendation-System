@@ -42,7 +42,7 @@ describe("postRagChat", () => {
 
     expect(result.tokens).toBe("")
     expect(result.assistantMessage).toBe("Pick a starting movie from the list below.")
-    expect(result.final.needs_disambiguation).toBe(true)
+    expect(result.view.outcome).toBe("disambiguate")
   })
 
   it("serializes explicit year bounds in the request body", async () => {

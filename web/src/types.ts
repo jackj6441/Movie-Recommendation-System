@@ -1,3 +1,5 @@
+import type { ChatTurnView } from "./lib/chatTurnView"
+
 export type MoviePosters = {
   poster_url?: string
   poster_thumb_url?: string
@@ -67,16 +69,18 @@ export type RagChatFinal = {
 
 export type RagChatStreamResult = {
   tokens: string
-  final: RagChatFinal
+  view: ChatTurnView
   assistantMessage: string
 }
+
+export type { ChatTurnView } from "./lib/chatTurnView"
 
 export type ChatTurn = {
   id: string
   role: "user" | "assistant"
   content: string
   streaming?: boolean
-  final?: RagChatFinal
+  view?: ChatTurnView
 }
 
 export type MovieSuggestion = MoviePosters & {

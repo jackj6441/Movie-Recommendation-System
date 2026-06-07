@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from app import posters, seed_ranker
+from app import posters
 from app.rag_resolve import GenreSeedIdsFn, GetTitleFn, SearchMoviesFn
 
 _YEAR_RE = re.compile(r"\((\d{4})\)")
@@ -94,16 +94,6 @@ class RuntimeCatalog:
 
     def as_resolve_hooks(self) -> tuple[SearchMoviesFn, GenreSeedIdsFn, GetTitleFn]:
         return self.search_movies, self.genre_seed_ids, self.get_title
-
-    def for_ranking(self) -> seed_ranker.Catalog:
-        return seed_ranker.Catalog(
-            movie_titles=self.movie_titles,
-            popular_movie_ids=self.popular_movie_ids,
-            candidate_pool=self.candidate_pool,
-            movie_genres=self.movie_genres,
-            movie_years=self.movie_years,
-            movie_popularity=self.movie_popularity,
-        )
 
     def movie_payload(
         self,

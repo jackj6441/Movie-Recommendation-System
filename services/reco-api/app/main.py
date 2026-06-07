@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import content, metrics, posters, seed_ranker
-from app import rag_chat as rag_chat_service
+from app import rag_chat_sse as rag_chat_service
 from app.artifact_bundle import get_default_bundle
 from app.rag_session import GLOBAL_SESSION_STORE
 from app.runtime_catalog import load_runtime_catalog_from_env
@@ -66,8 +66,6 @@ except Exception:
     print("Warning: content embeddings unavailable at startup")
 
 runtime_catalog = load_runtime_catalog_from_env()
-# Ranking view kept for seed_ranker callers and legacy tests (app_main.catalog).
-catalog = runtime_catalog.for_ranking()
 
 poster_lookup = posters.load_poster_lookup(poster_urls_path)
 poster_meta = posters.load_poster_meta(poster_meta_path)
@@ -195,7 +193,7 @@ def recommendations(request: SeedsRequest):
         result = seed_ranker.rank_seed_set(
             seed_ranker.RankRequest(
                 seed_movie_ids=request.seeds,
-                catalog=catalog,
+                catalog=runtime_catalog,
                 filters=seed_ranker.RankFilters(
                     genres=request.genres,
                     year_min=request.year_min,
@@ -232,7 +230,7 @@ def explanations(request: SeedsRequest):
         result = seed_ranker.rank_seed_set(
             seed_ranker.RankRequest(
                 seed_movie_ids=request.seeds,
-                catalog=catalog,
+                catalog=runtime_catalog,
                 filters=seed_ranker.RankFilters(
                     genres=request.genres,
                     year_min=request.year_min,

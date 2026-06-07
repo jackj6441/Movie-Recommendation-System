@@ -1,6 +1,7 @@
 import { apiBase } from "../config"
+import { parseRagChatFinal, toChatTurnView } from "../lib/chatTurnView"
 import { parseSsePayload } from "../lib/parseSse"
-import type { RagChatFinal, RagChatStreamResult } from "../types"
+import type { RagChatStreamResult } from "../types"
 
 export type RagChatRequest = {
   session_id: string | null
@@ -47,10 +48,11 @@ export async function postRagChat(request: RagChatRequest): Promise<RagChatStrea
   if (!finalEntry) {
     throw new Error("Chat response missing final event")
   }
-  const final = finalEntry.data as RagChatFinal
+  const final = parseRagChatFinal(finalEntry.data)
+  const view = toChatTurnView(final, { streamedText: tokens })
   return {
     tokens,
-    final,
-    assistantMessage: final.assistant_message || tokens,
+    view,
+    assistantMessage: view.assistantMessage,
   }
 }

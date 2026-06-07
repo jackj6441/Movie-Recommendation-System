@@ -115,5 +115,5 @@ def test_rank_seed_set_uses_ranking_view(monkeypatch: pytest.MonkeyPatch, tmp_pa
 
     rank_seed_set([1, 2], catalog, top_k=5)
     assert seen["request"].seed_movie_ids == [1, 2]
-    assert seen["request"].catalog == catalog.for_ranking()
+    assert seen["request"].catalog is catalog
     assert seen["request"].top_k == 5

@@ -1,4 +1,4 @@
-"""Conversational RAG chat turns with SSE streaming and deterministic ranking."""
+"""Conversational RAG chat turns with deterministic ranking."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from collections.abc import Iterator
 from typing import Any, Callable
 
 from app import metrics, seed_ranker
+from app.rag_chat_events import ChatTurnEvent, ChatTurnFinal, ChatTurnToken
 from app.rag_evidence import RAG_CHAT_VERSION, build_evidence
 from app.runtime_catalog import RuntimeCatalog
 from app.rag_resolve import (
@@ -40,10 +41,6 @@ SUPPORTED_CHAT_PROVIDERS = {
     "disabled",
     "external",
 }
-
-
-def format_sse(event: str, payload: dict[str, Any]) -> str:
-    return f"event: {event}\ndata: {json.dumps(payload, separators=(',', ':'))}\n\n"
 
 
 def clarification_copy(reason: str) -> str:
@@ -202,7 +199,7 @@ def context_payload(ready: ResolveReady) -> dict[str, Any]:
     return visible_context_payload(ready.context, ready=ready)
 
 
-def run_chat_turn_sse(
+def run_chat_turn(
     *,
     session_store: SessionStore,
     catalog: RuntimeCatalog,
@@ -219,7 +216,7 @@ def run_chat_turn_sse(
     year_min: int | None = None,
     year_max: int | None = None,
     disambiguation_genre: str | None = None,
-) -> Iterator[str]:
+) -> Iterator[ChatTurnEvent]:
     turn_id = str(uuid.uuid4())
     provider = os.getenv("RAG_PROVIDER", "mock").strip()
     started_at = time.perf_counter()
@@ -324,13 +321,13 @@ def run_chat_turn_sse(
         metrics.record_rag_chat_turn("disambiguation", resolved.reason)
         metrics.record_disambiguation_candidate_count(len(resolved.candidates))
         log_chat_turn(session.session_id, turn_id, "disambiguation", started_at)
-        yield format_sse("final", final_payload)
+        yield ChatTurnFinal(payload=final_payload)
         return
 
     if isinstance(resolved, ResolveClarify):
         assistant_message = clarification_copy(resolved.reason)
         for chunk in iter_text_chunks(assistant_message, provider="mock"):
-            yield format_sse("token", {"delta": chunk})
+            yield ChatTurnToken(delta=chunk)
         session.context = ChatContext(
             explicit_seed_ids=list(session.context.explicit_seed_ids),
             genres=normalize_session_genres(genres, session.context),
@@ -362,7 +359,7 @@ def run_chat_turn_sse(
         )
         metrics.record_rag_chat_turn("clarify", resolved.reason)
         log_chat_turn(session.session_id, turn_id, "clarify", started_at)
-        yield format_sse("final", final_payload)
+        yield ChatTurnFinal(payload=final_payload)
         return
 
     assert isinstance(resolved, ResolveReady)
@@ -403,7 +400,7 @@ def run_chat_turn_sse(
             ranking_mode=seed_ranker.active_ranking_mode_label(),
         )
         log_chat_turn(session.session_id, turn_id, "error", started_at)
-        yield format_sse("final", final_payload)
+        yield ChatTurnFinal(payload=final_payload)
         return
 
     if rank_result is not None and rank_result.items:
@@ -418,7 +415,7 @@ def run_chat_turn_sse(
     if rank_result is not None and not rank_result.items:
         assistant_message = clarification_copy("empty_recommendations")
         for chunk in iter_text_chunks(assistant_message, provider="mock"):
-            yield format_sse("token", {"delta": chunk})
+            yield ChatTurnToken(delta=chunk)
         session_store.append_message(session, "assistant", assistant_message, turn_id=turn_id)
         empty_payload = _base_final_payload(
             session=session,
@@ -448,7 +445,7 @@ def run_chat_turn_sse(
         )
         metrics.record_rag_chat_turn("clarify", "empty_recommendations")
         log_chat_turn(session.session_id, turn_id, "clarify", started_at)
-        yield format_sse("final", empty_payload)
+        yield ChatTurnFinal(payload=empty_payload)
         return
 
     if evidence is None:
@@ -474,7 +471,7 @@ def run_chat_turn_sse(
 
     stream_provider = "mock_sse_slow" if provider == "mock_sse_slow" else "mock"
     for chunk in iter_text_chunks(assistant_message, provider=stream_provider):
-        yield format_sse("token", {"delta": chunk})
+        yield ChatTurnToken(delta=chunk)
 
     session_store.append_message(session, "assistant", assistant_message, turn_id=turn_id)
     final_payload = _base_final_payload(
@@ -512,7 +509,7 @@ def run_chat_turn_sse(
     else:
         metrics.record_rag_chat_turn("fallback", chat_fallback_reason)
         log_chat_turn(session.session_id, turn_id, "fallback", started_at)
-    yield format_sse("final", final_payload)
+    yield ChatTurnFinal(payload=final_payload)
 
 
 def try_rank(
@@ -522,12 +519,11 @@ def try_rank(
     shuffle: bool,
     catalog: RuntimeCatalog,
 ) -> tuple[RankedList | None, str | None]:
-    ranking_catalog = catalog.for_ranking()
     try:
         result = seed_ranker.rank_seed_set(
             seed_ranker.RankRequest(
                 seed_movie_ids=ranking_seed_ids,
-                catalog=ranking_catalog,
+                catalog=catalog,
                 filters=seed_ranker.RankFilters(
                     genres=context.genres or None,
                     year_min=context.year_min,

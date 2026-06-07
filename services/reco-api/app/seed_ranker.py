@@ -9,12 +9,15 @@ from __future__ import annotations
 import os
 import random
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from app.artifact_bundle import get_default_bundle
 from app.fusion import CANDIDATE_CAP, CHANNELS, feature_rows, fuse, merge_candidate_ids
 from app import ltr as ltr_ranker
 from app.retrievers import content_retriever, item_cf, popularity, svd
+
+if TYPE_CHECKING:
+    from app.runtime_catalog import RuntimeCatalog
 
 TOP_K = 24
 
@@ -25,18 +28,6 @@ class InvalidSeedsError(Exception):
 
 class ContentUnavailableError(Exception):
     """Raised when content embeddings cannot be retrieved for the validated seeds."""
-
-
-@dataclass(frozen=True)
-class Catalog:
-    """Immutable snapshot of the movie catalog needed for ranking."""
-
-    movie_titles: dict[int, str]
-    popular_movie_ids: list[int]
-    candidate_pool: int
-    movie_genres: dict[int, list[str]] = field(default_factory=dict)
-    movie_years: dict[int, int] = field(default_factory=dict)
-    movie_popularity: dict[int, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -53,7 +44,7 @@ class RankRequest:
     """Ranker-owned request shape for turning a Seed Set into a Ranked List."""
 
     seed_movie_ids: list[int]
-    catalog: Catalog
+    catalog: RuntimeCatalog
     filters: RankFilters = field(default_factory=RankFilters)
     top_k: int = TOP_K
     fusion_weights: Optional[dict[str, float]] = None
@@ -108,7 +99,7 @@ def active_ranking_mode_label() -> str:
 def collect_channel_hits(
     valid_seeds: list[int],
     exclude: set[int],
-    catalog: Catalog,
+    catalog: RuntimeCatalog,
 ) -> dict[str, list[tuple[int, float]]]:
     return {
         "content": content_retriever.retrieve(valid_seeds, exclude),
@@ -124,7 +115,7 @@ def collect_channel_hits(
 
 def _passes_filters(
     movie_id: int,
-    catalog: Catalog,
+    catalog: RuntimeCatalog,
     genre_set: set[str],
     year_min: Optional[int],
     year_max: Optional[int],
@@ -146,7 +137,7 @@ def _passes_filters(
 
 def _filter_candidate_ids(
     candidate_ids: list[int],
-    catalog: Catalog,
+    catalog: RuntimeCatalog,
     genre_set: set[str],
     year_min: Optional[int],
     year_max: Optional[int],
@@ -160,7 +151,7 @@ def _filter_candidate_ids(
     ]
 
 
-def _candidate_cap(catalog: Catalog, filters: RankFilters) -> int:
+def _candidate_cap(catalog: RuntimeCatalog, filters: RankFilters) -> int:
     has_filters = bool(filters.genres) or filters.year_min is not None or filters.year_max is not None
     if has_filters:
         return catalog.candidate_pool

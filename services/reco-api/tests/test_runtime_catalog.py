@@ -100,24 +100,6 @@ def test_popularity_fallback_from_ratings(tmp_path: Path):
     assert catalog.num_items == 2
 
 
-def test_for_ranking_view_matches_seed_ranker_catalog(tmp_path: Path):
-    movies = tmp_path / "movies.csv"
-    _write_movies_csv(movies, [(1, "A (2000)", "Comedy")])
-    catalog = runtime_catalog.load_runtime_catalog(
-        movies_csv_path=movies,
-        ratings_csv_path=tmp_path / "ratings.csv",
-        serving_stats_path=tmp_path / "stats.json",
-        candidate_pool=123,
-    )
-    ranking = catalog.for_ranking()
-    assert ranking.movie_titles == catalog.movie_titles
-    assert ranking.movie_genres == catalog.movie_genres
-    assert ranking.movie_years == catalog.movie_years
-    assert ranking.movie_popularity == catalog.movie_popularity
-    assert ranking.popular_movie_ids == catalog.popular_movie_ids
-    assert ranking.candidate_pool == 123
-
-
 def test_search_movies_substring_case_insensitive(tmp_path: Path):
     movies = tmp_path / "movies.csv"
     _write_movies_csv(

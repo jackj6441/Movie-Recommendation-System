@@ -556,6 +556,10 @@ def test_rag_chat_caps_recommendations_at_ten(load_app, monkeypatch):
 
 
 def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
+    import importlib
+
+    seed_ranker = importlib.import_module("app.seed_ranker")
+
     def empty_rank(request):
         seeds = list(request.seed_movie_ids)
         return RankedList(
@@ -565,7 +569,7 @@ def test_rag_chat_empty_recommendations_clarifies(load_app, monkeypatch):
             similar_movies=[],
         )
 
-    monkeypatch.setattr(rag_chat_service.seed_ranker, "rank_seed_set", empty_rank)
+    monkeypatch.setattr(seed_ranker, "rank_seed_set", empty_rank)
     client = TestClient(load_app)
     final_payload = final_event(
         parse_sse(

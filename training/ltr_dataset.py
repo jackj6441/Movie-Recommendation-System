@@ -53,7 +53,6 @@ def build_training_arrays(
     ratings = ratings.sort_values(sort_cols)
 
     eval_catalog = load_eval_catalog(movies_csv, serving_stats_json, ratings_csv)
-    serving_catalog = eval_catalog.for_ranking()
 
     feature_rows_list: list[list[float]] = []
     labels: list[int] = []
@@ -71,13 +70,13 @@ def build_training_arrays(
         seed_ids = [int(row.movieId) for row in rows[:-1]][-5:]
         user_ratings = {int(row.movieId): float(row.rating) for row in rows}
 
-        valid_seeds = [mid for mid in seed_ids if mid in serving_catalog.movie_titles]
+        valid_seeds = [mid for mid in seed_ids if mid in eval_catalog.movie_titles]
         valid_seeds = content.filter_movie_ids(valid_seeds)
         if not valid_seeds:
             continue
 
         exclude = set(valid_seeds)
-        channel_hits = collect_channel_hits(valid_seeds, exclude, serving_catalog)
+        channel_hits = collect_channel_hits(valid_seeds, exclude, eval_catalog)
         merged_ids = merge_candidate_ids(channel_hits)
         if target not in merged_ids:
             continue

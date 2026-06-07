@@ -1,4 +1,5 @@
 import type { ChatTurn } from "../types"
+import { normalizeChatTurn } from "./chatTurnView"
 
 export type StoredChatSession = {
   id: string
@@ -16,7 +17,14 @@ function readSessions(): StoredChatSession[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as StoredChatSession[]
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed)
+      ? parsed.map((session) => ({
+          ...session,
+          turns: Array.isArray(session.turns)
+            ? session.turns.map((turn) => normalizeChatTurn(turn))
+            : [],
+        }))
+      : []
   } catch {
     return []
   }

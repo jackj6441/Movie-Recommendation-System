@@ -31,24 +31,24 @@ export function ChatThread({
         >
           <span className="chat-bubble-label">{turn.role === "user" ? "You" : "Assistant"}</span>
           <p className="chat-bubble-text">{turn.content || (turn.streaming ? "…" : "")}</p>
-          {turn.role === "assistant" && turn.final?.needs_disambiguation && turn.final.disambiguation_candidates && onDisambiguationSubmit && (
+          {turn.role === "assistant" && turn.view?.outcome === "disambiguate" && turn.view.disambiguation && onDisambiguationSubmit && (
             <DisambiguationPicker
-              candidates={turn.final.disambiguation_candidates}
-              genreOptions={turn.final.disambiguation_genre_options}
+              candidates={turn.view.disambiguation.candidates}
+              genreOptions={turn.view.disambiguation.genreOptions}
               disabled={pickerDisabled}
               onSubmit={onDisambiguationSubmit}
               onGenrePick={onDisambiguationGenrePick}
             />
           )}
-          {turn.role === "assistant" && turn.final?.recommendations && (
+          {turn.role === "assistant" && turn.view?.recommendations && (
             <ChatRecommendationBlock
-              data={turn.final.recommendations}
+              data={turn.view.recommendations}
               onMoreLike={onMoreLike}
               moreLikeDisabled={moreLikeDisabled}
             />
           )}
-          {turn.role === "assistant" && turn.final?.debug && (
-            <ChatDebugPanel debug={turn.final.debug} />
+          {turn.role === "assistant" && turn.view?.debug && (
+            <ChatDebugPanel debug={turn.view.debug} />
           )}
         </article>
       ))}
