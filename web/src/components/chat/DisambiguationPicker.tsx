@@ -3,7 +3,6 @@ import type { DisambiguationCandidate } from "../../types"
 import { formatTitle } from "../../utils/format"
 
 const MAX_PICKS = 5
-const POSTER_OVERLAY = "linear-gradient(180deg, rgba(20, 18, 16, 0.05), rgba(20, 18, 16, 0.85))"
 
 type DisambiguationPickerProps = {
   candidates: DisambiguationCandidate[]
@@ -11,6 +10,62 @@ type DisambiguationPickerProps = {
   disabled?: boolean
   onSubmit: (movieIds: number[]) => void
   onGenrePick?: (genre: string) => void
+}
+
+function DisambiguationFrame({
+  candidate,
+  isSelected,
+  disabled,
+  atLimit,
+  onToggle,
+}: {
+  candidate: DisambiguationCandidate
+  isSelected: boolean
+  disabled: boolean
+  atLimit: boolean
+  onToggle: () => void
+}) {
+  const [posterHidden, setPosterHidden] = useState(false)
+  const posterUrl = candidate.poster_thumb_url ?? candidate.poster_url
+  const showPoster = Boolean(posterUrl) && !posterHidden
+  const label = formatTitle(candidate.title)
+  const yearSuffix = candidate.year != null ? ` (${candidate.year})` : ""
+  const genreLine = candidate.genres?.length ? candidate.genres.join(", ") : null
+
+  return (
+    <div className="disambiguation-shelf-item">
+      <button
+        type="button"
+        className={`disambiguation-frame${isSelected ? " is-selected" : ""}${
+          showPoster ? " has-poster" : ""
+        }`}
+        aria-pressed={isSelected}
+        aria-label={`${label}${yearSuffix}`}
+        disabled={disabled || atLimit}
+        onClick={onToggle}
+      >
+        {showPoster && posterUrl ? (
+          <img
+            className="disambiguation-frame__poster"
+            src={posterUrl}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            onError={() => setPosterHidden(true)}
+          />
+        ) : (
+          <div className="disambiguation-frame__fallback" aria-hidden="true" />
+        )}
+      </button>
+      <p className="disambiguation-shelf-caption">
+        <span className="disambiguation-shelf-title">
+          {label}
+          {yearSuffix}
+        </span>
+        {genreLine && <span className="disambiguation-shelf-genres">{genreLine}</span>}
+      </p>
+    </div>
+  )
 }
 
 export function DisambiguationPicker({
@@ -56,46 +111,23 @@ export function DisambiguationPicker({
       <div className="disambiguation-picker-grid">
         {candidates.map((candidate) => {
           const isSelected = selected.includes(candidate.movie_id)
-          const posterUrl = candidate.poster_thumb_url ?? candidate.poster_url
-          const label = formatTitle(candidate.title)
-          const yearSuffix = candidate.year != null ? ` (${candidate.year})` : ""
-          const genreLine = candidate.genres?.length ? candidate.genres.join(", ") : null
           const atLimit = !isSelected && selected.length >= MAX_PICKS
 
           return (
-            <button
+            <DisambiguationFrame
               key={candidate.movie_id}
-              type="button"
-              className={`disambiguation-poster-card${isSelected ? " is-selected" : ""}${
-                posterUrl ? " has-poster" : ""
-              }`}
-              aria-pressed={isSelected}
-              disabled={disabled || atLimit}
-              style={
-                posterUrl
-                  ? {
-                      backgroundImage: `${POSTER_OVERLAY}, url(${posterUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }
-                  : undefined
-              }
-              onClick={() => toggle(candidate.movie_id)}
-            >
-              <span className="disambiguation-poster-title">
-                {label}
-                {yearSuffix}
-              </span>
-              {genreLine && (
-                <span className="disambiguation-poster-genres">{genreLine}</span>
-              )}
-            </button>
+              candidate={candidate}
+              isSelected={isSelected}
+              disabled={disabled}
+              atLimit={atLimit}
+              onToggle={() => toggle(candidate.movie_id)}
+            />
           )
         })}
       </div>
       <button
         type="button"
-        className="chat-send-btn"
+        className="chat-send-btn disambiguation-submit"
         disabled={disabled || selected.length === 0}
         onClick={() => onSubmit(selected)}
       >

@@ -1,42 +1,62 @@
 :root {
-  --color-page-bg: #f5efe6;
-  --color-surface: #fff8f0;
-  --color-surface-muted: #fff8f0;
-  --color-text: #2b2a28;
-  --color-muted: #5f5a54;
-  --color-subtle: #736c65;
-  --color-surface-hover: #f4efe7;
-  --color-surface-raised: #ffffff;
-  --color-on-primary: #fffdf9;
-  --color-chip-hover: #a89f92;
-  --color-chart-baseline: #9a8f82;
-  --color-row-divider: #f1ece4;
-  --color-disabled: #b5c9bd;
-  --color-film-1: #34291f;
-  --color-film-2: #1c1916;
-  --color-primary-subtle: rgba(47, 133, 90, 0.12);
-  --color-primary-glow: rgba(47, 133, 90, 0.28);
-  --color-error-subtle: rgba(197, 48, 48, 0.06);
-  --color-error-border: rgba(197, 48, 48, 0.24);
-  --color-warn-subtle: rgba(192, 86, 33, 0.06);
-  --color-poster-on-image: #fffaf2;
-  --color-poster-scrim-top: rgba(20, 18, 16, 0.05);
-  --color-poster-scrim-bottom: rgba(20, 18, 16, 0.85);
-  --color-refetch-veil: rgba(251, 250, 247, 0.72);
-  --color-overlay-hover: rgba(0, 0, 0, 0.06);
-  --color-overlay-seed-remove: rgba(0, 0, 0, 0.07);
-  --color-border: #d7cfc4;
-  --color-border-soft: #efe7db;
-  --color-primary: #2f855a;
-  --color-primary-hover: #3a9b6c;
-  --color-warn: #c05621;
-  --color-error: #c53030;
+  /* ── Hero Shelf palette (OKLCH, warm evening living room) ── */
+  --color-page-bg: oklch(0.96 0.012 78);
+  --color-surface: oklch(0.98 0.008 78);
+  --color-surface-muted: oklch(0.97 0.01 78);
+  --color-surface-hover: oklch(0.94 0.014 78);
+  --color-surface-raised: oklch(0.99 0.006 78);
+  --color-text: oklch(0.28 0.012 68);
+  --color-muted: oklch(0.48 0.014 68);
+  --color-subtle: oklch(0.55 0.012 68);
+  --color-on-primary: oklch(0.98 0.008 84);
+  --color-chip-hover: oklch(0.62 0.018 72);
+  --color-chart-baseline: oklch(0.58 0.02 72);
+  --color-row-divider: oklch(0.92 0.01 78);
+  --color-disabled: oklch(0.72 0.03 145);
+  --color-film-1: oklch(0.28 0.02 68);
+  --color-film-2: oklch(0.18 0.015 68);
+  --color-primary-subtle: oklch(0.52 0.1 145 / 0.12);
+  --color-primary-glow: oklch(0.52 0.1 145 / 0.22);
+  --color-error-subtle: oklch(0.55 0.18 25 / 0.08);
+  --color-error-border: oklch(0.55 0.18 25 / 0.28);
+  --color-warn-subtle: oklch(0.58 0.14 45 / 0.08);
+  --color-poster-on-image: oklch(0.98 0.01 84);
+  --color-poster-scrim-top: oklch(0.15 0.01 68 / 0.05);
+  --color-poster-scrim-bottom: oklch(0.15 0.01 68 / 0.82);
+  --color-refetch-veil: oklch(0.96 0.012 78 / 0.78);
+  --color-overlay-hover: oklch(0.2 0.01 68 / 0.06);
+  --color-overlay-seed-remove: oklch(0.2 0.01 68 / 0.08);
+  --color-border: oklch(0.84 0.018 74);
+  --color-border-soft: oklch(0.91 0.012 78);
+  --color-primary: oklch(0.52 0.1 145);
+  --color-primary-hover: oklch(0.56 0.11 145);
+  --color-warn: oklch(0.58 0.14 45);
+  --color-error: oklch(0.55 0.18 25);
+
+  /* ── Frame primitives (Living Room Shelf) ── */
+  --frame-border: oklch(0.78 0.016 74);
+  --frame-border-selected: oklch(0.52 0.1 145);
+  --frame-radius: 6px;
+  --frame-radius-hero: 8px;
+  --shadow-frame: 2px 6px 14px oklch(0.25 0.02 68 / 0.14);
+  --shadow-frame-hover: 3px 10px 20px oklch(0.25 0.02 68 / 0.2);
+  --hero-max-width: 26.25rem;
+  --hero-aspect-ratio: 2 / 3;
+  --strip-tile-width: 7.25rem;
+  --strip-tile-min-width: 6.5rem;
+
+  /* ── Typography ── */
   --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-ui: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* ── Radius ── */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 18px;
   --radius-pill: 999px;
+
+  /* ── Spacing ── */
   --space-2xs: 0.25rem;
   --space-xs: 0.5rem;
   --space-sm: 0.75rem;
@@ -45,10 +65,20 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
+
+  /* ── Layout ── */
   --page-max: 1360px;
-  --shadow-sm: 0 2px 8px rgba(39, 30, 14, 0.04);
-  --shadow-md: 0 12px 28px rgba(39, 30, 14, 0.06);
-  --shadow-lg: 0 20px 36px rgba(39, 30, 14, 0.08);
-  --shadow-xl: 0 24px 48px rgba(24, 20, 16, 0.28);
+  --chat-max: 52rem;
+  --chat-max-with-rail: 72rem;
+
+  /* ── Elevation ── */
+  --shadow-sm: 0 2px 8px oklch(0.25 0.02 68 / 0.06);
+  --shadow-md: 0 10px 24px oklch(0.25 0.02 68 / 0.08);
+  --shadow-lg: 0 18px 32px oklch(0.25 0.02 68 / 0.1);
+  --shadow-xl: 0 22px 40px oklch(0.2 0.02 68 / 0.18);
+
+  /* ── Motion ── */
   --ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-fast: 140ms;
+  --duration-normal: 200ms;
 }

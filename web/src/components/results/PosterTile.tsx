@@ -2,8 +2,6 @@ import { useState } from "react"
 import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 
-const POSTER_OVERLAY = "linear-gradient(180deg, rgba(20, 18, 16, 0.05), rgba(20, 18, 16, 0.85))"
-
 type PosterTileProps = {
   item: RecommendationItem
   rank?: number
@@ -12,6 +10,30 @@ type PosterTileProps = {
   addSeedDisabled?: boolean
   isInSeeds?: boolean
   seedSetFull?: boolean
+}
+
+function PosterArt({
+  showPoster,
+  posterUrl,
+  onPosterError,
+}: {
+  showPoster: boolean
+  posterUrl?: string
+  onPosterError: () => void
+}) {
+  if (showPoster && posterUrl) {
+    return (
+      <img
+        className="poster-tile__poster"
+        src={posterUrl}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={onPosterError}
+      />
+    )
+  }
+  return <div className="poster-tile__fallback" aria-hidden="true" />
 }
 
 export function PosterTile({
@@ -26,67 +48,56 @@ export function PosterTile({
   const [posterHidden, setPosterHidden] = useState(false)
   const showPoster = Boolean(item.poster_url) && !posterHidden
   const label = formatTitle(item.title)
-  const className = `poster-tile${variant === "strip" ? " poster-tile--strip" : ""}${
+  const isStrip = variant === "strip"
+  const frameClass = `poster-tile${isStrip ? " poster-tile--strip" : ""}${
     showPoster ? " has-poster" : ""
   }${isInSeeds ? " is-in-seeds" : ""}${onAddSeed && seedSetFull ? " is-at-limit" : ""}${
     onAddSeed ? " poster-tile--interactive" : ""
   }`
-  const posterStyle = showPoster
-    ? {
-        backgroundImage: `${POSTER_OVERLAY}, url(${item.poster_url})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : undefined
-  const content = (
+  const onPosterError = () => setPosterHidden(true)
+
+  const frameBody = (
     <>
-      {item.poster_url && (
-        <img
-          className="poster-tile-probe"
-          src={item.poster_url}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          onError={() => setPosterHidden(true)}
-        />
-      )}
+      <PosterArt
+        showPoster={showPoster}
+        posterUrl={item.poster_url}
+        onPosterError={onPosterError}
+      />
       {rank != null && <span className="poster-rank">{`#${rank}`}</span>}
-      <h3 className="poster-tile-title">{label}</h3>
     </>
   )
 
-  if (isInSeeds) {
-    return (
-      <article
-        className={className}
-        style={posterStyle}
-        aria-label={`${label} is in your starting movies`}
-      >
-        {content}
-      </article>
-    )
-  }
-
-  if (onAddSeed) {
-    const atLimit = seedSetFull
-    return (
+  const frame =
+    onAddSeed && !isInSeeds ? (
       <button
         type="button"
-        className={className}
-        style={posterStyle}
-        disabled={addSeedDisabled || atLimit}
-        title={atLimit ? "Seed set full (max 5)" : undefined}
+        className={frameClass}
+        disabled={addSeedDisabled || seedSetFull}
+        title={seedSetFull ? "Seed set full (max 5)" : undefined}
         aria-label={`Add ${label} to starting movies`}
         onClick={onAddSeed}
       >
-        {content}
+        {frameBody}
       </button>
+    ) : (
+      <div className={frameClass} aria-label={isInSeeds ? `${label} is in your starting movies` : undefined}>
+        {frameBody}
+      </div>
+    )
+
+  if (isStrip) {
+    return (
+      <div className="poster-shelf-item">
+        {frame}
+        <p className="poster-shelf-caption">{label}</p>
+      </div>
     )
   }
 
   return (
-    <article className={className} style={posterStyle}>
-      {content}
-    </article>
+    <div className="poster-shelf-item poster-shelf-item--default">
+      {frame}
+      <h3 className="poster-shelf-caption poster-shelf-caption--title">{label}</h3>
+    </div>
   )
 }

@@ -1100,7 +1100,7 @@ describe("App conversational RAG chat", () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole("button", { name: "System Evidence" }))
+    await user.click(screen.getByRole("tab", { name: "System Evidence" }))
 
     expect(await screen.findByRole("heading", { name: "System Evidence" })).toBeInTheDocument()
     expect(screen.getByText("RAG chat p95")).toBeInTheDocument()

@@ -30,7 +30,7 @@ export function ChatRecommendationBlock({
   const heroAddState = seedAddState(hero.movie_id, seedMovieIds)
 
   return (
-    <div className="chat-rec-block">
+    <section className="chat-rec-block" aria-label="Recommendations">
       <HeroPick
         item={hero}
         isInSeeds={heroAddState.isInSeeds}
@@ -50,6 +50,6 @@ export function ChatRecommendationBlock({
           addSeedDisabled={addSeedDisabled}
         />
       )}
-    </div>
+    </section>
   )
 }

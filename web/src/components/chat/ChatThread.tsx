@@ -24,36 +24,49 @@ export function ChatThread({
 }: ChatThreadProps) {
   return (
     <div className="chat-thread" role="log" aria-live="polite" aria-relevant="additions text">
-      {turns.map((turn) => (
-        <article
-          key={turn.id}
-          data-turn-id={turn.id}
-          className={`chat-bubble chat-bubble--${turn.role}${turn.streaming ? " is-streaming" : ""}`}
-        >
-          <span className="chat-bubble-label">{turn.role === "user" ? "You" : "Assistant"}</span>
-          <p className="chat-bubble-text">{turn.content || (turn.streaming ? "…" : "")}</p>
-          {turn.role === "assistant" && turn.view?.outcome === "disambiguate" && turn.view.disambiguation && onDisambiguationSubmit && (
-            <DisambiguationPicker
-              candidates={turn.view.disambiguation.candidates}
-              genreOptions={turn.view.disambiguation.genreOptions}
-              disabled={pickerDisabled}
-              onSubmit={onDisambiguationSubmit}
-              onGenrePick={onDisambiguationGenrePick}
-            />
-          )}
-          {turn.role === "assistant" && turn.view?.recommendations && (
-            <ChatRecommendationBlock
-              data={turn.view.recommendations}
-              seedMovieIds={seedMovieIds}
-              onAddSeed={onAddSeed}
-              addSeedDisabled={addSeedDisabled}
-            />
-          )}
-          {turn.role === "assistant" && turn.view?.debug && (
-            <ChatDebugPanel debug={turn.view.debug} />
-          )}
-        </article>
-      ))}
+      {turns.map((turn) => {
+        const isUser = turn.role === "user"
+
+        return (
+          <article
+            key={turn.id}
+            data-turn-id={turn.id}
+            className={`chat-turn chat-bubble chat-bubble--${turn.role}${
+              turn.streaming ? " is-streaming" : ""
+            }`}
+          >
+            <span className="chat-turn-label">{isUser ? "You" : "Assistant"}</span>
+            {turn.content || turn.streaming ? (
+              <p className="chat-turn-text chat-bubble-text">
+                {turn.content || (turn.streaming ? "…" : "")}
+              </p>
+            ) : null}
+            {turn.role === "assistant" &&
+              turn.view?.outcome === "disambiguate" &&
+              turn.view.disambiguation &&
+              onDisambiguationSubmit && (
+                <DisambiguationPicker
+                  candidates={turn.view.disambiguation.candidates}
+                  genreOptions={turn.view.disambiguation.genreOptions}
+                  disabled={pickerDisabled}
+                  onSubmit={onDisambiguationSubmit}
+                  onGenrePick={onDisambiguationGenrePick}
+                />
+              )}
+            {turn.role === "assistant" && turn.view?.recommendations && (
+              <ChatRecommendationBlock
+                data={turn.view.recommendations}
+                seedMovieIds={seedMovieIds}
+                onAddSeed={onAddSeed}
+                addSeedDisabled={addSeedDisabled}
+              />
+            )}
+            {turn.role === "assistant" && turn.view?.debug && (
+              <ChatDebugPanel debug={turn.view.debug} />
+            )}
+          </article>
+        )
+      })}
     </div>
   )
 }

@@ -3,6 +3,8 @@ import type { StoredChatSession } from "../../lib/chatSessionStore"
 type ChatSessionSidebarProps = {
   sessions: StoredChatSession[]
   activeSessionId: string | null
+  open?: boolean
+  onClose?: () => void
   onNewChat: () => void
   onSelectSession: (sessionId: string) => void
   onDeleteSession: (sessionId: string) => void
@@ -12,6 +14,8 @@ type ChatSessionSidebarProps = {
 export function ChatSessionSidebar({
   sessions,
   activeSessionId,
+  open = false,
+  onClose,
   onNewChat,
   onSelectSession,
   onDeleteSession,
@@ -19,13 +23,43 @@ export function ChatSessionSidebar({
 }: ChatSessionSidebarProps) {
   const active = sessions.find((row) => row.id === activeSessionId)
 
+  const handleSelectSession = (sessionId: string) => {
+    onSelectSession(sessionId)
+    onClose?.()
+  }
+
+  const handleNewChat = () => {
+    onNewChat()
+    onClose?.()
+  }
+
+  const handleJumpToTurn = (turnId: string) => {
+    onJumpToTurn(turnId)
+    onClose?.()
+  }
+
   return (
-    <aside className="chat-session-sidebar" aria-label="Chat history">
+    <aside
+      className={`chat-session-sidebar${open ? " is-drawer-open" : ""}`}
+      aria-label="Chat history"
+    >
       <div className="chat-session-sidebar-header">
         <h2 className="chat-session-sidebar-title">Chats</h2>
-        <button type="button" className="chat-session-new-btn" onClick={onNewChat}>
-          New chat
-        </button>
+        <div className="chat-session-sidebar-actions">
+          <button type="button" className="chat-session-new-btn" onClick={handleNewChat}>
+            New chat
+          </button>
+          {onClose && (
+            <button
+              type="button"
+              className="chat-session-close-btn"
+              aria-label="Close chat history"
+              onClick={onClose}
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       <ul className="chat-session-list">
@@ -34,7 +68,7 @@ export function ChatSessionSidebar({
             <button
               type="button"
               className={`chat-session-link${session.id === activeSessionId ? " is-active" : ""}`}
-              onClick={() => onSelectSession(session.id)}
+              onClick={() => handleSelectSession(session.id)}
             >
               {session.title}
             </button>
@@ -61,7 +95,7 @@ export function ChatSessionSidebar({
                   <button
                     type="button"
                     className="chat-session-turn-link"
-                    onClick={() => onJumpToTurn(turn.id)}
+                    onClick={() => handleJumpToTurn(turn.id)}
                   >
                     {turn.content}
                   </button>

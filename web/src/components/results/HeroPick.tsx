@@ -2,11 +2,6 @@ import { useState } from "react"
 import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 
-const HERO_SCRIM = [
-  "linear-gradient(90deg, rgba(19, 27, 24, 0.92) 0%, rgba(19, 27, 24, 0.72) 39%, rgba(19, 27, 24, 0.2) 70%, rgba(19, 27, 24, 0.08) 100%)",
-  "linear-gradient(180deg, rgba(19, 27, 24, 0.08), rgba(19, 27, 24, 0.42))",
-].join(", ")
-
 type HeroPickProps = {
   item: RecommendationItem
   onAddSeed?: () => void
@@ -15,13 +10,43 @@ type HeroPickProps = {
   seedSetFull?: boolean
 }
 
-function heroBody(item: RecommendationItem) {
+function HeroPoster({
+  showPoster,
+  posterUrl,
+  onPosterError,
+}: {
+  showPoster: boolean
+  posterUrl?: string
+  onPosterError: () => void
+}) {
+  if (showPoster && posterUrl) {
+    return (
+      <img
+        className="hero-pick__poster"
+        src={posterUrl}
+        alt=""
+        onError={onPosterError}
+      />
+    )
+  }
+  return <div className="hero-pick__fallback" aria-hidden="true" />
+}
+
+function HeroCaption({
+  label,
+  isInSeeds,
+}: {
+  label: string
+  isInSeeds: boolean
+}) {
   return (
-    <>
-      <span className="hero-rank">#1</span>
-      <span className="hero-kicker">Tonight&apos;s strongest match</span>
-      <h2 className="hero-title">{formatTitle(item.title)}</h2>
-    </>
+    <div className="hero-pick__caption">
+      <span className="hero-pick__label">#1 · Top pick</span>
+      <h2 className="hero-pick__title">{label}</h2>
+      {isInSeeds && (
+        <span className="hero-pick__status">In your starting movies</span>
+      )}
+    </div>
   )
 }
 
@@ -35,58 +60,45 @@ export function HeroPick({
   const [posterHidden, setPosterHidden] = useState(false)
   const showPoster = Boolean(item.poster_url) && !posterHidden
   const label = formatTitle(item.title)
-  const posterStyle = showPoster
-    ? { backgroundImage: `${HERO_SCRIM}, url(${item.poster_url})` }
-    : undefined
-  const posterProbe = item.poster_url ? (
-    <img
-      className="hero-pick-probe"
-      src={item.poster_url}
-      alt=""
-      onError={() => setPosterHidden(true)}
-    />
-  ) : null
+  const shelfClass = `hero-pick${showPoster ? " has-poster" : ""}${
+    isInSeeds ? " is-in-seeds" : ""
+  }`
+  const onPosterError = () => setPosterHidden(true)
 
-  if (isInSeeds) {
-    return (
-      <article
-        className={`hero-pick is-in-seeds${showPoster ? " has-poster" : ""}`}
-        style={posterStyle}
-        aria-label={`${label} is in your starting movies`}
-      >
-        {posterProbe}
-        <div className="hero-pick-body">{heroBody(item)}</div>
-      </article>
-    )
-  }
-
-  if (onAddSeed) {
-    const atLimit = seedSetFull
-    return (
-      <button
-        type="button"
-        className={`hero-pick hero-pick--interactive${atLimit ? " is-at-limit" : ""}${
-          showPoster ? " has-poster" : ""
-        }`}
-        style={posterStyle}
-        disabled={addSeedDisabled || atLimit}
-        title={atLimit ? "Seed set full (max 5)" : undefined}
-        aria-label={`Add ${label} to starting movies`}
-        onClick={onAddSeed}
-      >
-        {posterProbe}
-        <div className="hero-pick-body">{heroBody(item)}</div>
-      </button>
-    )
-  }
+  const frame = onAddSeed && !isInSeeds ? (
+    <button
+      type="button"
+      className={`hero-pick__frame hero-pick--interactive${
+        seedSetFull ? " is-at-limit" : ""
+      }`}
+      disabled={addSeedDisabled || seedSetFull}
+      title={seedSetFull ? "Seed set full (max 5)" : undefined}
+      aria-label={`Add ${label} to starting movies`}
+      onClick={onAddSeed}
+    >
+      <HeroPoster
+        showPoster={showPoster}
+        posterUrl={item.poster_url}
+        onPosterError={onPosterError}
+      />
+    </button>
+  ) : (
+    <div className="hero-pick__frame">
+      <HeroPoster
+        showPoster={showPoster}
+        posterUrl={item.poster_url}
+        onPosterError={onPosterError}
+      />
+    </div>
+  )
 
   return (
     <article
-      className={`hero-pick${showPoster ? " has-poster" : ""}`}
-      style={posterStyle}
+      className={shelfClass}
+      aria-label={isInSeeds ? `${label} is in your starting movies` : undefined}
     >
-      {posterProbe}
-      <div className="hero-pick-body">{heroBody(item)}</div>
+      {frame}
+      <HeroCaption label={label} isInSeeds={isInSeeds} />
     </article>
   )
 }

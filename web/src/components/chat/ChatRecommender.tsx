@@ -40,6 +40,7 @@ export function ChatRecommender() {
   const [turns, setTurns] = useState<ChatTurn[]>([])
   const [chatLoading, setChatLoading] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
+  const [sessionDrawerOpen, setSessionDrawerOpen] = useState(false)
   const composerId = useId()
   const hydratedRef = useRef(false)
 
@@ -415,9 +416,19 @@ export function ChatRecommender() {
 
   return (
     <div className="chat-app-layout">
+      {sessionDrawerOpen && (
+        <button
+          type="button"
+          className="chat-drawer-backdrop"
+          aria-label="Close chat history"
+          onClick={() => setSessionDrawerOpen(false)}
+        />
+      )}
       <ChatSessionSidebar
         sessions={storedSessions}
         activeSessionId={localSessionId}
+        open={sessionDrawerOpen}
+        onClose={() => setSessionDrawerOpen(false)}
         onNewChat={startNewLocalChat}
         onSelectSession={selectSession}
         onDeleteSession={removeSession}
@@ -428,6 +439,18 @@ export function ChatRecommender() {
         className={`chat-layout${hasThread && activeContext ? " chat-layout--with-rail" : ""}`}
       >
         <div className={`chat-panel${hasThread ? " chat-panel--thread" : " chat-panel--home"}`}>
+          {hasThread && (
+            <div className="chat-panel-head">
+              <button
+                type="button"
+                className="chat-chats-toggle"
+                onClick={() => setSessionDrawerOpen(true)}
+              >
+                Chats
+              </button>
+            </div>
+          )}
+
           {!hasThread && (
             <header className="chat-home-header">
               <h2 className="chat-greeting">What are you in the mood to watch?</h2>

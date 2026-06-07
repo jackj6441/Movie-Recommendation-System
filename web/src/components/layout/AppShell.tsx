@@ -13,31 +13,32 @@ type AppShellProps = {
 export function AppShell({ view, onViewChange, headerAlerts, children }: AppShellProps) {
   return (
     <main className="page">
-      <section className="header">
+      <header className="header app-header">
         <div className="app-topbar">
-          <h1 className="title">
-            <span className="brand-mark" aria-hidden="true">M</span>
-            Movie Recommender
-          </h1>
-          <div className="view-tabs" role="group" aria-label="Primary views">
+          <p className="app-brand">Movie Recommender</p>
+          <nav className="view-segment" role="tablist" aria-label="Primary views">
             <button
               type="button"
-              className={`view-tab ${view === "recommender" ? "active" : ""}`}
+              role="tab"
+              aria-selected={view === "recommender"}
+              className={`view-segment-btn${view === "recommender" ? " is-active" : ""}`}
               onClick={() => onViewChange("recommender")}
             >
               Recommender
             </button>
             <button
               type="button"
-              className={`view-tab ${view === "evidence" ? "active" : ""}`}
+              role="tab"
+              aria-selected={view === "evidence"}
+              className={`view-segment-btn${view === "evidence" ? " is-active" : ""}`}
               onClick={() => onViewChange("evidence")}
             >
               System Evidence
             </button>
-          </div>
+          </nav>
         </div>
         {headerAlerts}
-      </section>
+      </header>
       {children}
       <TmdbFooter />
     </main>
