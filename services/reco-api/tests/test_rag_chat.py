@@ -59,6 +59,28 @@ def test_rag_chat_ready_final_sse_contract(load_app):
     assert final_payload["recommendations"] is not None
 
 
+def test_rag_chat_context_seeds_include_poster_fields(poster_load_app):
+    client = TestClient(poster_load_app)
+    final_payload = final_event(
+        parse_sse(
+            client.post(
+                "/rag/chat",
+                json={
+                    "message": "go",
+                    "genres": ["Comedy"],
+                    "seed_movie_ids": [1],
+                    "seed_update_mode": "replace",
+                },
+            ).text,
+        ),
+    )
+    seeds = final_payload["context"]["seeds"]
+    assert seeds
+    toy_story = next(seed for seed in seeds if seed["movie_id"] == 1)
+    assert "poster_url" in toy_story
+    assert toy_story["poster_url"].startswith("https://")
+
+
 def test_rag_explanations_endpoint_removed(load_app):
     client = TestClient(load_app)
     response = client.post("/rag/explanations", json={"seeds": [1, 2, 3]})

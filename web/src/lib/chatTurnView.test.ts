@@ -23,6 +23,27 @@ describe("parseRagChatFinal", () => {
     expect(() => parseRagChatFinal(null)).toThrow(/object/)
   })
 
+  it("parses seed poster fields in context", () => {
+    const parsed = parseRagChatFinal({
+      ...readyFinal,
+      context: {
+        seeds: [
+          {
+            movie_id: 1,
+            title: "Toy Story (1995)",
+            poster_url: "https://image.tmdb.org/t/p/w500/poster.jpg",
+            poster_thumb_url: "https://image.tmdb.org/t/p/w185/poster.jpg",
+          },
+        ],
+        genres: ["Comedy"],
+        year_min: null,
+        year_max: null,
+      },
+    })
+    expect(parsed.context.seeds[0].poster_url).toContain("w500")
+    expect(parsed.context.seeds[0].poster_thumb_url).toContain("w185")
+  })
+
   it("requires core final fields", () => {
     expect(() => parseRagChatFinal({ session_id: "s" })).toThrow(/turn_id/)
   })

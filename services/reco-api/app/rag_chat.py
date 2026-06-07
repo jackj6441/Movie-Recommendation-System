@@ -162,19 +162,24 @@ def visible_context_payload(
     catalog: RuntimeCatalog | None = None,
     *,
     ready: ResolveReady | None = None,
+    movie_payload_fn: Callable[..., dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if ready is not None:
-        seeds = [
-            {"movie_id": seed.movie_id, "title": seed.title}
-            for seed in ready.seed_movies
-        ]
+        seed_pairs = [(seed.movie_id, seed.title) for seed in ready.seed_movies]
     elif catalog is not None:
-        seeds = [
-            {"movie_id": mid, "title": catalog.get_title(mid)}
+        seed_pairs = [
+            (mid, catalog.get_title(mid))
             for mid in context.explicit_seed_ids
         ]
     else:
-        seeds = [{"movie_id": mid, "title": f"Movie {mid}"} for mid in context.explicit_seed_ids]
+        seed_pairs = [
+            (mid, f"Movie {mid}")
+            for mid in context.explicit_seed_ids
+        ]
+    seeds = [
+        _seed_context_row(movie_id, title, movie_payload_fn)
+        for movie_id, title in seed_pairs
+    ]
     return {
         "seeds": seeds,
         "genres": list(context.genres),
@@ -184,12 +189,47 @@ def visible_context_payload(
     }
 
 
-def context_from_chat_context(context: ChatContext, catalog: RuntimeCatalog) -> dict[str, Any]:
-    return visible_context_payload(context, catalog)
+def _seed_context_row(
+    movie_id: int,
+    title: str,
+    movie_payload_fn: Callable[..., dict[str, Any]] | None,
+) -> dict[str, Any]:
+    row: dict[str, Any] = {"movie_id": movie_id, "title": title}
+    if movie_payload_fn is None:
+        return row
+    payload = movie_payload_fn(movie_id)
+    poster_url = payload.get("poster_url")
+    poster_thumb_url = payload.get("poster_thumb_url")
+    if poster_url:
+        row["poster_url"] = poster_url
+    if poster_thumb_url:
+        row["poster_thumb_url"] = poster_thumb_url
+    return row
 
 
-def context_payload(ready: ResolveReady) -> dict[str, Any]:
-    return visible_context_payload(ready.context, ready=ready)
+def context_from_chat_context(
+    context: ChatContext,
+    catalog: RuntimeCatalog,
+    *,
+    movie_payload_fn: Callable[..., dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return visible_context_payload(
+        context,
+        catalog,
+        movie_payload_fn=movie_payload_fn,
+    )
+
+
+def context_payload(
+    ready: ResolveReady,
+    *,
+    movie_payload_fn: Callable[..., dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return visible_context_payload(
+        ready.context,
+        ready=ready,
+        movie_payload_fn=movie_payload_fn,
+    )
 
 
 def run_chat_turn(
@@ -294,7 +334,11 @@ def run_chat_turn(
                 catalog=catalog,
                 movie_payload_fn=movie_payload_fn,
             ),
-            "context": context_from_chat_context(session.context, catalog),
+            "context": context_from_chat_context(
+                session.context,
+                catalog,
+                movie_payload_fn=movie_payload_fn,
+            ),
             "recommendations": None,
             "assistant_message": assistant_message,
         })
@@ -339,7 +383,7 @@ def run_chat_turn(
             clarification_reason=resolved.reason,
         )
         final_payload.update({
-            "context": session_context_api(session, catalog),
+            "context": session_context_api(session, catalog, movie_payload_fn=movie_payload_fn),
             "recommendations": None,
             "assistant_message": assistant_message,
         })
@@ -379,7 +423,7 @@ def run_chat_turn(
             needs_disambiguation=False,
         )
         final_payload.update({
-            "context": context_payload(resolved),
+            "context": context_payload(resolved, movie_payload_fn=movie_payload_fn),
             "recommendations": None,
             "assistant_message": "Content embeddings are unavailable right now.",
             "explanation_source": "deterministic_fallback",
@@ -419,7 +463,7 @@ def run_chat_turn(
             clarification_reason="empty_recommendations",
         )
         empty_payload.update({
-            "context": context_payload(resolved),
+            "context": context_payload(resolved, movie_payload_fn=movie_payload_fn),
             "recommendations": recommendations_payload(
                 rank_result,
                 model_version=model_version,
@@ -442,7 +486,10 @@ def run_chat_turn(
         return
 
     if evidence is None:
-        evidence = {"seed_movies": context_payload(resolved)["seeds"], "top_items": []}
+        evidence = {
+            "seed_movies": context_payload(resolved, movie_payload_fn=movie_payload_fn)["seeds"],
+            "top_items": [],
+        }
 
     if provider not in SUPPORTED_CHAT_PROVIDERS:
         provider = "disabled"
@@ -475,7 +522,7 @@ def run_chat_turn(
         needs_disambiguation=False,
     )
     final_payload.update({
-        "context": context_payload(resolved),
+        "context": context_payload(resolved, movie_payload_fn=movie_payload_fn),
         "recommendations": recommendations,
         "assistant_message": assistant_message,
         "explanation_source": explanation_source,
@@ -546,8 +593,17 @@ def normalize_session_genres(
     return list(prior.genres)
 
 
-def session_context_api(session: ChatSession, catalog: RuntimeCatalog) -> dict[str, Any]:
-    return visible_context_payload(session.context, catalog)
+def session_context_api(
+    session: ChatSession,
+    catalog: RuntimeCatalog,
+    *,
+    movie_payload_fn: Callable[..., dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return visible_context_payload(
+        session.context,
+        catalog,
+        movie_payload_fn=movie_payload_fn,
+    )
 
 
 def chat_prompt_version() -> str:

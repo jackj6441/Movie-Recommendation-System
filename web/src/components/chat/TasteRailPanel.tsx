@@ -7,6 +7,7 @@ import {
   sliderMatchesContext,
 } from "../../lib/tasteYear"
 import { CloseIcon } from "../icons"
+import { SeedPosterTile } from "./SeedPosterTile"
 import { GenreChipsRow } from "./GenreChipsRow"
 import { YearRangeSlider } from "./YearRangeSlider"
 
@@ -190,18 +191,17 @@ export function TasteRailPanel({
         <div className="taste-rail-section-head">
           <h3 className="taste-rail-section-title">Starting movies</h3>
         </div>
-        <div className="taste-rail-pill-row">
+        <div className="taste-rail-seed-row">
           {context.seeds.length === 0 ? (
             <TastePill muted>None yet</TastePill>
           ) : (
             context.seeds.map((seed) => (
-              <TastePill
+              <SeedPosterTile
                 key={seed.movie_id}
+                seed={seed}
                 disabled={disabled}
                 onRemove={() => onRemoveSeed(seed.movie_id, seed.title)}
-              >
-                {seed.title}
-              </TastePill>
+              />
             ))
           )}
         </div>

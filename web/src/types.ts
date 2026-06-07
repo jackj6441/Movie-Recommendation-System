@@ -18,7 +18,7 @@ export type RecommendationResponse = {
   model_version: string
 }
 
-export type ChatSeedRef = {
+export type ChatSeedRef = MoviePosters & {
   movie_id: number
   title: string
 }

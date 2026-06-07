@@ -1,4 +1,5 @@
 import type {
+  ChatSeedRef,
   DisambiguationCandidate,
   RagChatContext,
   RagChatDebug,
@@ -60,10 +61,19 @@ function readContext(row: Record<string, unknown>): RagChatContext {
   return {
     seeds: seeds
       .filter(isRecord)
-      .map((seed) => ({
-        movie_id: Number(seed.movie_id),
-        title: String(seed.title ?? ""),
-      }))
+      .map((seed) => {
+        const row: ChatSeedRef = {
+          movie_id: Number(seed.movie_id),
+          title: String(seed.title ?? ""),
+        }
+        if (typeof seed.poster_url === "string" && seed.poster_url) {
+          row.poster_url = seed.poster_url
+        }
+        if (typeof seed.poster_thumb_url === "string" && seed.poster_thumb_url) {
+          row.poster_thumb_url = seed.poster_thumb_url
+        }
+        return row
+      })
       .filter((seed) => Number.isFinite(seed.movie_id) && seed.title),
     genres,
     year_min: typeof context.year_min === "number" ? context.year_min : null,

@@ -57,6 +57,7 @@
   --hero-aspect-ratio: 2 / 3;
   --strip-tile-width: 7.25rem;
   --strip-tile-min-width: 6.5rem;
+  --seed-tile-width: 4rem;
 
   /* ── Scene assets ── */
   --asset-plaster-tile: url("/assets/living-room/plaster-wall-tile.png");
@@ -64,6 +65,9 @@
   --asset-frame-strip: url("/assets/living-room/frame-strip-9slice.png");
   --asset-wood-shelf: url("/assets/living-room/wood-shelf.png");
   --asset-sidebar-cabinet: url("/assets/living-room/sidebar-cabinet.png");
+  --asset-scene-lamp-left: url("/assets/living-room/scene-lamp-left.png");
+  --asset-scene-console-right: url("/assets/living-room/scene-console-right.png");
+  --sidebar-scene-max-height: 220px;
   --frame-slice-hero: 48;
   --frame-slice-strip: 24;
 
@@ -93,6 +97,11 @@
   --page-max: 1360px;
   --chat-max: 52rem;
   --chat-max-with-rail: 72rem;
+  --chat-wing-min-height: calc(100vh - 5rem);
+  --shadow-chat-stage: 0 12px 32px oklch(0.22 0.02 68 / 0.1);
+  --bg-plaster-wing:
+    radial-gradient(ellipse 90% 55% at 50% 0%, oklch(0.95 0.028 78 / 0.42), transparent 62%),
+    var(--asset-plaster-tile);
 
   /* ── Elevation ── */
   --shadow-sm: 0 2px 8px oklch(0.25 0.02 68 / 0.08);

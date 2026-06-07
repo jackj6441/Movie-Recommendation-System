@@ -337,6 +337,13 @@ describe("App conversational RAG chat", () => {
 
   it("shows current taste chips after recommendations", async () => {
     chatConfig.assistantMessage = "Done."
+    chatConfig.contextSeeds = [
+      {
+        movie_id: 1,
+        title: "Toy Story (1995)",
+        poster_thumb_url: "https://image.tmdb.org/t/p/w185/poster.jpg",
+      },
+    ]
     vi.stubGlobal("fetch", createFetchMock(chatConfig))
 
     const user = userEvent.setup()
@@ -347,6 +354,11 @@ describe("App conversational RAG chat", () => {
     expect(taste).not.toBeNull()
     expect(within(taste).getByText("Comedy")).toBeInTheDocument()
     expect(within(taste).getByText("Toy Story (1995)")).toBeInTheDocument()
+    expect(within(taste).queryByRole("button", { name: "Toy Story (1995)" })).toBeNull()
+    expect(taste.querySelector(".taste-seed-tile__frame")).toBeInTheDocument()
+    expect(
+      taste.querySelector('img[src="https://image.tmdb.org/t/p/w185/poster.jpg"]')
+    ).toBeInTheDocument()
   })
 
   it("renders desktop taste rail aside when thread has context", async () => {
@@ -1205,6 +1217,18 @@ describe("App conversational RAG chat", () => {
 
       expect(await screen.findByText("Here are some picks.")).toBeInTheDocument()
       expect(document.querySelector(".assistant-avatar")).toBeInTheDocument()
+    })
+
+    it("renders plaster wing scene decor in side columns when thread has taste", async () => {
+      chatConfig.assistantMessage = "Done."
+      vi.stubGlobal("fetch", createFetchMock(chatConfig))
+
+      const user = userEvent.setup()
+      render(<App />)
+      await sendChat(user, "go")
+
+      expect(document.querySelector(".sidebar-scene-decor--lamp")).toBeInTheDocument()
+      expect(document.querySelector(".sidebar-scene-decor--console")).toBeInTheDocument()
     })
 
     it("renders wooden shelf under the more-movies strip", async () => {

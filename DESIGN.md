@@ -44,6 +44,7 @@ components:
     shadow: "{shadow-frame}"
     hero-max-width: "26.25rem"
     strip-tile-width: "7.25rem"
+  seed-tile-width: "4rem"
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "oklch(0.98 0.008 84)"
@@ -78,8 +79,19 @@ All tokens in `web/src/styles/tokens.css` (OKLCH).
 | Plaster wall tile | `public/assets/living-room/plaster-wall-tile.png` | A ✓ |
 | Hero frame 9-slice | `frame-hero-9slice.png` (256×256, slice 48) | C ✓ |
 | Strip frame 9-slice | `frame-strip-9slice.png` (128×128, slice 24) | C ✓ |
-| Wood shelf | `wood-shelf.png` | C ✓ |
-| Sidebar cabinet | `sidebar-cabinet.png` | D |
+| Wood shelf | `wood-shelf.png` | C (unused in UI) |
+| Sidebar lamp vignette | `scene-lamp-left.png` | F ✓ |
+| Sidebar console vignette | `scene-console-right.png` | F ✓ |
+| Final mockup reference | `docs/mockups/living-room-shelf-final-mockup.png` | F |
+
+## Three-zone chat layout (Phase F ✓)
+
+Desktop ≥1024px:
+
+- **Left / right wings**: bare plaster (`--bg-plaster-wing`) on Chats sidebar and Current taste rail.
+- **Center**: brighter `--color-surface` panel on `.chat-panel` with soft shadow.
+- **Sidebar footer decor**: asymmetric vignettes (`SidebarSceneDecor`) below functional panels; max `min(35vh, 220px)`; `aria-hidden`.
+- **Starting movies**: framed poster thumbnails (`SeedPosterTile`) in taste rail; API enriches `context.seeds` with poster URLs.
 
 ## Frame primitives (Phase C ✓)
 
@@ -99,8 +111,8 @@ Inline SVG set wired into UI:
 - **Send**: circular primary button + paper plane (`aria-label="Send"`)
 - **Composer**: pill wrap, paperclip attach (disabled placeholder)
 - **Sidebar**: speech bubble per session, solid green active link, CloseIcon delete
-- **Sidebar footer (desktop)**: cabinet scene image + Settings (disabled placeholder)
-- **Taste pills**: CloseIcon on removable tags
+- **Sidebar footer (desktop ≥1024px)**: lamp vignette (left) + console vignette (right); Settings above decor
+- **Starting movies**: mini strip frames with poster art + remove control
 - **User bubble**: `--color-user-bubble` white/cream
 
 ## Stylesheet layout

@@ -1,4 +1,5 @@
 import type { RagChatContext } from "../../types"
+import { SidebarSceneDecor } from "./SidebarSceneDecor"
 import { TasteRailPanel } from "./TasteRailPanel"
 
 type TasteRailProps = {
@@ -31,18 +32,21 @@ export function TasteRail({
       className={`taste-rail ${className}`.trim()}
       aria-label="Current taste"
     >
-      <h2 className="taste-rail-title">Current taste</h2>
-      <TasteRailPanel
-        context={context}
-        availableGenres={availableGenres}
-        genresLoading={genresLoading}
-        disabled={disabled}
-        onRemoveSeed={onRemoveSeed}
-        onRemoveGenre={onRemoveGenre}
-        onToggleGenre={onToggleGenre}
-        onSetYearRange={onSetYearRange}
-        onSetAnyYear={onSetAnyYear}
-      />
+      <div className="taste-rail-body">
+        <h2 className="taste-rail-title">Current taste</h2>
+        <TasteRailPanel
+          context={context}
+          availableGenres={availableGenres}
+          genresLoading={genresLoading}
+          disabled={disabled}
+          onRemoveSeed={onRemoveSeed}
+          onRemoveGenre={onRemoveGenre}
+          onToggleGenre={onToggleGenre}
+          onSetYearRange={onSetYearRange}
+          onSetAnyYear={onSetAnyYear}
+        />
+      </div>
+      <SidebarSceneDecor variant="console" />
     </aside>
   )
 }
