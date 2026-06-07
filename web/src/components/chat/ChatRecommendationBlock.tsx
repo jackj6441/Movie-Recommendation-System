@@ -1,17 +1,20 @@
+import { seedAddState } from "../../lib/seedAdd"
 import type { RecommendationResponse } from "../../types"
 import { HeroPick } from "../results/HeroPick"
 import { MoreMoviesStrip } from "./MoreMoviesStrip"
 
 type ChatRecommendationBlockProps = {
   data: RecommendationResponse
-  onMoreLike?: (movieId: number, title: string) => void
-  moreLikeDisabled?: boolean
+  seedMovieIds?: number[]
+  onAddSeed?: (movieId: number, title: string) => void
+  addSeedDisabled?: boolean
 }
 
 export function ChatRecommendationBlock({
   data,
-  onMoreLike,
-  moreLikeDisabled = false,
+  seedMovieIds = [],
+  onAddSeed,
+  addSeedDisabled = false,
 }: ChatRecommendationBlockProps) {
   const items = data.items
   if (items.length === 0) {
@@ -24,25 +27,29 @@ export function ChatRecommendationBlock({
 
   const hero = items[0]
   const rest = items.slice(1)
+  const heroAddState = seedAddState(hero.movie_id, seedMovieIds)
 
   return (
     <div className="chat-rec-block">
       <HeroPick
         item={hero}
-        actions={
-          onMoreLike ? (
-            <button
-              type="button"
-              className="hero-secondary-action"
-              disabled={moreLikeDisabled}
-              onClick={() => onMoreLike(hero.movie_id, hero.title)}
-            >
-              More like this
-            </button>
-          ) : undefined
+        isInSeeds={heroAddState.isInSeeds}
+        seedSetFull={heroAddState.seedSetFull}
+        addSeedDisabled={addSeedDisabled}
+        onAddSeed={
+          onAddSeed && !heroAddState.isInSeeds
+            ? () => onAddSeed(hero.movie_id, hero.title)
+            : undefined
         }
       />
-      {rest.length > 0 && <MoreMoviesStrip items={rest} />}
+      {rest.length > 0 && (
+        <MoreMoviesStrip
+          items={rest}
+          seedMovieIds={seedMovieIds}
+          onAddSeed={onAddSeed}
+          addSeedDisabled={addSeedDisabled}
+        />
+      )}
     </div>
   )
 }

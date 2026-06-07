@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useState } from "react"
 import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 
@@ -9,36 +9,84 @@ const HERO_SCRIM = [
 
 type HeroPickProps = {
   item: RecommendationItem
-  actions?: ReactNode
+  onAddSeed?: () => void
+  addSeedDisabled?: boolean
+  isInSeeds?: boolean
+  seedSetFull?: boolean
 }
 
-export function HeroPick({ item, actions }: HeroPickProps) {
+function heroBody(item: RecommendationItem) {
+  return (
+    <>
+      <span className="hero-rank">#1</span>
+      <span className="hero-kicker">Tonight&apos;s strongest match</span>
+      <h2 className="hero-title">{formatTitle(item.title)}</h2>
+    </>
+  )
+}
+
+export function HeroPick({
+  item,
+  onAddSeed,
+  addSeedDisabled = false,
+  isInSeeds = false,
+  seedSetFull = false,
+}: HeroPickProps) {
   const [posterHidden, setPosterHidden] = useState(false)
   const showPoster = Boolean(item.poster_url) && !posterHidden
+  const label = formatTitle(item.title)
+  const posterStyle = showPoster
+    ? { backgroundImage: `${HERO_SCRIM}, url(${item.poster_url})` }
+    : undefined
+  const posterProbe = item.poster_url ? (
+    <img
+      className="hero-pick-probe"
+      src={item.poster_url}
+      alt=""
+      onError={() => setPosterHidden(true)}
+    />
+  ) : null
+
+  if (isInSeeds) {
+    return (
+      <article
+        className={`hero-pick is-in-seeds${showPoster ? " has-poster" : ""}`}
+        style={posterStyle}
+        aria-label={`${label} is in your starting movies`}
+      >
+        {posterProbe}
+        <div className="hero-pick-body">{heroBody(item)}</div>
+      </article>
+    )
+  }
+
+  if (onAddSeed) {
+    const atLimit = seedSetFull
+    return (
+      <button
+        type="button"
+        className={`hero-pick hero-pick--interactive${atLimit ? " is-at-limit" : ""}${
+          showPoster ? " has-poster" : ""
+        }`}
+        style={posterStyle}
+        disabled={addSeedDisabled || atLimit}
+        title={atLimit ? "Seed set full (max 5)" : undefined}
+        aria-label={`Add ${label} to starting movies`}
+        onClick={onAddSeed}
+      >
+        {posterProbe}
+        <div className="hero-pick-body">{heroBody(item)}</div>
+      </button>
+    )
+  }
 
   return (
     <article
       className={`hero-pick${showPoster ? " has-poster" : ""}`}
-      style={
-        showPoster
-          ? { backgroundImage: `${HERO_SCRIM}, url(${item.poster_url})` }
-          : undefined
-      }
+      style={posterStyle}
     >
-      {item.poster_url && (
-        <img
-          className="hero-pick-probe"
-          src={item.poster_url}
-          alt=""
-          onError={() => setPosterHidden(true)}
-        />
-      )}
-      <div className="hero-pick-body">
-        <span className="hero-rank">#1</span>
-        <span className="hero-kicker">Tonight&apos;s strongest match</span>
-        <h2 className="hero-title">{formatTitle(item.title)}</h2>
-        {actions && <div className="hero-actions">{actions}</div>}
-      </div>
+      {posterProbe}
+      <div className="hero-pick-body">{heroBody(item)}</div>
     </article>
   )
 }

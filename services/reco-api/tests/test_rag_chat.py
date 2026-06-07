@@ -626,3 +626,8 @@ def test_rag_chat_provider_timeout_still_returns_recommendations(load_app, monke
     assert final_payload["chat_fallback_reason"] == "provider_timeout"
     assert final_payload["recommendations"] is not None
     assert len(final_payload["recommendations"]["items"]) > 0
+
+
+def test_disambiguation_copy_is_concise():
+    assert rag_chat_service.disambiguation_copy("ambiguous_message") == "Which did you mean?"
+    assert rag_chat_service.disambiguation_copy("title_unresolved") == "Which movie did you mean?"

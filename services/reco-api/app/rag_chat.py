@@ -69,15 +69,8 @@ def clarification_copy(reason: str) -> str:
 
 def disambiguation_copy(reason: str) -> str:
     if reason == "ambiguous_message":
-        return (
-            "Your message could mean a genre or specific movies. Pick a genre below, "
-            "or select 1–5 movies as your Seed Set—these are possible matches, not your "
-            "final recommendations."
-        )
-    return (
-        "I could not lock onto a starting movie yet. These are not your final recommendations—"
-        "they are possible matches. Pick 1–5 movies to use as your Seed Set."
-    )
+        return "Which did you mean?"
+    return "Which movie did you mean?"
 
 
 def deterministic_assistant_copy(evidence: dict[str, Any]) -> str:

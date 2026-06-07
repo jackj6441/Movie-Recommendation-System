@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { postRagChat } from "../../api/ragChat"
-import { MAX_GENRES } from "../../config"
+import { MAX_GENRES, MAX_SEEDS } from "../../config"
 import {
   createChatSession,
   deleteChatSession,
@@ -359,10 +359,13 @@ export function ChatRecommender() {
     }
   }
 
-  const moreLikeThis = async (movieId: number, title: string) => {
+  const addSeedFromRecommendation = async (movieId: number, title: string) => {
+    if (!activeContext) return
+    const seedIds = activeContext.seeds.map((seed) => seed.movie_id)
+    if (seedIds.includes(movieId) || seedIds.length >= MAX_SEEDS) return
     await runChatTurn({
       message: "",
-      userContent: `More like: ${title}`,
+      userContent: `Added ${title}`,
       seed_movie_ids: [movieId],
       seed_update_mode: "append",
     })
@@ -437,11 +440,12 @@ export function ChatRecommender() {
           {hasThread && (
             <ChatThread
               turns={turns}
-              onMoreLike={(id, title) => void moreLikeThis(id, title)}
+              seedMovieIds={activeContext?.seeds.map((seed) => seed.movie_id) ?? []}
+              onAddSeed={(id, title) => void addSeedFromRecommendation(id, title)}
               onDisambiguationSubmit={(ids) => void submitDisambiguation(ids)}
               onDisambiguationGenrePick={(genre) => void submitDisambiguationGenre(genre)}
               pickerDisabled={chatLoading}
-              moreLikeDisabled={chatLoading}
+              addSeedDisabled={chatLoading}
             />
           )}
 

@@ -40,7 +40,7 @@ describe("App conversational RAG chat", () => {
 
     expect(await screen.findByText("Pick a starting movie from the list below.")).toBeInTheDocument()
     expect(screen.queryByText("…")).not.toBeInTheDocument()
-    expect(await screen.findByText(/Which movie did you mean\?/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Use as Seed Set" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Send" })).toBeEnabled()
   })
 
@@ -114,7 +114,7 @@ describe("App conversational RAG chat", () => {
     )
     await user.click(screen.getByRole("button", { name: "Send" }))
 
-    await user.click(screen.getByRole("button", { name: "Use genre: Drama" }))
+    await user.click(screen.getByRole("button", { name: "Drama" }))
     expect(await screen.findByText("Drama picks for you.")).toBeInTheDocument()
     const thread = await screen.findByRole("log")
     expect(within(thread).getByText("You selected: Drama (genre)")).toBeInTheDocument()
@@ -157,7 +157,7 @@ describe("App conversational RAG chat", () => {
       "zzzznotamovie"
     )
     await user.click(screen.getByRole("button", { name: "Send" }))
-    expect(await screen.findByText(/Which movie did you mean\?/)).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Use as Seed Set" })).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: /Candidate Movie/i }))
     await user.click(screen.getByRole("button", { name: "Use as Seed Set" }))
@@ -167,7 +167,7 @@ describe("App conversational RAG chat", () => {
     expect(within(thread).getByText("You picked: Candidate Movie (2000)")).toBeInTheDocument()
   })
 
-  it("more like this sends append seed chat turn", async () => {
+  it("clicking hero card sends append seed chat turn", async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = input.toString()
       if (url.endsWith("/genres")) {
@@ -178,7 +178,7 @@ describe("App conversational RAG chat", () => {
         if (body.seed_movie_ids?.length === 1 && body.seed_update_mode === "append") {
           return sseResponse(
             buildSseBody({
-              assistantMessage: "More like that pick.",
+              assistantMessage: "Updated picks.",
               items: [{ movie_id: 55, title: "Similar (2010)", score: 0.8 }],
             })
           )
@@ -193,10 +193,146 @@ describe("App conversational RAG chat", () => {
     render(<App />)
     await sendChat(user, "first")
 
-    await user.click(screen.getByRole("button", { name: "More like this" }))
-    expect(await screen.findByText("More like that pick.")).toBeInTheDocument()
+    await user.click(
+      screen.getByRole("button", { name: "Add Some Movie (1999) to starting movies" })
+    )
+    expect(await screen.findByText("Updated picks.")).toBeInTheDocument()
     const thread = await screen.findByRole("log")
-    expect(within(thread).getByText("More like: Some Movie (1999)")).toBeInTheDocument()
+    expect(within(thread).getByText("Added Some Movie (1999)")).toBeInTheDocument()
+  })
+
+  it("clicking strip card sends append seed chat turn", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString()
+      if (url.endsWith("/genres")) {
+        return jsonResponse([{ name: "Comedy" }])
+      }
+      if (url.endsWith("/rag/chat")) {
+        const body = init?.body ? JSON.parse(String(init.body)) : {}
+        if (body.seed_movie_ids?.[0] === 240 && body.seed_update_mode === "append") {
+          return sseResponse(
+            buildSseBody({
+              assistantMessage: "Strip pick added.",
+              items: [{ movie_id: 55, title: "Similar (2010)", score: 0.8 }],
+            })
+          )
+        }
+        return sseResponse(
+          buildSseBody({
+            assistantMessage: "First list.",
+            items: [
+              { movie_id: 239, title: "Some Movie (1999)", score: 0.9 },
+              { movie_id: 240, title: "Strip Movie (2001)", score: 0.85 },
+            ],
+          })
+        )
+      }
+      throw new Error(`Unhandled: ${url}`)
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+    await sendChat(user, "first")
+
+    await user.click(
+      screen.getByRole("button", { name: "Add Strip Movie (2001) to starting movies" })
+    )
+    expect(await screen.findByText("Strip pick added.")).toBeInTheDocument()
+  })
+
+  it("ignores append when recommendation is already in seeds", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString()
+      if (url.endsWith("/genres")) {
+        return jsonResponse([{ name: "Comedy" }])
+      }
+      if (url.endsWith("/rag/chat")) {
+        return sseResponse(
+          buildSseBody({
+            assistantMessage: "First list.",
+            contextSeeds: [
+              { movie_id: 1, title: "Toy Story (1995)" },
+              { movie_id: 239, title: "Some Movie (1999)" },
+            ],
+            items: [{ movie_id: 239, title: "Some Movie (1999)", score: 0.9 }],
+          })
+        )
+      }
+      throw new Error(`Unhandled: ${url}`)
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+    await sendChat(user, "first")
+
+    const chatCallsBefore = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).endsWith("/rag/chat")
+    ).length
+    expect(
+      screen.queryByRole("button", { name: "Add Some Movie (1999) to starting movies" })
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByLabelText("Some Movie (1999) is in your starting movies"))
+    const chatCallsAfter = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).endsWith("/rag/chat")
+    ).length
+    expect(chatCallsAfter).toBe(chatCallsBefore)
+  })
+
+  it("disables strip add buttons when seed set is full", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString()
+      if (url.endsWith("/genres")) {
+        return jsonResponse([{ name: "Comedy" }])
+      }
+      if (url.endsWith("/rag/chat")) {
+        return sseResponse(
+          buildSseBody({
+            assistantMessage: "Full seeds.",
+            contextSeeds: [
+              { movie_id: 1, title: "Toy Story (1995)" },
+              { movie_id: 2, title: "Jumanji (1995)" },
+              { movie_id: 3, title: "Grumpier Old Men (1995)" },
+              { movie_id: 4, title: "Waiting to Exhale (1995)" },
+              { movie_id: 5, title: "Father of the Bride Part II (1995)" },
+            ],
+            items: [
+              { movie_id: 239, title: "Some Movie (1999)", score: 0.9 },
+              { movie_id: 240, title: "Strip Movie (2001)", score: 0.85 },
+            ],
+          })
+        )
+      }
+      throw new Error(`Unhandled: ${url}`)
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+    await sendChat(user, "first")
+
+    const heroButton = screen.getByRole("button", {
+      name: "Add Some Movie (1999) to starting movies",
+    })
+    const stripButton = screen.getByRole("button", {
+      name: "Add Strip Movie (2001) to starting movies",
+    })
+    expect(heroButton).toBeDisabled()
+    expect(stripButton).toBeDisabled()
+    expect(heroButton).toHaveAttribute("title", "Seed set full (max 5)")
+    expect(stripButton).toHaveAttribute("title", "Seed set full (max 5)")
+
+    const chatCallsBefore = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).endsWith("/rag/chat")
+    ).length
+    await user.click(heroButton)
+    await user.click(stripButton)
+    const chatCallsAfter = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).endsWith("/rag/chat")
+    ).length
+    expect(chatCallsAfter).toBe(chatCallsBefore)
   })
 
   it("shows current taste chips after recommendations", async () => {
@@ -255,7 +391,7 @@ describe("App conversational RAG chat", () => {
     expect(screen.getByRole("button", { name: /King Kong/i })).toBeInTheDocument()
   })
 
-  it("scrolls to latest assistant bubble after more like this", async () => {
+  it("scrolls to latest assistant bubble after adding seed from hero", async () => {
     const scrollIntoView = vi.fn()
     Element.prototype.scrollIntoView = scrollIntoView
 
@@ -283,7 +419,9 @@ describe("App conversational RAG chat", () => {
     const user = userEvent.setup()
     render(<App />)
     await sendChat(user, "first")
-    await user.click(screen.getByRole("button", { name: "More like this" }))
+    await user.click(
+      screen.getByRole("button", { name: "Add Some Movie (1999) to starting movies" })
+    )
     await screen.findByText("More like that pick.")
 
     await waitFor(() => {
@@ -328,7 +466,7 @@ describe("App conversational RAG chat", () => {
       "zzzznotamovie"
     )
     await user.click(screen.getByRole("button", { name: "Send" }))
-    await screen.findByText(/Which movie did you mean\?/)
+    await screen.findByRole("button", { name: "Use as Seed Set" })
 
     scrollIntoView.mockClear()
     await user.click(screen.getByRole("button", { name: /Candidate Movie/i }))
@@ -600,6 +738,87 @@ describe("App conversational RAG chat", () => {
     await user.click(within(yearSection).getByRole("button", { name: "Edit" }))
     expect(within(yearSection).getByText("Any year")).toBeInTheDocument()
     expect(within(yearSection).queryByText("2005–2025")).not.toBeInTheDocument()
+  })
+
+  it("slider drag after any year commits a year range", async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input.toString()
+      if (url.endsWith("/genres")) {
+        return jsonResponse([{ name: "Comedy" }])
+      }
+      if (url.endsWith("/rag/chat")) {
+        const body = init?.body ? JSON.parse(String(init.body)) : {}
+        if (body.clear_year_bounds) {
+          return sseResponse(
+            buildSseBody({
+              assistantMessage: "Including older movies now.",
+              contextSeeds: [],
+              contextGenres: ["Comedy"],
+              yearMin: null,
+              yearMax: null,
+              recencyOptOut: true,
+            })
+          )
+        }
+        if (body.year_min === 1990 && body.year_max === 2004) {
+          return sseResponse(
+            buildSseBody({
+              assistantMessage: "Back to a specific range.",
+              contextSeeds: [],
+              contextGenres: ["Comedy"],
+              yearMin: 1990,
+              yearMax: 2004,
+              recencyOptOut: false,
+            })
+          )
+        }
+        return sseResponse(
+          buildSseBody({
+            assistantMessage: "Comedy picks for you.",
+            contextSeeds: [],
+            contextGenres: ["Comedy"],
+            yearMin: 2005,
+            yearMax: null,
+            recencyOptOut: false,
+          })
+        )
+      }
+      throw new Error(`Unhandled: ${url}`)
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(await screen.findByRole("button", { name: "Comedy" }))
+    await user.click(screen.getByRole("button", { name: "Send" }))
+    await screen.findByText("Comedy picks for you.")
+
+    const taste = document.querySelector("aside.taste-rail--desktop") as HTMLElement
+    const yearSection = within(taste)
+      .getByRole("heading", { name: "Release year" })
+      .closest("section") as HTMLElement
+    await user.click(within(yearSection).getByRole("button", { name: "Edit" }))
+    await user.click(within(yearSection).getByRole("button", { name: "Any year" }))
+    await screen.findByText("Including older movies now.")
+
+    const minThumb = within(yearSection).getByLabelText("Release year minimum")
+    fireEvent.mouseDown(minThumb)
+    fireEvent.change(minThumb, { target: { value: "1990" } })
+    const maxThumb = within(yearSection).getByLabelText("Release year maximum")
+    fireEvent.change(maxThumb, { target: { value: "2004" } })
+    fireEvent.mouseUp(maxThumb)
+
+    await waitFor(() => {
+      expect(screen.getByText("Back to a specific range.")).toBeInTheDocument()
+    })
+    const chatCalls = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).endsWith("/rag/chat")
+    )
+    const lastBody = JSON.parse(String((chatCalls.at(-1)?.[1] as RequestInit)?.body))
+    expect(lastBody.year_min).toBe(1990)
+    expect(lastBody.year_max).toBe(2004)
+    expect(lastBody.clear_year_bounds).toBe(false)
   })
 
   it("commits explicit year bounds from the release year slider", async () => {

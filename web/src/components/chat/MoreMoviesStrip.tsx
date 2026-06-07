@@ -1,14 +1,23 @@
 import { useState } from "react"
 import type { RecommendationItem } from "../../types"
+import { seedAddState } from "../../lib/seedAdd"
 import { PosterTile } from "../results/PosterTile"
 
 const STRIP_VISIBLE = 5
 
 type MoreMoviesStripProps = {
   items: RecommendationItem[]
+  seedMovieIds?: number[]
+  onAddSeed?: (movieId: number, title: string) => void
+  addSeedDisabled?: boolean
 }
 
-export function MoreMoviesStrip({ items }: MoreMoviesStripProps) {
+export function MoreMoviesStrip({
+  items,
+  seedMovieIds = [],
+  onAddSeed,
+  addSeedDisabled = false,
+}: MoreMoviesStripProps) {
   const [expanded, setExpanded] = useState(false)
   const hiddenCount = Math.max(0, items.length - STRIP_VISIBLE)
   const showToggle = hiddenCount > 0
@@ -35,11 +44,26 @@ export function MoreMoviesStrip({ items }: MoreMoviesStripProps) {
           className={`more-movies-strip${expanded ? " more-movies-strip--scroll" : ""}`}
           role="list"
         >
-          {visibleItems.map((item, index) => (
-            <div key={item.movie_id} role="listitem" className="more-movies-strip-item">
-              <PosterTile item={item} rank={index + 2} variant="strip" />
-            </div>
-          ))}
+          {visibleItems.map((item, index) => {
+            const addState = seedAddState(item.movie_id, seedMovieIds)
+            return (
+              <div key={item.movie_id} role="listitem" className="more-movies-strip-item">
+                <PosterTile
+                  item={item}
+                  rank={index + 2}
+                  variant="strip"
+                  isInSeeds={addState.isInSeeds}
+                  seedSetFull={addState.seedSetFull}
+                  addSeedDisabled={addSeedDisabled}
+                  onAddSeed={
+                    onAddSeed && !addState.isInSeeds
+                      ? () => onAddSeed(item.movie_id, item.title)
+                      : undefined
+                  }
+                />
+              </div>
+            )
+          })}
         </div>
         {(hiddenCount > 0 || expanded) && (
           <div className="more-movies-strip-fade" aria-hidden="true" />

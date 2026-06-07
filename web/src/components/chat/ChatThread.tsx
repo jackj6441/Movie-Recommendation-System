@@ -5,21 +5,22 @@ import { DisambiguationPicker } from "./DisambiguationPicker"
 
 type ChatThreadProps = {
   turns: ChatTurn[]
-  onMoreLike?: (movieId: number, title: string) => void
+  seedMovieIds?: number[]
+  onAddSeed?: (movieId: number, title: string) => void
   onDisambiguationSubmit?: (movieIds: number[]) => void
   onDisambiguationGenrePick?: (genre: string) => void
   pickerDisabled?: boolean
-  moreLikeDisabled?: boolean
+  addSeedDisabled?: boolean
 }
 
 export function ChatThread({
   turns,
-  onNewChat,
-  onMoreLike,
+  seedMovieIds = [],
+  onAddSeed,
   onDisambiguationSubmit,
   onDisambiguationGenrePick,
   pickerDisabled = false,
-  moreLikeDisabled = false,
+  addSeedDisabled = false,
 }: ChatThreadProps) {
   return (
     <div className="chat-thread" role="log" aria-live="polite" aria-relevant="additions text">
@@ -43,8 +44,9 @@ export function ChatThread({
           {turn.role === "assistant" && turn.view?.recommendations && (
             <ChatRecommendationBlock
               data={turn.view.recommendations}
-              onMoreLike={onMoreLike}
-              moreLikeDisabled={moreLikeDisabled}
+              seedMovieIds={seedMovieIds}
+              onAddSeed={onAddSeed}
+              addSeedDisabled={addSeedDisabled}
             />
           )}
           {turn.role === "assistant" && turn.view?.debug && (

@@ -29,3 +29,5 @@ export const apiBase = resolveApiBase()
 export const PRIORITY_GENRES = ["Comedy", "Drama", "Action"] as const
 
 export const MAX_GENRES = 3
+
+export const MAX_SEEDS = 5

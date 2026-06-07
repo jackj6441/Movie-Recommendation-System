@@ -82,6 +82,7 @@ export function TasteRailPanel({
   }
 
   const anyYear = isAnyYear(context)
+  const previewAnyYear = previewRange.anyYear
   const yearSummary = formatYearSummary(context)
   const yearDraftPending =
     openSection === "year" && !sliderMatchesContext(previewRange, context)
@@ -153,9 +154,9 @@ export function TasteRailPanel({
             <div className="taste-rail-pill-row">
               <button
                 type="button"
-                className={`taste-pill${anyYear ? " taste-pill--selected" : ""}`}
+                className={`taste-pill${previewAnyYear ? " taste-pill--selected" : ""}`}
                 disabled={disabled}
-                aria-pressed={anyYear}
+                aria-pressed={previewAnyYear}
                 onClick={() => onSetAnyYear()}
               >
                 Any year
@@ -164,7 +165,7 @@ export function TasteRailPanel({
             <YearRangeSlider
               min={previewRange.min}
               max={previewRange.max}
-              disabled={disabled || anyYear}
+              disabled={disabled}
               onChange={(min, max) => setPreviewRange({ min, max, anyYear: false })}
               onCommit={(min, max) => {
                 onSetYearRange(min, max)
