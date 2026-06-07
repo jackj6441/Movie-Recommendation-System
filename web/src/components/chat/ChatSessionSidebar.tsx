@@ -1,6 +1,5 @@
 import type { StoredChatSession } from "../../lib/chatSessionStore"
-import { CloseIcon, SettingsIcon, SpeechBubbleIcon } from "../icons"
-import { SidebarSceneDecor } from "./SidebarSceneDecor"
+import { CloseIcon, SpeechBubbleIcon } from "../icons"
 
 type ChatSessionSidebarProps = {
   sessions: StoredChatSession[]
@@ -108,22 +107,6 @@ export function ChatSessionSidebar({
             </ul>
           </div>
         )}
-      </div>
-
-      <div className="chat-session-sidebar-wing-bottom">
-        <div className="chat-session-sidebar-footer">
-          <button
-            type="button"
-            className="chat-session-settings-btn"
-            aria-label="Settings"
-            disabled
-            title="Settings (coming soon)"
-          >
-            <SettingsIcon size={18} />
-            <span>Settings</span>
-          </button>
-        </div>
-        <SidebarSceneDecor variant="lamp" />
       </div>
     </aside>
   )

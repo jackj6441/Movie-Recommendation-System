@@ -20,7 +20,7 @@ import {
 import { useGenres } from "../../hooks/useGenres"
 import type { ChatTurn } from "../../types"
 import type { RagChatContext } from "../../types"
-import { PaperPlaneIcon, PaperclipIcon } from "../icons"
+import { PaperPlaneIcon } from "../icons"
 import { ChatSessionSidebar } from "./ChatSessionSidebar"
 import { ChatThread } from "./ChatThread"
 import { GenreChipsRow } from "./GenreChipsRow"
@@ -416,7 +416,9 @@ export function ChatRecommender() {
     : null
 
   return (
-    <div className="chat-app-layout">
+    <div
+      className={`chat-app-layout${hasThread && activeContext ? " chat-app-layout--three-col" : ""}`}
+    >
       {sessionDrawerOpen && (
         <button
           type="button"
@@ -436,9 +438,7 @@ export function ChatRecommender() {
         onJumpToTurn={(turnId) => scrollToTurn(turnId)}
       />
 
-      <section
-        className={`chat-layout${hasThread && activeContext ? " chat-layout--with-rail" : ""}`}
-      >
+      <section className="chat-layout">
         <div className={`chat-panel${hasThread ? " chat-panel--thread" : " chat-panel--home"}`}>
           {hasThread && (
             <div className="chat-panel-head">
@@ -516,15 +516,6 @@ export function ChatRecommender() {
             )}
             <div className={`chat-composer-wrap${hasThread ? " chat-composer-wrap--thread" : ""}`}>
               <div className="chat-composer-row">
-                <button
-                  type="button"
-                  className="chat-composer-attach"
-                  disabled
-                  aria-label="Attach file"
-                  title="Attachments coming soon"
-                >
-                  <PaperclipIcon size={20} />
-                </button>
                 <label className="sr-only" htmlFor={composerId}>
                   Message
                 </label>
@@ -561,17 +552,17 @@ export function ChatRecommender() {
             </div>
           </div>
         </div>
-
-        {hasThread && activeContext && tasteHandlers && (
-          <TasteRail
-            className="taste-rail--desktop"
-            context={activeContext}
-            disabled={chatLoading}
-            availableGenres={genres}
-            {...tasteHandlers}
-          />
-        )}
       </section>
+
+      {hasThread && activeContext && tasteHandlers && (
+        <TasteRail
+          className="taste-rail--desktop"
+          context={activeContext}
+          disabled={chatLoading}
+          availableGenres={genres}
+          {...tasteHandlers}
+        />
+      )}
     </div>
   )
 }

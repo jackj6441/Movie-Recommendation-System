@@ -10,7 +10,7 @@ describe("SeedPosterTile", () => {
     cleanup()
   })
 
-  it("renders a strip frame with poster art", () => {
+  it("renders poster art without a frame", () => {
     const { container } = render(
       <SeedPosterTile
         seed={{
@@ -22,7 +22,8 @@ describe("SeedPosterTile", () => {
       />
     )
 
-    expect(container.querySelector(".taste-seed-tile__frame.poster-frame--strip")).toBeInTheDocument()
+    expect(container.querySelector(".poster-frame")).not.toBeInTheDocument()
+    expect(container.querySelector(".taste-seed-tile__poster-wrap")).toBeInTheDocument()
     expect(container.querySelector('img[src="https://image.tmdb.org/t/p/w185/poster.jpg"]')).toBeInTheDocument()
   })
 

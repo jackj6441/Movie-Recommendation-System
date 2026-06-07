@@ -355,7 +355,7 @@ describe("App conversational RAG chat", () => {
     expect(within(taste).getByText("Comedy")).toBeInTheDocument()
     expect(within(taste).getByText("Toy Story (1995)")).toBeInTheDocument()
     expect(within(taste).queryByRole("button", { name: "Toy Story (1995)" })).toBeNull()
-    expect(taste.querySelector(".taste-seed-tile__frame")).toBeInTheDocument()
+    expect(taste.querySelector(".taste-seed-tile__poster-wrap")).toBeInTheDocument()
     expect(
       taste.querySelector('img[src="https://image.tmdb.org/t/p/w185/poster.jpg"]')
     ).toBeInTheDocument()
@@ -372,7 +372,7 @@ describe("App conversational RAG chat", () => {
     const rail = document.querySelector("aside.taste-rail--desktop")
     expect(rail).not.toBeNull()
     expect(rail).toHaveAttribute("aria-label", "Current taste")
-    expect(document.querySelector(".chat-layout--with-rail")).not.toBeNull()
+    expect(document.querySelector(".chat-app-layout--three-col")).not.toBeNull()
   })
 
   it("renders poster-forward disambiguation grid", async () => {
@@ -1201,10 +1201,10 @@ describe("App conversational RAG chat", () => {
       expect(screen.getByText("Living Room Shelf")).toBeInTheDocument()
     })
 
-    it("exposes icon-only send and attach controls in the composer", () => {
+    it("exposes icon-only send control in the composer", () => {
       render(<App />)
       expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Attach file" })).toBeDisabled()
+      expect(screen.queryByRole("button", { name: "Attach file" })).not.toBeInTheDocument()
     })
 
     it("renders assistant sofa avatar after a reply", async () => {
@@ -1217,18 +1217,6 @@ describe("App conversational RAG chat", () => {
 
       expect(await screen.findByText("Here are some picks.")).toBeInTheDocument()
       expect(document.querySelector(".assistant-avatar")).toBeInTheDocument()
-    })
-
-    it("renders plaster wing scene decor in side columns when thread has taste", async () => {
-      chatConfig.assistantMessage = "Done."
-      vi.stubGlobal("fetch", createFetchMock(chatConfig))
-
-      const user = userEvent.setup()
-      render(<App />)
-      await sendChat(user, "go")
-
-      expect(document.querySelector(".sidebar-scene-decor--lamp")).toBeInTheDocument()
-      expect(document.querySelector(".sidebar-scene-decor--console")).toBeInTheDocument()
     })
 
     it("renders wooden shelf under the more-movies strip", async () => {

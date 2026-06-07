@@ -98,6 +98,8 @@
   --chat-max: 52rem;
   --chat-max-with-rail: 72rem;
   --chat-wing-min-height: calc(100vh - 5rem);
+  --chat-wing-sticky-top: var(--space-md);
+  --chat-wing-sticky-max-height: calc(100vh - 2 * var(--space-md));
   --shadow-chat-stage: 0 12px 32px oklch(0.22 0.02 68 / 0.1);
   --bg-plaster-wing:
     radial-gradient(ellipse 90% 55% at 50% 0%, oklch(0.95 0.028 78 / 0.42), transparent 62%),

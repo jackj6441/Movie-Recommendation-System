@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { normalizeChatTurn, parseRagChatFinal, toChatTurnView } from "./chatTurnView"
+import { enrichContextSeedPosters, normalizeChatTurn, parseRagChatFinal, toChatTurnView } from "./chatTurnView"
 import type { RagChatFinal } from "../types"
 
 const readyFinal: RagChatFinal = {
@@ -42,6 +42,49 @@ describe("parseRagChatFinal", () => {
     })
     expect(parsed.context.seeds[0].poster_url).toContain("w500")
     expect(parsed.context.seeds[0].poster_thumb_url).toContain("w185")
+  })
+
+  it("fills seed posters from recommendations when context seeds omit them", () => {
+    const view = toChatTurnView({
+      ...readyFinal,
+      context: {
+        seeds: [{ movie_id: 1, title: "Toy Story (1995)" }],
+        genres: ["Comedy"],
+        year_min: null,
+        year_max: null,
+      },
+      recommendations: {
+        items: [{ movie_id: 1, title: "Toy Story (1995)", score: 0.9 }],
+        seed_movies: [
+          {
+            movie_id: 1,
+            title: "Toy Story (1995)",
+            poster_url: "https://image.tmdb.org/t/p/w500/poster.jpg",
+            poster_thumb_url: "https://image.tmdb.org/t/p/w185/poster.jpg",
+          },
+        ],
+        anchor_source: "seed",
+        model_version: "test",
+      },
+    })
+    expect(view.context.seeds[0].poster_thumb_url).toContain("w185")
+  })
+
+  it("enrichContextSeedPosters is a no-op when posters already exist", () => {
+    const context = {
+      seeds: [
+        {
+          movie_id: 1,
+          title: "Toy Story (1995)",
+          poster_thumb_url: "https://image.tmdb.org/t/p/w185/existing.jpg",
+        },
+      ],
+      genres: ["Comedy"],
+      year_min: null,
+      year_max: null,
+    }
+    const enriched = enrichContextSeedPosters(context, readyFinal.recommendations)
+    expect(enriched).toBe(context)
   })
 
   it("requires core final fields", () => {

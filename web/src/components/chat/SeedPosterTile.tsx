@@ -2,7 +2,6 @@ import { useState } from "react"
 import type { ChatSeedRef } from "../../types"
 import { formatTitle } from "../../utils/format"
 import { CloseIcon } from "../icons"
-import { PosterFrame } from "../results/PosterFrame"
 
 type SeedPosterTileProps = {
   seed: ChatSeedRef
@@ -25,10 +24,10 @@ export function SeedPosterTile({ seed, disabled = false, onRemove }: SeedPosterT
         aria-label={`Remove ${label} from starting movies`}
         onClick={onRemove}
       >
-        <PosterFrame variant="strip" className="taste-seed-tile__frame">
+        <div className="taste-seed-tile__poster-wrap">
           {showPoster && posterUrl ? (
             <img
-              className="poster-frame__art"
+              className="taste-seed-tile__poster"
               src={posterUrl}
               alt=""
               loading="lazy"
@@ -36,9 +35,9 @@ export function SeedPosterTile({ seed, disabled = false, onRemove }: SeedPosterT
               onError={() => setPosterHidden(true)}
             />
           ) : (
-            <div className="poster-frame__fallback" aria-hidden="true" />
+            <div className="taste-seed-tile__poster-fallback" aria-hidden="true" />
           )}
-        </PosterFrame>
+        </div>
         <CloseIcon className="taste-seed-tile__close" size={12} />
       </button>
       <p className="taste-seed-tile__caption" title={label}>

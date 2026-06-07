@@ -1,6 +1,7 @@
 import type {
   ChatSeedRef,
   DisambiguationCandidate,
+  MoviePosters,
   RagChatContext,
   RagChatDebug,
   RagChatFinal,
@@ -47,6 +48,51 @@ function readBool(row: Record<string, unknown>, key: string): boolean {
     throw new Error(`Chat final payload missing ${key}`)
   }
   return value
+}
+
+type PosterCarrier = MoviePosters & { movie_id: number }
+
+/** Fill missing seed poster URLs from recommendation payloads (older API builds). */
+export function enrichContextSeedPosters(
+  context: RagChatContext,
+  recommendations: RecommendationResponse | null | undefined,
+): RagChatContext {
+  if (!recommendations || context.seeds.length === 0) {
+    return context
+  }
+
+  const posterById = new Map<number, MoviePosters>()
+  const sources: PosterCarrier[] = [
+    ...(recommendations.seed_movies ?? []),
+    ...(recommendations.items ?? []),
+  ]
+  for (const row of sources) {
+    if (posterById.has(row.movie_id)) continue
+    if (!row.poster_url && !row.poster_thumb_url) continue
+    posterById.set(row.movie_id, {
+      poster_url: row.poster_url,
+      poster_thumb_url: row.poster_thumb_url,
+    })
+  }
+
+  if (posterById.size === 0) {
+    return context
+  }
+
+  let changed = false
+  const seeds = context.seeds.map((seed) => {
+    if (seed.poster_url || seed.poster_thumb_url) {
+      return seed
+    }
+    const posters = posterById.get(seed.movie_id)
+    if (!posters) {
+      return seed
+    }
+    changed = true
+    return { ...seed, ...posters }
+  })
+
+  return changed ? { ...context, seeds } : context
 }
 
 function readContext(row: Record<string, unknown>): RagChatContext {
@@ -169,7 +215,7 @@ export function toChatTurnView(
     turnId: raw.turn_id,
     outcome: resolveOutcome(raw),
     assistantMessage,
-    context: raw.context,
+    context: enrichContextSeedPosters(raw.context, raw.recommendations),
     recommendations: raw.recommendations,
     disambiguation,
     debug: raw.debug ?? null,
@@ -191,7 +237,20 @@ type StoredChatTurn = {
 
 /** Upgrade persisted turns that still store the raw backend final payload. */
 export function normalizeChatTurn<T extends StoredChatTurn>(turn: T): T {
-  if (turn.view || turn.role !== "assistant" || !turn.final) {
+  if (turn.view) {
+    if (turn.role !== "assistant" || !turn.view.recommendations) {
+      return turn
+    }
+    const context = enrichContextSeedPosters(turn.view.context, turn.view.recommendations)
+    if (context === turn.view.context) {
+      return turn
+    }
+    return {
+      ...turn,
+      view: { ...turn.view, context },
+    }
+  }
+  if (turn.role !== "assistant" || !turn.final) {
     return turn
   }
   return {

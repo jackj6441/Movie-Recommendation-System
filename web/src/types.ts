@@ -13,7 +13,7 @@ export type RecommendationItem = MoviePosters & {
 
 export type RecommendationResponse = {
   items: RecommendationItem[]
-  seed_movies: { movie_id: number; title: string }[]
+  seed_movies: (MoviePosters & { movie_id: number; title: string })[]
   anchor_source: string
   model_version: string
 }
