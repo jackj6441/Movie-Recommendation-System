@@ -105,12 +105,14 @@ def rank_seed_set(
     _ensure_api_on_path()
     seed_ranker = importlib.import_module("app.seed_ranker")
     try:
-        result = seed_ranker.rank(
-            seed_ids,
-            shuffle=False,
-            catalog=catalog.for_ranking(),
-            fusion_weights=fusion_weights,
-            top_k=top_k,
+        result = seed_ranker.rank_seed_set(
+            seed_ranker.RankRequest(
+                seed_movie_ids=seed_ids,
+                catalog=catalog.for_ranking(),
+                top_k=top_k,
+                fusion_weights=fusion_weights,
+                shuffle=False,
+            )
         )
     except (seed_ranker.InvalidSeedsError, seed_ranker.ContentUnavailableError):
         return []

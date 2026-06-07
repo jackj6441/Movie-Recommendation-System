@@ -201,6 +201,7 @@ def recommendations(request: SeedsRequest):
                     year_min=request.year_min,
                     year_max=request.year_max,
                 ),
+                shuffle=request.shuffle,
             )
         )
     except seed_ranker.InvalidSeedsError:
@@ -237,6 +238,7 @@ def explanations(request: SeedsRequest):
                     year_min=request.year_min,
                     year_max=request.year_max,
                 ),
+                shuffle=request.shuffle,
             )
         )
     except seed_ranker.InvalidSeedsError:
@@ -244,15 +246,7 @@ def explanations(request: SeedsRequest):
     except seed_ranker.ContentUnavailableError:
         return JSONResponse(status_code=503, content={"content_unavailable": True})
 
-    topk = [
-        {
-            "movie_id": item.movie_id,
-            "title": item.title,
-            "content": item.content_score,
-            "final": item.fusion_score,
-        }
-        for item in result.items
-    ]
+    topk = result.explanation_topk()
     similar_movies = [
         {"movie_id": mid, "title": get_title(mid), "similarity": sim}
         for mid, sim in result.similar_movies

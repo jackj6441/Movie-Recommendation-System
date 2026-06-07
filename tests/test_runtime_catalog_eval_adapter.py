@@ -106,15 +106,14 @@ def test_rank_seed_set_uses_ranking_view(monkeypatch: pytest.MonkeyPatch, tmp_pa
 
     seen: dict[str, object] = {}
 
-    def fake_rank(seed_ids, *, shuffle, catalog, fusion_weights=None, top_k=24):
-        del shuffle, fusion_weights, top_k
-        seen["catalog"] = catalog
-        seen["seed_ids"] = seed_ids
-        return type("Result", (), {"items": []})()
+    def fake_rank_seed_set(request):
+        seen["request"] = request
+        raise seed_ranker.InvalidSeedsError("test")
 
     seed_ranker = importlib.import_module("app.seed_ranker")
-    monkeypatch.setattr(seed_ranker, "rank", fake_rank)
+    monkeypatch.setattr(seed_ranker, "rank_seed_set", fake_rank_seed_set)
 
     rank_seed_set([1, 2], catalog, top_k=5)
-    assert seen["seed_ids"] == [1, 2]
-    assert seen["catalog"] == catalog.for_ranking()
+    assert seen["request"].seed_movie_ids == [1, 2]
+    assert seen["request"].catalog == catalog.for_ranking()
+    assert seen["request"].top_k == 5

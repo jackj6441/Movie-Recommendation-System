@@ -7,11 +7,12 @@ and ranks with Phase 1 fusion or Phase 2 LightGBM Lambdarank.
 from __future__ import annotations
 
 import os
+import random
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from app.artifact_bundle import get_default_bundle
-from app.fusion import CHANNELS, feature_rows, fuse, merge_candidate_ids
+from app.fusion import CANDIDATE_CAP, CHANNELS, feature_rows, fuse, merge_candidate_ids
 from app import ltr as ltr_ranker
 from app.retrievers import content_retriever, item_cf, popularity, svd
 
@@ -57,6 +58,7 @@ class RankRequest:
     top_k: int = TOP_K
     fusion_weights: Optional[dict[str, float]] = None
     ranking_mode: Optional[str] = None
+    shuffle: bool = False
 
 
 @dataclass
@@ -75,6 +77,18 @@ class RankedList:
     anchor_movie_id: int
     similar_movies: list[tuple[int, float]]
     ranking_mode: str = "multi_retriever_fusion"
+
+    def explanation_topk(self) -> list[dict[str, Any]]:
+        """Explanation endpoint rows: content-only vs fusion final scores per item."""
+        return [
+            {
+                "movie_id": item.movie_id,
+                "title": item.title,
+                "content": item.content_score,
+                "final": item.fusion_score,
+            }
+            for item in self.items
+        ]
 
 
 def resolve_ranking_mode() -> str:
@@ -146,6 +160,13 @@ def _filter_candidate_ids(
     ]
 
 
+def _candidate_cap(catalog: Catalog, filters: RankFilters) -> int:
+    has_filters = bool(filters.genres) or filters.year_min is not None or filters.year_max is not None
+    if has_filters:
+        return catalog.candidate_pool
+    return CANDIDATE_CAP
+
+
 def rank_seed_set(request: RankRequest) -> RankedList:
     """Run multi-retriever retrieval then fusion or LTR scoring."""
     catalog = request.catalog
@@ -162,9 +183,12 @@ def rank_seed_set(request: RankRequest) -> RankedList:
     exclude = set(valid_seeds)
     anchor_movie_id = valid_seeds[0]
     channel_hits = collect_channel_hits(valid_seeds, exclude, catalog)
-
-    merged_ids = merge_candidate_ids(channel_hits)
     filters = request.filters
+
+    merged_ids = merge_candidate_ids(
+        channel_hits,
+        cap=_candidate_cap(catalog, filters),
+    )
     genre_set = {g.lower() for g in filters.genres} if filters.genres else set()
     filtered_ids = _filter_candidate_ids(
         merged_ids,
@@ -198,6 +222,9 @@ def rank_seed_set(request: RankRequest) -> RankedList:
         weights = request.fusion_weights if request.fusion_weights is not None else dict(bundle.fusion.weights)
         scored = fuse(filtered_ids, channel_hits, weights)
 
+    if request.shuffle and scored:
+        random.shuffle(scored)
+
     items: list[RankedItem] = []
     for movie_id, final_score, breakdown in scored[: request.top_k]:
         items.append(
@@ -223,33 +250,4 @@ def rank_seed_set(request: RankRequest) -> RankedList:
         anchor_movie_id=anchor_movie_id,
         similar_movies=similar_movies,
         ranking_mode=label,
-    )
-
-
-def rank(
-    seeds: list[int],
-    shuffle: bool,
-    catalog: Catalog,
-    genres: Optional[list[str]] = None,
-    year_min: Optional[int] = None,
-    year_max: Optional[int] = None,
-    fusion_weights: Optional[dict[str, float]] = None,
-    top_k: int = TOP_K,
-    ranking_mode: Optional[str] = None,
-) -> RankedList:
-    """Compatibility shim for callers that still use the old rank Interface."""
-    del shuffle
-    return rank_seed_set(
-        RankRequest(
-            seed_movie_ids=seeds,
-            catalog=catalog,
-            filters=RankFilters(
-                genres=genres,
-                year_min=year_min,
-                year_max=year_max,
-            ),
-            top_k=top_k,
-            fusion_weights=fusion_weights,
-            ranking_mode=ranking_mode,
-        )
     )

@@ -522,7 +522,6 @@ def try_rank(
     shuffle: bool,
     catalog: RuntimeCatalog,
 ) -> tuple[RankedList | None, str | None]:
-    del shuffle
     ranking_catalog = catalog.for_ranking()
     try:
         result = seed_ranker.rank_seed_set(
@@ -534,6 +533,7 @@ def try_rank(
                     year_min=context.year_min,
                     year_max=context.year_max,
                 ),
+                shuffle=shuffle,
             )
         )
         return result, None

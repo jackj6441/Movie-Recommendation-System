@@ -71,31 +71,53 @@ def test_explanations_final_differs_from_content_only_when_fusion_active(load_ap
         assert "final" in row
 
 
-def test_rank_seed_set_matches_legacy_rank_shim(load_app):
+def test_ranked_list_explanation_topk_uses_content_and_final_scores(load_app):
     del load_app
     app_main = importlib.import_module("app.main")
     seed_ranker = importlib.import_module("app.seed_ranker")
 
-    request = seed_ranker.RankRequest(
-        seed_movie_ids=[1, 2, 3],
-        catalog=app_main.catalog,
-        filters=seed_ranker.RankFilters(genres=["Comedy"], year_min=1990, year_max=2009),
+    result = seed_ranker.rank_seed_set(
+        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.catalog)
+    )
+    assert result.items
+    rows = result.explanation_topk()
+    assert len(rows) == len(result.items)
+    for row, item in zip(rows, result.items):
+        assert row == {
+            "movie_id": item.movie_id,
+            "title": item.title,
+            "content": item.content_score,
+            "final": item.fusion_score,
+        }
+
+
+def test_rank_seed_set_shuffle_calls_random_shuffle(load_app, monkeypatch):
+    del load_app
+    app_main = importlib.import_module("app.main")
+    seed_ranker = importlib.import_module("app.seed_ranker")
+    shuffled_lengths: list[int] = []
+
+    monkeypatch.setattr(
+        seed_ranker.random,
+        "shuffle",
+        lambda items: shuffled_lengths.append(len(items)),
     )
 
-    direct = seed_ranker.rank_seed_set(request)
-    shim = seed_ranker.rank(
-        [1, 2, 3],
-        False,
-        app_main.catalog,
-        genres=["Comedy"],
-        year_min=1990,
-        year_max=2009,
+    seed_ranker.rank_seed_set(
+        seed_ranker.RankRequest(seed_movie_ids=[1, 2, 3], catalog=app_main.catalog)
     )
+    assert shuffled_lengths == []
 
-    assert [item.movie_id for item in direct.items] == [item.movie_id for item in shim.items]
-    assert direct.seed_movie_ids == shim.seed_movie_ids
-    assert direct.anchor_movie_id == shim.anchor_movie_id
-    assert direct.ranking_mode == shim.ranking_mode
+    result = seed_ranker.rank_seed_set(
+        seed_ranker.RankRequest(
+            seed_movie_ids=[1, 2, 3],
+            catalog=app_main.catalog,
+            shuffle=True,
+        )
+    )
+    assert result.items
+    assert len(shuffled_lengths) == 1
+    assert shuffled_lengths[0] >= len(result.items)
 
 
 def test_rank_seed_set_applies_request_top_k(load_app):

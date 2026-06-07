@@ -5928,7 +5928,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L141",
       "id": "scripts_live_browser_writescrolly",
-      "community": 59,
+      "community": 57,
       "norm_label": "writescrolly()"
     },
     {
@@ -5982,7 +5982,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L198",
       "id": "scripts_live_browser_id8",
-      "community": 59,
+      "community": 57,
       "norm_label": "id8()"
     },
     {
@@ -6072,7 +6072,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L416",
       "id": "scripts_live_browser_clearannotations",
-      "community": 28,
+      "community": 57,
       "norm_label": "clearannotations()"
     },
     {
@@ -6198,7 +6198,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L778",
       "id": "scripts_live_browser_extractcontext",
-      "community": 59,
+      "community": 57,
       "norm_label": "extractcontext()"
     },
     {
@@ -6504,7 +6504,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1807",
       "id": "scripts_live_browser_closetunepopover",
-      "community": 28,
+      "community": 42,
       "norm_label": "closetunepopover()"
     },
     {
@@ -6567,7 +6567,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L1964",
       "id": "scripts_live_browser_startscrolllock",
-      "community": 59,
+      "community": 28,
       "norm_label": "startscrolllock()"
     },
     {
@@ -6576,7 +6576,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2071",
       "id": "scripts_live_browser_stopscrolllock",
-      "community": 59,
+      "community": 28,
       "norm_label": "stopscrolllock()"
     },
     {
@@ -6585,7 +6585,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2085",
       "id": "scripts_live_browser_startvariantobserver",
-      "community": 59,
+      "community": 57,
       "norm_label": "startvariantobserver()"
     },
     {
@@ -6594,7 +6594,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2168",
       "id": "scripts_live_browser_startscrolltracking",
-      "community": 28,
+      "community": 59,
       "norm_label": "startscrolltracking()"
     },
     {
@@ -6684,7 +6684,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2393",
       "id": "scripts_live_browser_maybewarnconditionalancestor",
-      "community": 13,
+      "community": 28,
       "norm_label": "maybewarnconditionalancestor()"
     },
     {
@@ -6711,7 +6711,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L2525",
       "id": "scripts_live_browser_handlego",
-      "community": 59,
+      "community": 57,
       "norm_label": "handlego()"
     },
     {
@@ -6909,7 +6909,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3157",
       "id": "scripts_live_browser_showtoast",
-      "community": 13,
+      "community": 28,
       "norm_label": "showtoast()"
     },
     {
@@ -6963,7 +6963,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3567",
       "id": "scripts_live_browser_updateglobalbarstate",
-      "community": 58,
+      "community": 13,
       "norm_label": "updateglobalbarstate()"
     },
     {
@@ -6972,7 +6972,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3609",
       "id": "scripts_live_browser_toggledetect",
-      "community": 58,
+      "community": 13,
       "norm_label": "toggledetect()"
     },
     {
@@ -6990,7 +6990,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3647",
       "id": "scripts_live_browser_loaddetectscript",
-      "community": 58,
+      "community": 13,
       "norm_label": "loaddetectscript()"
     },
     {
@@ -6999,7 +6999,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L3656",
       "id": "scripts_live_browser_ondetectmessage",
-      "community": 58,
+      "community": 13,
       "norm_label": "ondetectmessage()"
     },
     {
@@ -7377,7 +7377,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-browser.js",
       "source_location": "L4809",
       "id": "scripts_live_browser_copytoclipboard",
-      "community": 13,
+      "community": 28,
       "norm_label": "copytoclipboard()"
     },
     {
@@ -7962,7 +7962,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L1",
       "id": "scripts_live_session_store",
-      "community": 35,
+      "community": 44,
       "norm_label": "live-session-store.mjs"
     },
     {
@@ -7971,7 +7971,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L5",
       "id": "scripts_live_session_store_completed_phases",
-      "community": 35,
+      "community": 44,
       "norm_label": "completed_phases"
     },
     {
@@ -7989,7 +7989,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L82",
       "id": "scripts_live_session_store_normalizeevent",
-      "community": 35,
+      "community": 44,
       "norm_label": "normalizeevent()"
     },
     {
@@ -7998,7 +7998,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L90",
       "id": "scripts_live_session_store_getjournalpath",
-      "community": 35,
+      "community": 44,
       "norm_label": "getjournalpath()"
     },
     {
@@ -8007,7 +8007,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L94",
       "id": "scripts_live_session_store_getsnapshotpath",
-      "community": 35,
+      "community": 44,
       "norm_label": "getsnapshotpath()"
     },
     {
@@ -8016,7 +8016,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L98",
       "id": "scripts_live_session_store_safesessionid",
-      "community": 35,
+      "community": 44,
       "norm_label": "safesessionid()"
     },
     {
@@ -8025,7 +8025,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L103",
       "id": "scripts_live_session_store_basesnapshot",
-      "community": 35,
+      "community": 44,
       "norm_label": "basesnapshot()"
     },
     {
@@ -8034,7 +8034,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L126",
       "id": "scripts_live_session_store_rebuildsnapshotfromjournal",
-      "community": 35,
+      "community": 44,
       "norm_label": "rebuildsnapshotfromjournal()"
     },
     {
@@ -8043,7 +8043,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L153",
       "id": "scripts_live_session_store_applyevent",
-      "community": 35,
+      "community": 44,
       "norm_label": "applyevent()"
     },
     {
@@ -8052,7 +8052,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L240",
       "id": "scripts_live_session_store_topendingevent",
-      "community": 35,
+      "community": 44,
       "norm_label": "topendingevent()"
     },
     {
@@ -8061,7 +8061,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L246",
       "id": "scripts_live_session_store_upsertartifact",
-      "community": 35,
+      "community": 44,
       "norm_label": "upsertartifact()"
     },
     {
@@ -8070,7 +8070,7 @@
       "source_file": ".cursor/skills/impeccable/scripts/live-session-store.mjs",
       "source_location": "L252",
       "id": "scripts_live_session_store_writesnapshot",
-      "community": 35,
+      "community": 44,
       "norm_label": "writesnapshot()"
     },
     {
@@ -10059,7 +10059,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L1",
       "id": "app_artifact_bundle",
-      "community": 41,
+      "community": 128,
       "norm_label": "artifact_bundle.py"
     },
     {
@@ -10176,7 +10176,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L108",
       "id": "app_artifact_bundle_ltrartifacts",
-      "community": 41,
+      "community": 128,
       "norm_label": "ltrartifacts"
     },
     {
@@ -10185,7 +10185,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L115",
       "id": "app_artifact_bundle_ltrartifacts_ok",
-      "community": 41,
+      "community": 128,
       "norm_label": ".ok()"
     },
     {
@@ -10194,7 +10194,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L120",
       "id": "app_artifact_bundle_artifactbundle",
-      "community": 41,
+      "community": 128,
       "norm_label": "artifactbundle"
     },
     {
@@ -10203,7 +10203,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L125",
       "id": "app_artifact_bundle_artifactbundle_health",
-      "community": 41,
+      "community": 128,
       "norm_label": ".health()"
     },
     {
@@ -10212,7 +10212,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L125",
       "id": "services_reco_api_app_artifact_bundle_py_any",
-      "community": 41,
+      "community": 128,
       "norm_label": "any"
     },
     {
@@ -10230,7 +10230,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L165",
       "id": "app_artifact_bundle_load_fusion_weights",
-      "community": 41,
+      "community": 128,
       "norm_label": "_load_fusion_weights()"
     },
     {
@@ -10239,7 +10239,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L178",
       "id": "app_artifact_bundle_load_fusion_artifacts",
-      "community": 41,
+      "community": 128,
       "norm_label": "_load_fusion_artifacts()"
     },
     {
@@ -10248,7 +10248,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L209",
       "id": "app_artifact_bundle_load_ltr_artifacts",
-      "community": 41,
+      "community": 128,
       "norm_label": "_load_ltr_artifacts()"
     },
     {
@@ -10266,7 +10266,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L287",
       "id": "app_artifact_bundle_load_artifact_bundle_from_env",
-      "community": 41,
+      "community": 128,
       "norm_label": "load_artifact_bundle_from_env()"
     },
     {
@@ -10284,7 +10284,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L298",
       "id": "app_artifact_bundle_reset_default_bundle",
-      "community": 41,
+      "community": 128,
       "norm_label": "reset_default_bundle()"
     },
     {
@@ -10293,7 +10293,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L303",
       "id": "app_artifact_bundle_set_default_bundle",
-      "community": 41,
+      "community": 128,
       "norm_label": "set_default_bundle()"
     },
     {
@@ -10302,7 +10302,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L1",
       "id": "app_artifact_bundle_rationale_1",
-      "community": 41,
+      "community": 128,
       "norm_label": "typed serving artifact bundle: content embeddings, fusion artifacts, and optiona"
     },
     {
@@ -10311,7 +10311,7 @@
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L304",
       "id": "app_artifact_bundle_rationale_304",
-      "community": 41,
+      "community": 128,
       "norm_label": "install a pre-loaded bundle for serving, evaluation, or tests."
     },
     {
@@ -10653,7 +10653,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L1",
       "id": "app_fusion",
-      "community": 103,
+      "community": 36,
       "norm_label": "fusion.py"
     },
     {
@@ -10662,7 +10662,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L15",
       "id": "app_fusion_minmax_normalize",
-      "community": 103,
+      "community": 36,
       "norm_label": "minmax_normalize()"
     },
     {
@@ -10671,7 +10671,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L28",
       "id": "app_fusion_merge_candidate_ids",
-      "community": 103,
+      "community": 36,
       "norm_label": "merge_candidate_ids()"
     },
     {
@@ -10680,7 +10680,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L41",
       "id": "app_fusion_feature_rows",
-      "community": 103,
+      "community": 36,
       "norm_label": "feature_rows()"
     },
     {
@@ -10689,7 +10689,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L54",
       "id": "app_fusion_fuse",
-      "community": 103,
+      "community": 36,
       "norm_label": "fuse()"
     },
     {
@@ -10698,7 +10698,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L1",
       "id": "app_fusion_rationale_1",
-      "community": 103,
+      "community": 36,
       "norm_label": "merge multi-retriever hits and compute weighted phase 1 fusion scores."
     },
     {
@@ -10707,7 +10707,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L16",
       "id": "app_fusion_rationale_16",
-      "community": 103,
+      "community": 36,
       "norm_label": "min-max each channel's top-k list to [0, 1]; ties at the max map to 1."
     },
     {
@@ -10716,7 +10716,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L32",
       "id": "app_fusion_rationale_32",
-      "community": 103,
+      "community": 36,
       "norm_label": "union retriever lists, dedupe, and cap by best raw score across channels."
     },
     {
@@ -10725,7 +10725,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L45",
       "id": "app_fusion_rationale_45",
-      "community": 103,
+      "community": 36,
       "norm_label": "per-candidate normalized channel features (same inputs as weighted fusion)."
     },
     {
@@ -10734,7 +10734,7 @@
       "source_file": "services/reco-api/app/fusion.py",
       "source_location": "L59",
       "id": "app_fusion_rationale_59",
-      "community": 103,
+      "community": 36,
       "norm_label": "return (movie_id, fusion_score, normalized_channel_scores) sorted by fusion desc"
     },
     {
@@ -10770,7 +10770,7 @@
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L22",
       "id": "app_ltr_rating_to_relevance",
-      "community": 43,
+      "community": 52,
       "norm_label": "rating_to_relevance()"
     },
     {
@@ -10851,7 +10851,7 @@
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L23",
       "id": "app_ltr_rationale_23",
-      "community": 43,
+      "community": 52,
       "norm_label": "graded relevance for offline labels: >=4 high, 3 medium, else low."
     },
     {
@@ -11038,7 +11038,7 @@
       "label": "explanations()",
       "file_type": "code",
       "source_file": "services/reco-api/app/main.py",
-      "source_location": "L226",
+      "source_location": "L227",
       "id": "app_main_explanations",
       "community": 29,
       "norm_label": "explanations()"
@@ -11047,7 +11047,7 @@
       "label": "rag_chat()",
       "file_type": "code",
       "source_file": "services/reco-api/app/main.py",
-      "source_location": "L277",
+      "source_location": "L271",
       "id": "app_main_rag_chat",
       "community": 29,
       "norm_label": "rag_chat()"
@@ -11056,7 +11056,7 @@
       "label": "debug_similar()",
       "file_type": "code",
       "source_file": "services/reco-api/app/main.py",
-      "source_location": "L299",
+      "source_location": "L293",
       "id": "app_main_debug_similar",
       "community": 29,
       "norm_label": "debug_similar()"
@@ -11598,7 +11598,7 @@
       "source_file": "services/reco-api/app/rag_evidence.py",
       "source_location": "L1",
       "id": "app_rag_evidence",
-      "community": 18,
+      "community": 35,
       "norm_label": "rag_evidence.py"
     },
     {
@@ -11607,7 +11607,7 @@
       "source_file": "services/reco-api/app/rag_evidence.py",
       "source_location": "L12",
       "id": "app_rag_evidence_build_evidence",
-      "community": 18,
+      "community": 35,
       "norm_label": "build_evidence()"
     },
     {
@@ -11616,7 +11616,7 @@
       "source_file": "services/reco-api/app/rag_evidence.py",
       "source_location": "L12",
       "id": "services_reco_api_app_rag_evidence_py_rankedlist",
-      "community": 18,
+      "community": 35,
       "norm_label": "rankedlist"
     },
     {
@@ -11625,7 +11625,7 @@
       "source_file": "services/reco-api/app/rag_evidence.py",
       "source_location": "L12",
       "id": "services_reco_api_app_rag_evidence_py_any",
-      "community": 18,
+      "community": 35,
       "norm_label": "any"
     },
     {
@@ -11634,7 +11634,7 @@
       "source_file": "services/reco-api/app/rag_evidence.py",
       "source_location": "L1",
       "id": "app_rag_evidence_rationale_1",
-      "community": 18,
+      "community": 35,
       "norm_label": "grounded rag evidence from ranker output (prompt-only, not exposed as structured"
     },
     {
@@ -11985,7 +11985,7 @@
       "source_file": "services/reco-api/app/rag_session.py",
       "source_location": "L1",
       "id": "app_rag_session",
-      "community": 21,
+      "community": 215,
       "norm_label": "rag_session.py"
     },
     {
@@ -12021,7 +12021,7 @@
       "source_file": "services/reco-api/app/rag_session.py",
       "source_location": "L36",
       "id": "app_rag_session_sessionstore_init",
-      "community": 21,
+      "community": 215,
       "norm_label": ".__init__()"
     },
     {
@@ -12102,7 +12102,7 @@
       "source_file": "services/reco-api/app/rag_session.py",
       "source_location": "L88",
       "id": "app_rag_session_default_ttl_seconds",
-      "community": 21,
+      "community": 215,
       "norm_label": "default_ttl_seconds()"
     },
     {
@@ -12111,7 +12111,7 @@
       "source_file": "services/reco-api/app/rag_session.py",
       "source_location": "L1",
       "id": "app_rag_session_rationale_1",
-      "community": 21,
+      "community": 215,
       "norm_label": "in-memory chat sessions for conversational rag (ttl-bound)."
     },
     {
@@ -12219,7 +12219,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L1",
       "id": "retrievers_popularity",
-      "community": 103,
+      "community": 218,
       "norm_label": "popularity.py"
     },
     {
@@ -12228,7 +12228,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L8",
       "id": "retrievers_popularity_retrieve",
-      "community": 103,
+      "community": 218,
       "norm_label": "retrieve()"
     },
     {
@@ -12237,7 +12237,7 @@
       "source_file": "services/reco-api/app/retrievers/popularity.py",
       "source_location": "L1",
       "id": "retrievers_popularity_rationale_1",
-      "community": 103,
+      "community": 218,
       "norm_label": "popularity retriever: top-rated catalog movies by offline rating counts."
     },
     {
@@ -12291,7 +12291,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L1",
       "id": "app_runtime_catalog",
-      "community": 217,
+      "community": 7,
       "norm_label": "runtime_catalog.py"
     },
     {
@@ -12309,7 +12309,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L27",
       "id": "app_runtime_catalog_parse_year",
-      "community": 217,
+      "community": 7,
       "norm_label": "parse_year()"
     },
     {
@@ -12471,7 +12471,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L140",
       "id": "app_runtime_catalog_load_movies_csv",
-      "community": 217,
+      "community": 7,
       "norm_label": "_load_movies_csv()"
     },
     {
@@ -12480,7 +12480,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L140",
       "id": "services_reco_api_app_runtime_catalog_py_path",
-      "community": 217,
+      "community": 7,
       "norm_label": "path"
     },
     {
@@ -12489,7 +12489,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L172",
       "id": "app_runtime_catalog_load_serving_stats",
-      "community": 217,
+      "community": 7,
       "norm_label": "_load_serving_stats()"
     },
     {
@@ -12498,7 +12498,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L196",
       "id": "app_runtime_catalog_load_popularity_from_ratings",
-      "community": 217,
+      "community": 7,
       "norm_label": "_load_popularity_from_ratings()"
     },
     {
@@ -12507,7 +12507,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L232",
       "id": "app_runtime_catalog_load_runtime_catalog",
-      "community": 217,
+      "community": 7,
       "norm_label": "load_runtime_catalog()"
     },
     {
@@ -12516,7 +12516,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L269",
       "id": "app_runtime_catalog_load_runtime_catalog_from_env",
-      "community": 217,
+      "community": 7,
       "norm_label": "load_runtime_catalog_from_env()"
     },
     {
@@ -12525,7 +12525,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L280",
       "id": "app_runtime_catalog_get_default_catalog",
-      "community": 217,
+      "community": 7,
       "norm_label": "get_default_catalog()"
     },
     {
@@ -12534,7 +12534,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L287",
       "id": "app_runtime_catalog_reset_default_catalog",
-      "community": 217,
+      "community": 7,
       "norm_label": "reset_default_catalog()"
     },
     {
@@ -12543,7 +12543,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L292",
       "id": "app_runtime_catalog_set_default_catalog",
-      "community": 217,
+      "community": 7,
       "norm_label": "set_default_catalog()"
     },
     {
@@ -12552,7 +12552,7 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L1",
       "id": "app_runtime_catalog_rationale_1",
-      "community": 217,
+      "community": 7,
       "norm_label": "runtime movie catalog: one startup load, focused views for ranking and resolver."
     },
     {
@@ -12568,7 +12568,7 @@
       "label": "InvalidSeedsError",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L21",
+      "source_location": "L22",
       "id": "app_seed_ranker_invalidseedserror",
       "community": 36,
       "norm_label": "invalidseedserror"
@@ -12577,7 +12577,7 @@
       "label": "ContentUnavailableError",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L25",
+      "source_location": "L26",
       "id": "app_seed_ranker_contentunavailableerror",
       "community": 36,
       "norm_label": "contentunavailableerror"
@@ -12586,7 +12586,7 @@
       "label": "Catalog",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L30",
+      "source_location": "L31",
       "id": "app_seed_ranker_catalog",
       "community": 36,
       "norm_label": "catalog"
@@ -12595,7 +12595,7 @@
       "label": "RankFilters",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L42",
+      "source_location": "L43",
       "id": "app_seed_ranker_rankfilters",
       "community": 36,
       "norm_label": "rankfilters"
@@ -12604,7 +12604,7 @@
       "label": "RankRequest",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L51",
+      "source_location": "L52",
       "id": "app_seed_ranker_rankrequest",
       "community": 36,
       "norm_label": "rankrequest"
@@ -12613,7 +12613,7 @@
       "label": "RankedItem",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L63",
+      "source_location": "L65",
       "id": "app_seed_ranker_rankeditem",
       "community": 36,
       "norm_label": "rankeditem"
@@ -12622,25 +12622,43 @@
       "label": "RankedList",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L72",
+      "source_location": "L74",
       "id": "app_seed_ranker_rankedlist",
       "community": 215,
       "norm_label": "rankedlist"
     },
     {
+      "label": ".explanation_topk()",
+      "file_type": "code",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "id": "app_seed_ranker_rankedlist_explanation_topk",
+      "community": 21,
+      "norm_label": ".explanation_topk()"
+    },
+    {
+      "label": "Any",
+      "file_type": "code",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "id": "services_reco_api_app_seed_ranker_py_any",
+      "community": 21,
+      "norm_label": "any"
+    },
+    {
       "label": "resolve_ranking_mode()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L80",
+      "source_location": "L94",
       "id": "app_seed_ranker_resolve_ranking_mode",
-      "community": 36,
+      "community": 21,
       "norm_label": "resolve_ranking_mode()"
     },
     {
       "label": "active_ranking_mode_label()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L88",
+      "source_location": "L102",
       "id": "app_seed_ranker_active_ranking_mode_label",
       "community": 36,
       "norm_label": "active_ranking_mode_label()"
@@ -12649,7 +12667,7 @@
       "label": "collect_channel_hits()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L94",
+      "source_location": "L108",
       "id": "app_seed_ranker_collect_channel_hits",
       "community": 36,
       "norm_label": "collect_channel_hits()"
@@ -12658,7 +12676,7 @@
       "label": "_passes_filters()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L111",
+      "source_location": "L125",
       "id": "app_seed_ranker_passes_filters",
       "community": 36,
       "norm_label": "_passes_filters()"
@@ -12667,28 +12685,28 @@
       "label": "_filter_candidate_ids()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L133",
+      "source_location": "L147",
       "id": "app_seed_ranker_filter_candidate_ids",
       "community": 36,
       "norm_label": "_filter_candidate_ids()"
     },
     {
+      "label": "_candidate_cap()",
+      "file_type": "code",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L163",
+      "id": "app_seed_ranker_candidate_cap",
+      "community": 36,
+      "norm_label": "_candidate_cap()"
+    },
+    {
       "label": "rank_seed_set()",
       "file_type": "code",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L149",
+      "source_location": "L170",
       "id": "app_seed_ranker_rank_seed_set",
       "community": 36,
       "norm_label": "rank_seed_set()"
-    },
-    {
-      "label": "rank()",
-      "file_type": "code",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L229",
-      "id": "app_seed_ranker_rank",
-      "community": 36,
-      "norm_label": "rank()"
     },
     {
       "label": "Seed-based ranking pipeline.  Orchestrates four retrievers (content, SVD, item-C",
@@ -12703,8 +12721,8 @@
       "label": "Raised when the seed list is empty or no seeds survive content filtering.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L22",
-      "id": "app_seed_ranker_rationale_22",
+      "source_location": "L23",
+      "id": "app_seed_ranker_rationale_23",
       "community": 36,
       "norm_label": "raised when the seed list is empty or no seeds survive content filtering."
     },
@@ -12712,8 +12730,8 @@
       "label": "Raised when content embeddings cannot be retrieved for the validated seeds.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L26",
-      "id": "app_seed_ranker_rationale_26",
+      "source_location": "L27",
+      "id": "app_seed_ranker_rationale_27",
       "community": 36,
       "norm_label": "raised when content embeddings cannot be retrieved for the validated seeds."
     },
@@ -12721,8 +12739,8 @@
       "label": "Immutable snapshot of the movie catalog needed for ranking.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L31",
-      "id": "app_seed_ranker_rationale_31",
+      "source_location": "L32",
+      "id": "app_seed_ranker_rationale_32",
       "community": 36,
       "norm_label": "immutable snapshot of the movie catalog needed for ranking."
     },
@@ -12730,8 +12748,8 @@
       "label": "Optional ranking constraints applied after candidate generation.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L43",
-      "id": "app_seed_ranker_rationale_43",
+      "source_location": "L44",
+      "id": "app_seed_ranker_rationale_44",
       "community": 36,
       "norm_label": "optional ranking constraints applied after candidate generation."
     },
@@ -12739,37 +12757,37 @@
       "label": "Ranker-owned request shape for turning a Seed Set into a Ranked List.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L52",
-      "id": "app_seed_ranker_rationale_52",
+      "source_location": "L53",
+      "id": "app_seed_ranker_rationale_53",
       "community": 36,
       "norm_label": "ranker-owned request shape for turning a seed set into a ranked list."
+    },
+    {
+      "label": "Explanation endpoint rows: content-only vs fusion final scores per item.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L82",
+      "id": "app_seed_ranker_rationale_82",
+      "community": 21,
+      "norm_label": "explanation endpoint rows: content-only vs fusion final scores per item."
     },
     {
       "label": "Return active ranker: ``ltr`` only when model is loaded and env requests it.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L81",
-      "id": "app_seed_ranker_rationale_81",
-      "community": 36,
+      "source_location": "L95",
+      "id": "app_seed_ranker_rationale_95",
+      "community": 21,
       "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it."
     },
     {
       "label": "Run multi-retriever retrieval then fusion or LTR scoring.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L150",
-      "id": "app_seed_ranker_rationale_150",
+      "source_location": "L171",
+      "id": "app_seed_ranker_rationale_171",
       "community": 36,
       "norm_label": "run multi-retriever retrieval then fusion or ltr scoring."
-    },
-    {
-      "label": "Compatibility shim for callers that still use the old rank Interface.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L240",
-      "id": "app_seed_ranker_rationale_240",
-      "community": 36,
-      "norm_label": "compatibility shim for callers that still use the old rank interface."
     },
     {
       "label": "system_evidence.json",
@@ -27141,7 +27159,7 @@
       "source_file": "services/reco-api/tests/test_fusion.py",
       "source_location": "L20",
       "id": "tests_test_fusion_test_minmax_normalize_spreads_scores",
-      "community": 103,
+      "community": 36,
       "norm_label": "test_minmax_normalize_spreads_scores()"
     },
     {
@@ -27190,19 +27208,28 @@
       "norm_label": "test_explanations_final_differs_from_content_only_when_fusion_active()"
     },
     {
-      "label": "test_rank_seed_set_matches_legacy_rank_shim()",
+      "label": "test_ranked_list_explanation_topk_uses_content_and_final_scores()",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_fusion.py",
       "source_location": "L74",
-      "id": "tests_test_fusion_test_rank_seed_set_matches_legacy_rank_shim",
+      "id": "tests_test_fusion_test_ranked_list_explanation_topk_uses_content_and_final_scores",
       "community": 103,
-      "norm_label": "test_rank_seed_set_matches_legacy_rank_shim()"
+      "norm_label": "test_ranked_list_explanation_topk_uses_content_and_final_scores()"
+    },
+    {
+      "label": "test_rank_seed_set_shuffle_calls_random_shuffle()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_fusion.py",
+      "source_location": "L94",
+      "id": "tests_test_fusion_test_rank_seed_set_shuffle_calls_random_shuffle",
+      "community": 103,
+      "norm_label": "test_rank_seed_set_shuffle_calls_random_shuffle()"
     },
     {
       "label": "test_rank_seed_set_applies_request_top_k()",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_fusion.py",
-      "source_location": "L101",
+      "source_location": "L123",
       "id": "tests_test_fusion_test_rank_seed_set_applies_request_top_k",
       "community": 103,
       "norm_label": "test_rank_seed_set_applies_request_top_k()"
@@ -27211,7 +27238,7 @@
       "label": "test_rank_seed_set_applies_rank_filters()",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_fusion.py",
-      "source_location": "L117",
+      "source_location": "L139",
       "id": "tests_test_fusion_test_rank_seed_set_applies_rank_filters",
       "community": 103,
       "norm_label": "test_rank_seed_set_applies_rank_filters()"
@@ -27220,7 +27247,7 @@
       "label": "_write_retrieval_fixtures()",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_fusion.py",
-      "source_location": "L141",
+      "source_location": "L163",
       "id": "tests_test_fusion_write_retrieval_fixtures",
       "community": 103,
       "norm_label": "_write_retrieval_fixtures()"
@@ -27229,7 +27256,7 @@
       "label": "test_healthz_svd_and_item_cf_ok_with_fixtures()",
       "file_type": "code",
       "source_file": "services/reco-api/tests/test_fusion.py",
-      "source_location": "L164",
+      "source_location": "L186",
       "id": "tests_test_fusion_test_healthz_svd_and_item_cf_ok_with_fixtures",
       "community": 103,
       "norm_label": "test_healthz_svd_and_item_cf_ok_with_fixtures()"
@@ -27996,7 +28023,7 @@
       "source_file": "services/reco-api/tests/test_rag_session.py",
       "source_location": "L1",
       "id": "tests_test_rag_session",
-      "community": 21,
+      "community": 112,
       "norm_label": "test_rag_session.py"
     },
     {
@@ -28005,7 +28032,7 @@
       "source_file": "services/reco-api/tests/test_rag_session.py",
       "source_location": "L7",
       "id": "tests_test_rag_session_test_create_and_get_session",
-      "community": 21,
+      "community": 112,
       "norm_label": "test_create_and_get_session()"
     },
     {
@@ -28014,7 +28041,7 @@
       "source_file": "services/reco-api/tests/test_rag_session.py",
       "source_location": "L16",
       "id": "tests_test_rag_session_test_session_expires_after_ttl",
-      "community": 21,
+      "community": 112,
       "norm_label": "test_session_expires_after_ttl()"
     },
     {
@@ -28023,7 +28050,7 @@
       "source_file": "services/reco-api/tests/test_rag_session.py",
       "source_location": "L24",
       "id": "tests_test_rag_session_test_append_message_updates_context",
-      "community": 21,
+      "community": 112,
       "norm_label": "test_append_message_updates_context()"
     },
     {
@@ -28032,7 +28059,7 @@
       "source_file": "services/reco-api/tests/test_rag_session.py",
       "source_location": "L38",
       "id": "tests_test_rag_session_test_clear_removes_all_sessions",
-      "community": 21,
+      "community": 112,
       "norm_label": "test_clear_removes_all_sessions()"
     },
     {
@@ -28602,7 +28629,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L1",
       "id": "tests_test_ltr_ranking",
-      "community": 103,
+      "community": 52,
       "norm_label": "test_ltr_ranking.py"
     },
     {
@@ -28611,7 +28638,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L20",
       "id": "tests_test_ltr_ranking_test_rating_to_relevance_grades",
-      "community": 43,
+      "community": 52,
       "norm_label": "test_rating_to_relevance_grades()"
     },
     {
@@ -28620,7 +28647,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L26",
       "id": "tests_test_ltr_ranking_test_feature_rows_aligns_with_channels",
-      "community": 103,
+      "community": 52,
       "norm_label": "test_feature_rows_aligns_with_channels()"
     },
     {
@@ -28629,7 +28656,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L39",
       "id": "tests_test_ltr_ranking_test_train_lambdarank_cli_smoke",
-      "community": 103,
+      "community": 52,
       "norm_label": "test_train_lambdarank_cli_smoke()"
     },
     {
@@ -28638,7 +28665,7 @@
       "source_file": "tests/test_ltr_ranking.py",
       "source_location": "L1",
       "id": "tests_test_ltr_ranking_rationale_1",
-      "community": 103,
+      "community": 52,
       "norm_label": "tests for phase 2 ltr training and serving hooks."
     },
     {
@@ -31572,7 +31599,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L94",
       "id": "reference_animate_technical_implementation",
-      "community": 216,
+      "community": 74,
       "norm_label": "technical implementation"
     },
     {
@@ -31581,7 +31608,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L98",
       "id": "reference_animate_timing_easing",
-      "community": 216,
+      "community": 74,
       "norm_label": "timing & easing"
     },
     {
@@ -31590,7 +31617,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L120",
       "id": "reference_animate_css_animations",
-      "community": 216,
+      "community": 74,
       "norm_label": "css animations"
     },
     {
@@ -31599,7 +31626,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L129",
       "id": "reference_animate_javascript_animation",
-      "community": 216,
+      "community": 74,
       "norm_label": "javascript animation"
     },
     {
@@ -31608,7 +31635,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L137",
       "id": "reference_animate_performance",
-      "community": 216,
+      "community": 74,
       "norm_label": "performance"
     },
     {
@@ -31617,7 +31644,7 @@
       "source_file": ".cursor/skills/impeccable/reference/animate.md",
       "source_location": "L144",
       "id": "reference_animate_accessibility",
-      "community": 216,
+      "community": 74,
       "norm_label": "accessibility"
     },
     {
@@ -32643,7 +32670,7 @@
       "source_file": ".cursor/skills/impeccable/reference/colorize.md",
       "source_location": "L103",
       "id": "reference_colorize_balance_refinement",
-      "community": 80,
+      "community": 216,
       "norm_label": "balance & refinement"
     },
     {
@@ -32652,7 +32679,7 @@
       "source_file": ".cursor/skills/impeccable/reference/colorize.md",
       "source_location": "L107",
       "id": "reference_colorize_maintain_hierarchy",
-      "community": 80,
+      "community": 216,
       "norm_label": "maintain hierarchy"
     },
     {
@@ -32661,7 +32688,7 @@
       "source_file": ".cursor/skills/impeccable/reference/colorize.md",
       "source_location": "L113",
       "id": "reference_colorize_accessibility",
-      "community": 80,
+      "community": 216,
       "norm_label": "accessibility"
     },
     {
@@ -32670,7 +32697,7 @@
       "source_file": ".cursor/skills/impeccable/reference/colorize.md",
       "source_location": "L118",
       "id": "reference_colorize_cohesion",
-      "community": 80,
+      "community": 216,
       "norm_label": "cohesion"
     },
     {
@@ -39532,6 +39559,96 @@
       "norm_label": "web"
     },
     {
+      "label": "rank()",
+      "file_type": "code",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L229",
+      "community": 36,
+      "norm_label": "rank()",
+      "id": "app_seed_ranker_rank"
+    },
+    {
+      "label": "Raised when the seed list is empty or no seeds survive content filtering.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L22",
+      "community": 36,
+      "norm_label": "raised when the seed list is empty or no seeds survive content filtering.",
+      "id": "app_seed_ranker_rationale_22"
+    },
+    {
+      "label": "Raised when content embeddings cannot be retrieved for the validated seeds.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L26",
+      "community": 36,
+      "norm_label": "raised when content embeddings cannot be retrieved for the validated seeds.",
+      "id": "app_seed_ranker_rationale_26"
+    },
+    {
+      "label": "Immutable snapshot of the movie catalog needed for ranking.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L31",
+      "community": 36,
+      "norm_label": "immutable snapshot of the movie catalog needed for ranking.",
+      "id": "app_seed_ranker_rationale_31"
+    },
+    {
+      "label": "Optional ranking constraints applied after candidate generation.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L43",
+      "community": 36,
+      "norm_label": "optional ranking constraints applied after candidate generation.",
+      "id": "app_seed_ranker_rationale_43"
+    },
+    {
+      "label": "Ranker-owned request shape for turning a Seed Set into a Ranked List.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L52",
+      "community": 36,
+      "norm_label": "ranker-owned request shape for turning a seed set into a ranked list.",
+      "id": "app_seed_ranker_rationale_52"
+    },
+    {
+      "label": "Return active ranker: ``ltr`` only when model is loaded and env requests it.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "community": 21,
+      "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it.",
+      "id": "app_seed_ranker_rationale_81"
+    },
+    {
+      "label": "Run multi-retriever retrieval then fusion or LTR scoring.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L150",
+      "community": 36,
+      "norm_label": "run multi-retriever retrieval then fusion or ltr scoring.",
+      "id": "app_seed_ranker_rationale_150"
+    },
+    {
+      "label": "Compatibility shim for callers that still use the old rank Interface.",
+      "file_type": "rationale",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L240",
+      "community": 36,
+      "norm_label": "compatibility shim for callers that still use the old rank interface.",
+      "id": "app_seed_ranker_rationale_240"
+    },
+    {
+      "label": "test_rank_seed_set_matches_legacy_rank_shim()",
+      "file_type": "code",
+      "source_file": "services/reco-api/tests/test_fusion.py",
+      "source_location": "L74",
+      "community": 103,
+      "norm_label": "test_rank_seed_set_matches_legacy_rank_shim()",
+      "id": "tests_test_fusion_test_rank_seed_set_matches_legacy_rank_shim"
+    },
+    {
       "label": "EvalCatalog",
       "file_type": "code",
       "source_file": "evaluation/eval_fusion.py",
@@ -39680,7 +39797,7 @@
       "file_type": "code",
       "source_file": "services/reco-api/app/rag_chat.py",
       "source_location": "L154",
-      "community": 215,
+      "community": 18,
       "norm_label": "catalogservices",
       "id": "services_reco_api_app_rag_chat_py_catalogservices"
     },
@@ -39734,7 +39851,7 @@
       "file_type": "rationale",
       "source_file": "services/reco-api/app/artifact_bundle.py",
       "source_location": "L290",
-      "community": 41,
+      "community": 128,
       "norm_label": "install a pre-loaded bundle for serving, evaluation, or tests.",
       "id": "app_artifact_bundle_rationale_290"
     },
@@ -39793,60 +39910,6 @@
       "id": "evaluation_fusion_ranking_rationale_131"
     },
     {
-      "label": "Raised when the seed list is empty or no seeds survive content filtering.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L23",
-      "community": 36,
-      "norm_label": "raised when the seed list is empty or no seeds survive content filtering.",
-      "id": "app_seed_ranker_rationale_23"
-    },
-    {
-      "label": "Raised when content embeddings cannot be retrieved for the validated seeds.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L27",
-      "community": 36,
-      "norm_label": "raised when content embeddings cannot be retrieved for the validated seeds.",
-      "id": "app_seed_ranker_rationale_27"
-    },
-    {
-      "label": "Immutable snapshot of the movie catalog needed for ranking.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L32",
-      "community": 36,
-      "norm_label": "immutable snapshot of the movie catalog needed for ranking.",
-      "id": "app_seed_ranker_rationale_32"
-    },
-    {
-      "label": "Optional ranking constraints applied after candidate generation.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L44",
-      "community": 36,
-      "norm_label": "optional ranking constraints applied after candidate generation.",
-      "id": "app_seed_ranker_rationale_44"
-    },
-    {
-      "label": "Ranker-owned request shape for turning a Seed Set into a Ranked List.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L53",
-      "community": 36,
-      "norm_label": "ranker-owned request shape for turning a seed set into a ranked list.",
-      "id": "app_seed_ranker_rationale_53"
-    },
-    {
-      "label": "Return active ranker: ``ltr`` only when model is loaded and env requests it.",
-      "file_type": "rationale",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L82",
-      "community": 36,
-      "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it.",
-      "id": "app_seed_ranker_rationale_82"
-    },
-    {
       "label": "Run multi-retriever retrieval then fusion or LTR scoring.",
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
@@ -39869,7 +39932,7 @@
       "file_type": "rationale",
       "source_file": "services/reco-api/app/ltr.py",
       "source_location": "L28",
-      "community": 43,
+      "community": 52,
       "norm_label": "graded relevance for offline labels: >=4 high, 3 medium, else low.",
       "id": "app_ltr_rationale_28"
     },
@@ -39914,7 +39977,7 @@
       "file_type": "rationale",
       "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L61",
-      "community": 36,
+      "community": 21,
       "norm_label": "return active ranker: ``ltr`` only when model is loaded and env requests it.",
       "id": "app_seed_ranker_rationale_61"
     },
@@ -63135,9 +63198,9 @@
       "source_file": "evaluation/eval_fusion.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "evaluation_eval_fusion_py_namespace",
-      "target": "evaluation_fusion_ranking_py_runtimecatalog",
-      "confidence_score": 0.5
+      "target": "evaluation_fusion_ranking_py_runtimecatalog"
     },
     {
       "relation": "calls",
@@ -63234,9 +63297,9 @@
       "source_file": "evaluation/eval_fusion.py",
       "source_location": "L79",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "evaluation_eval_fusion_run_evaluation",
-      "target": "evaluation_eval_fusion_py_runtimecatalog",
-      "confidence_score": 1.0
+      "target": "evaluation_eval_fusion_py_runtimecatalog"
     },
     {
       "relation": "calls",
@@ -63276,9 +63339,9 @@
       "source_file": "evaluation/eval_fusion.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "evaluation_eval_fusion_py_dataframe",
-      "target": "evaluation_fusion_ranking_py_runtimecatalog",
-      "confidence_score": 0.5
+      "target": "evaluation_fusion_ranking_py_runtimecatalog"
     },
     {
       "relation": "uses",
@@ -63286,9 +63349,9 @@
       "source_file": "evaluation/eval_fusion.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "evaluation_eval_fusion_py_runtimecatalog",
-      "target": "evaluation_fusion_ranking_py_runtimecatalog",
-      "confidence_score": 0.5
+      "target": "evaluation_fusion_ranking_py_runtimecatalog"
     },
     {
       "relation": "uses",
@@ -63306,9 +63369,9 @@
       "source_file": "evaluation/eval_fusion.py",
       "source_location": "L13",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "evaluation_eval_fusion_py_any",
-      "target": "evaluation_fusion_ranking_py_runtimecatalog",
-      "confidence_score": 0.5
+      "target": "evaluation_fusion_ranking_py_runtimecatalog"
     },
     {
       "relation": "calls",
@@ -71076,9 +71139,9 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L14",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "app_runtime_catalog_searchhit",
-      "target": "services_reco_api_app_rag_resolve_py_searchmoviesfn",
-      "confidence_score": 0.5
+      "target": "services_reco_api_app_rag_resolve_py_searchmoviesfn"
     },
     {
       "relation": "uses",
@@ -71229,9 +71292,9 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L14",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "app_runtime_catalog_searchhit",
-      "target": "services_reco_api_app_rag_resolve_py_genreseedidsfn",
-      "confidence_score": 0.5
+      "target": "services_reco_api_app_rag_resolve_py_genreseedidsfn"
     },
     {
       "relation": "uses",
@@ -71371,9 +71434,9 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L14",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "app_runtime_catalog_searchhit",
-      "target": "services_reco_api_app_rag_resolve_py_gettitlefn",
-      "confidence_score": 0.5
+      "target": "services_reco_api_app_rag_resolve_py_gettitlefn"
     },
     {
       "relation": "uses",
@@ -72394,9 +72457,9 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_runtime_catalog",
-      "target": "app_runtime_catalog_searchhit",
-      "confidence_score": 1.0
+      "target": "app_runtime_catalog_searchhit"
     },
     {
       "relation": "contains",
@@ -72436,9 +72499,9 @@
       "source_file": "services/reco-api/tests/test_runtime_catalog.py",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "tests_test_runtime_catalog",
-      "target": "app_runtime_catalog",
-      "confidence_score": 1.0
+      "target": "app_runtime_catalog"
     },
     {
       "relation": "references",
@@ -72447,9 +72510,9 @@
       "source_file": "services/reco-api/app/runtime_catalog.py",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_runtime_catalog_runtimecatalog_search_movies",
-      "target": "app_runtime_catalog_searchhit",
-      "confidence_score": 1.0
+      "target": "app_runtime_catalog_searchhit"
     },
     {
       "relation": "uses",
@@ -72457,9 +72520,9 @@
       "source_file": "services/reco-api/tests/test_runtime_catalog.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "services_reco_api_tests_test_runtime_catalog_py_monkeypatch",
-      "target": "app_runtime_catalog_searchhit",
-      "confidence_score": 0.5
+      "target": "app_runtime_catalog_searchhit"
     },
     {
       "relation": "uses",
@@ -72467,9 +72530,9 @@
       "source_file": "services/reco-api/tests/test_runtime_catalog.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "services_reco_api_tests_test_runtime_catalog_py_path",
-      "target": "app_runtime_catalog_searchhit",
-      "confidence_score": 0.5
+      "target": "app_runtime_catalog_searchhit"
     },
     {
       "relation": "calls",
@@ -73006,6 +73069,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "app_seed_ranker",
+      "target": "app_seed_ranker_candidate_cap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L31",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -73253,6 +73326,17 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "app_seed_ranker_candidate_cap",
+      "target": "app_seed_ranker_catalog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L74",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -73331,6 +73415,17 @@
       "confidence_score": 0.5,
       "source": "training_ltr_dataset_py_ndarray",
       "target": "app_seed_ranker_catalog"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "app_seed_ranker_candidate_cap",
+      "target": "app_seed_ranker_rankfilters",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -73450,6 +73545,16 @@
       "target": "app_seed_ranker_rankedlist"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rankedlist",
+      "target": "app_seed_ranker_rankedlist_explanation_topk",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "services/reco-api/app/rag_chat.py",
@@ -73478,6 +73583,27 @@
       "confidence_score": 0.5,
       "source": "services_reco_api_app_rag_chat_py_catalogservices",
       "target": "app_seed_ranker_rankedlist"
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rankedlist_explanation_topk",
+      "target": "services_reco_api_app_seed_ranker_py_any",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_82",
+      "target": "app_seed_ranker_rankedlist_explanation_topk",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -73541,6 +73667,16 @@
       "confidence_score": 1.0,
       "source": "app_seed_ranker_rationale_82",
       "target": "app_seed_ranker_resolve_ranking_mode"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rationale_95",
+      "target": "app_seed_ranker_resolve_ranking_mode",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -73635,6 +73771,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L190",
+      "weight": 1.0,
+      "source": "app_seed_ranker_rank_seed_set",
+      "target": "app_seed_ranker_candidate_cap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
       "source_location": "L241",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -73665,31 +73812,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L140",
+      "source_location": "L171",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app_seed_ranker_rationale_140",
-      "target": "app_seed_ranker_rank"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L239",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app_seed_ranker_rationale_239",
-      "target": "app_seed_ranker_rank"
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "services/reco-api/app/seed_ranker.py",
-      "source_location": "L240",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "app_seed_ranker_rationale_240",
-      "target": "app_seed_ranker_rank"
+      "source": "app_seed_ranker_rationale_171",
+      "target": "app_seed_ranker_rank_seed_set",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -90029,6 +90156,26 @@
       "confidence_score": 1.0,
       "source": "tests_test_fusion",
       "target": "tests_test_fusion_test_rank_seed_set_matches_legacy_rank_shim"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_fusion.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "tests_test_fusion",
+      "target": "tests_test_fusion_test_rank_seed_set_shuffle_calls_random_shuffle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/tests/test_fusion.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "tests_test_fusion",
+      "target": "tests_test_fusion_test_ranked_list_explanation_topk_uses_content_and_final_scores",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -112228,6 +112375,36 @@
       "target": "web_readme_web"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_seed_ranker_rationale_140",
+      "target": "app_seed_ranker_rank"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L239",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_seed_ranker_rationale_239",
+      "target": "app_seed_ranker_rank"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/reco-api/app/seed_ranker.py",
+      "source_location": "L240",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_seed_ranker_rationale_240",
+      "target": "app_seed_ranker_rank"
+    },
+    {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "evaluation/eval_fusion.py",
@@ -113488,5 +113665,5 @@
       "source_file": "docs/agents/issue-tracker.md"
     }
   ],
-  "built_at_commit": "08663be301241b55f6639ab59408a679e0bca9f0"
+  "built_at_commit": "c2156b20283d88f2012410d2551412d58f60e5ab"
 }
