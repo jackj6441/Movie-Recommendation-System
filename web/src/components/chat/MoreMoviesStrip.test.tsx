@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest"
 import { cleanup, render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it } from "vitest"
 import { MoreMoviesStrip } from "./MoreMoviesStrip"
 
@@ -16,25 +15,22 @@ describe("MoreMoviesStrip", () => {
     score: 0.8,
   }))
 
-  it("shows five tiles and a Show all toggle when more remain", () => {
-    render(<MoreMoviesStrip items={items} />)
+  it("renders all strip tiles in a horizontal scroller without a show-more toggle", () => {
+    const { container } = render(<MoreMoviesStrip items={items} />)
 
     expect(screen.getByRole("heading", { name: "More movies you might like" })).toBeInTheDocument()
     expect(screen.getByText("Film 6 (2001)")).toBeInTheDocument()
-    expect(screen.queryByText("Film 10 (2001)")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show all (4)" })).toBeInTheDocument()
+    expect(screen.getByText("Film 10 (2001)")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Show \d+ more/ })).not.toBeInTheDocument()
+    expect(container.querySelector(".wood-shelf")).not.toBeInTheDocument()
+    expect(container.querySelector(".more-movies-strip-scroller.is-scrollable")).toBeInTheDocument()
+    expect(container.querySelectorAll(".poster-frame--strip").length).toBe(9)
   })
 
-  it("expands to the full strip and supports Show fewer", async () => {
-    render(<MoreMoviesStrip items={items} />)
-    const user = userEvent.setup()
+  it("does not mark the scroller scrollable when only a few items fit", () => {
+    const { container } = render(<MoreMoviesStrip items={items.slice(0, 3)} />)
 
-    await user.click(screen.getByRole("button", { name: "Show all (4)" }))
-    expect(await screen.findByText("Film 10 (2001)")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show fewer" })).toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: "Show fewer" }))
-    expect(screen.queryByText("Film 10 (2001)")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show all (4)" })).toBeInTheDocument()
+    expect(container.querySelector(".more-movies-strip-scroller.is-scrollable")).not.toBeInTheDocument()
+    expect(container.querySelectorAll(".poster-frame--strip").length).toBe(3)
   })
 })

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { AppBrand } from "./AppBrand"
 import { TmdbFooter } from "./TmdbFooter"
 
 type View = "recommender" | "evidence"
@@ -15,7 +16,7 @@ export function AppShell({ view, onViewChange, headerAlerts, children }: AppShel
     <main className="page">
       <header className="header app-header">
         <div className="app-topbar">
-          <p className="app-brand">Movie Recommender</p>
+          <AppBrand />
           <nav className="view-segment" role="tablist" aria-label="Primary views">
             <button
               type="button"

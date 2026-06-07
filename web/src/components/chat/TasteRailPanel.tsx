@@ -6,6 +6,7 @@ import {
   isAnyYear,
   sliderMatchesContext,
 } from "../../lib/tasteYear"
+import { CloseIcon } from "../icons"
 import { GenreChipsRow } from "./GenreChipsRow"
 import { YearRangeSlider } from "./YearRangeSlider"
 
@@ -48,7 +49,7 @@ function TastePill({
         onClick={onRemove}
       >
         {children}
-        <span aria-hidden="true"> ×</span>
+        <CloseIcon className="taste-pill__close" size={14} />
       </button>
     )
   }

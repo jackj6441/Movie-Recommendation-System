@@ -12,8 +12,12 @@ body {
   font-family: var(--font-ui);
   background-color: var(--color-page-bg);
   background-image:
-    radial-gradient(ellipse 120% 80% at 50% -20%, oklch(0.94 0.02 78 / 0.35), transparent 55%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    radial-gradient(ellipse 90% 55% at 50% 8%, oklch(0.96 0.03 78 / 0.55), transparent 62%),
+    radial-gradient(ellipse 120% 80% at 50% 100%, oklch(0.85 0.025 70 / 0.35), transparent 58%),
+    var(--asset-plaster-tile);
+  background-size: auto, auto, 512px 512px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position: center top, center bottom, center;
   min-height: 100vh;
   padding: var(--space-md) var(--space-lg) var(--space-3xl);
   color: var(--color-text);
@@ -233,14 +237,14 @@ body {
   animation: fade-in-up 220ms cubic-bezier(0.25, 1, 0.5, 1) both;
 }
 .card h2 {
-  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-family: var(--font-display);
   margin: 0 0 0.3rem;
   font-size: 1.5rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 .card h3 {
-  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-family: var(--font-display);
   font-size: 1.15rem;
   line-height: 1.2;
   letter-spacing: -0.01em;

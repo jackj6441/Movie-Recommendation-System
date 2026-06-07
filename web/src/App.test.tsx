@@ -1029,7 +1029,7 @@ describe("App conversational RAG chat", () => {
     expect(secondBody.session_id).toBe("sess-test-1")
   })
 
-  it("renders hero plus collapsed film strip when chat returns ten items", async () => {
+  it("renders hero plus scrollable film strip when chat returns ten items", async () => {
     chatConfig.items = Array.from({ length: 10 }, (_, index) => ({
       movie_id: 100 + index,
       title: `Ranked Film ${index + 1} (2001)`,
@@ -1044,14 +1044,11 @@ describe("App conversational RAG chat", () => {
     expect(await screen.findByRole("heading", { name: "Ranked Film 1 (2001)" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "More movies you might like" })).toBeInTheDocument()
     expect(screen.getByText("Ranked Film 6 (2001)")).toBeInTheDocument()
-    expect(screen.queryByText("Ranked Film 10 (2001)")).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show all (4)" })).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Start over" })).toBeInTheDocument()
+    expect(screen.getByText("Ranked Film 10 (2001)")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Show \d+ more/ })).not.toBeInTheDocument()
+    expect(document.querySelector(".more-movies-strip-scroller.is-scrollable")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Start over" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Start over" })).not.toHaveClass("hero-secondary-action")
-
-    await user.click(screen.getByRole("button", { name: "Show all (4)" }))
-    expect(await screen.findByText("Ranked Film 10 (2001)")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show fewer" })).toBeInTheDocument()
   })
 
   it("shows empty recommendations guidance without a hero pick", async () => {
@@ -1090,10 +1087,9 @@ describe("App conversational RAG chat", () => {
     await sendChat(user, "more")
 
     expect(await screen.findByRole("heading", { name: "More movies you might like" })).toBeInTheDocument()
-    const strip = document.querySelector(".more-movies-strip")
-    expect(strip).not.toBeNull()
-    expect(within(strip as HTMLElement).getByText("Fourth (2004)")).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: /Show all/ })).not.toBeInTheDocument()
+    expect(document.querySelector(".more-movies-strip-row--frames")).not.toBeNull()
+    expect(screen.getByText("Fourth (2004)")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Show \d+ more/ })).not.toBeInTheDocument()
   })
 
   it("renders the System Evidence dashboard", async () => {
@@ -1180,7 +1176,56 @@ describe("App conversational RAG chat", () => {
 
     const card = await screen.findByRole("heading", { name: "Some Movie" })
     await waitFor(() => {
-      expect(card.closest(".hero-pick")).toHaveClass("has-poster")
+      const hero = card.closest(".hero-pick")
+      expect(hero).toHaveClass("has-poster")
+      expect(hero?.querySelector(".poster-frame--hero .poster-frame__wood")).toBeInTheDocument()
+      expect(hero?.querySelector(".poster-frame__mat")).toBeInTheDocument()
+    })
+  })
+
+  describe("Living Room Shelf shell", () => {
+    it("shows the Living Room Shelf brand in the header", () => {
+      render(<App />)
+      expect(screen.getByText("Living Room Shelf")).toBeInTheDocument()
+    })
+
+    it("exposes icon-only send and attach controls in the composer", () => {
+      render(<App />)
+      expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Attach file" })).toBeDisabled()
+    })
+
+    it("renders assistant sofa avatar after a reply", async () => {
+      chatConfig.assistantMessage = "Here are some picks."
+      vi.stubGlobal("fetch", createFetchMock(chatConfig))
+
+      const user = userEvent.setup()
+      render(<App />)
+      await sendChat(user, "hello")
+
+      expect(await screen.findByText("Here are some picks.")).toBeInTheDocument()
+      expect(document.querySelector(".assistant-avatar")).toBeInTheDocument()
+    })
+
+    it("renders wooden shelf under the more-movies strip", async () => {
+      chatConfig.items = Array.from({ length: 4 }, (_, index) => ({
+        movie_id: index + 2,
+        title: `Shelf Film ${index + 2}`,
+        score: 0.7,
+      }))
+      vi.stubGlobal("fetch", createFetchMock(chatConfig))
+
+      const user = userEvent.setup()
+      render(<App />)
+      await sendChat(user, "more films")
+
+      expect(
+        await screen.findByRole("heading", { name: "More movies you might like" })
+      ).toBeInTheDocument()
+      expect(document.querySelector(".wood-shelf")).not.toBeInTheDocument()
+      expect(
+        document.querySelector(".more-movies-strip-row--frames .poster-frame--strip")
+      ).toBeInTheDocument()
     })
   })
 })

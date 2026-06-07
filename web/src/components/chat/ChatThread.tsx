@@ -1,4 +1,5 @@
 import type { ChatTurn } from "../../types"
+import { SofaIcon } from "../icons"
 import { ChatDebugPanel } from "./ChatDebugPanel"
 import { ChatRecommendationBlock } from "./ChatRecommendationBlock"
 import { DisambiguationPicker } from "./DisambiguationPicker"
@@ -35,7 +36,16 @@ export function ChatThread({
               turn.streaming ? " is-streaming" : ""
             }`}
           >
-            <span className="chat-turn-label">{isUser ? "You" : "Assistant"}</span>
+            {isUser ? (
+              <span className="chat-turn-label">You</span>
+            ) : (
+              <div className="chat-assistant-head">
+                <span className="assistant-avatar" aria-hidden="true">
+                  <SofaIcon size={17} />
+                </span>
+                <span className="sr-only">Assistant</span>
+              </div>
+            )}
             {turn.content || turn.streaming ? (
               <p className="chat-turn-text chat-bubble-text">
                 {turn.content || (turn.streaming ? "…" : "")}

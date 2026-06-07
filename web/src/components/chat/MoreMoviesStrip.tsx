@@ -1,9 +1,7 @@
-import { useState } from "react"
 import type { RecommendationItem } from "../../types"
 import { seedAddState } from "../../lib/seedAdd"
+import { formatTitle } from "../../utils/format"
 import { PosterTile } from "../results/PosterTile"
-
-const STRIP_VISIBLE = 5
 
 type MoreMoviesStripProps = {
   items: RecommendationItem[]
@@ -18,56 +16,54 @@ export function MoreMoviesStrip({
   onAddSeed,
   addSeedDisabled = false,
 }: MoreMoviesStripProps) {
-  const [expanded, setExpanded] = useState(false)
-  const hiddenCount = Math.max(0, items.length - STRIP_VISIBLE)
-  const showToggle = hiddenCount > 0
-  const visibleItems = expanded ? items : items.slice(0, STRIP_VISIBLE)
+  const scrollable = items.length > 4
 
   return (
     <section className="more-movies-section" aria-label="More movies you might like">
-      <div className="more-movies-section-head">
-        <h3 className="subsection-title">More movies you might like</h3>
-        {showToggle && (
-          <button
-            type="button"
-            className="more-movies-toggle"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded ? "Show fewer" : `Show all (${hiddenCount})`}
-          </button>
-        )}
-      </div>
-      <div
-        className={`more-movies-strip-wrap${expanded ? " is-expanded" : ""}${hiddenCount > 0 ? " has-overflow" : ""}`}
-      >
+      <h3 className="subsection-title more-movies-section-title">More movies you might like</h3>
+      <div className="more-movies-strip-stage">
         <div
-          className={`more-movies-strip${expanded ? " more-movies-strip--scroll" : ""}`}
-          role="list"
+          className={`more-movies-strip-scroller${scrollable ? " is-scrollable" : ""}`}
+          tabIndex={scrollable ? 0 : undefined}
+          aria-label={scrollable ? "Scroll for more movie picks" : undefined}
         >
-          {visibleItems.map((item, index) => {
-            const addState = seedAddState(item.movie_id, seedMovieIds)
-            return (
-              <div key={item.movie_id} role="listitem" className="more-movies-strip-item">
-                <PosterTile
-                  item={item}
-                  rank={index + 2}
-                  variant="strip"
-                  isInSeeds={addState.isInSeeds}
-                  seedSetFull={addState.seedSetFull}
-                  addSeedDisabled={addSeedDisabled}
-                  onAddSeed={
-                    onAddSeed && !addState.isInSeeds
-                      ? () => onAddSeed(item.movie_id, item.title)
-                      : undefined
-                  }
-                />
-              </div>
-            )
-          })}
+          <div className="more-movies-strip-track">
+            <div
+              className="more-movies-strip-row more-movies-strip-row--frames"
+              role="list"
+            >
+              {items.map((item) => {
+                const addState = seedAddState(item.movie_id, seedMovieIds)
+                const rank = items.indexOf(item) + 2
+                return (
+                  <div key={item.movie_id} role="listitem" className="more-movies-strip-cell">
+                    <PosterTile
+                      item={item}
+                      rank={rank}
+                      variant="strip"
+                      frameOnly
+                      isInSeeds={addState.isInSeeds}
+                      seedSetFull={addState.seedSetFull}
+                      addSeedDisabled={addSeedDisabled}
+                      onAddSeed={
+                        onAddSeed && !addState.isInSeeds
+                          ? () => onAddSeed(item.movie_id, item.title)
+                          : undefined
+                      }
+                    />
+                  </div>
+                )
+              })}
+            </div>
+            <div className="more-movies-strip-row more-movies-strip-row--captions">
+              {items.map((item) => (
+                <p key={item.movie_id} className="more-movies-strip-caption">
+                  {formatTitle(item.title)}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
-        {(hiddenCount > 0 || expanded) && (
-          <div className="more-movies-strip-fade" aria-hidden="true" />
-        )}
       </div>
     </section>
   )

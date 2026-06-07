@@ -1,0 +1,7 @@
+export { CloseIcon } from "./CloseIcon"
+export { PaperclipIcon } from "./PaperclipIcon"
+export { PaperPlaneIcon } from "./PaperPlaneIcon"
+export { SettingsIcon } from "./SettingsIcon"
+export { SofaIcon } from "./SofaIcon"
+export { SpeechBubbleIcon } from "./SpeechBubbleIcon"
+export type { IconProps } from "./types"

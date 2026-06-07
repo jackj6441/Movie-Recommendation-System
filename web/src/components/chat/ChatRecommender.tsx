@@ -20,6 +20,7 @@ import {
 import { useGenres } from "../../hooks/useGenres"
 import type { ChatTurn } from "../../types"
 import type { RagChatContext } from "../../types"
+import { PaperPlaneIcon, PaperclipIcon } from "../icons"
 import { ChatSessionSidebar } from "./ChatSessionSidebar"
 import { ChatThread } from "./ChatThread"
 import { GenreChipsRow } from "./GenreChipsRow"
@@ -500,47 +501,62 @@ export function ChatRecommender() {
             />
           )}
 
-          <div className="chat-composer-wrap">
-            <label className="sr-only" htmlFor={composerId}>
-              Message
-            </label>
-            <textarea
-              id={composerId}
-              className="chat-composer-input"
-              rows={hasThread ? 2 : 3}
-              placeholder="Describe the kind of movies you want…"
-              value={message}
-              disabled={chatLoading}
-              onChange={(event) => setMessage(event.target.value)}
-              onKeyDown={onComposerKeyDown}
-            />
-            {!hasThread && (
-              <GenreChipsRow
-                genres={genres}
-                selected={selectedGenres}
-                loading={genresLoading}
-                disabled={chatLoading}
-                onToggle={toggleGenre}
-              />
-            )}
-            <div className="chat-composer-actions">
-              <button
-                type="button"
-                className="chat-send-btn"
-                disabled={!sendEnabled}
-                onClick={() => void sendMessage()}
-              >
-                {chatLoading ? "Thinking…" : "Send"}
-              </button>
-              {hasThread && (
+          <div className="chat-composer-area">
+            {hasThread && (
+              <div className="chat-composer-meta">
                 <button
                   type="button"
-                  className="ghost"
+                  className="ghost chat-start-over-btn"
                   onClick={() => void startOver()}
                   disabled={chatLoading}
                 >
                   Start over
                 </button>
+              </div>
+            )}
+            <div className={`chat-composer-wrap${hasThread ? " chat-composer-wrap--thread" : ""}`}>
+              <div className="chat-composer-row">
+                <button
+                  type="button"
+                  className="chat-composer-attach"
+                  disabled
+                  aria-label="Attach file"
+                  title="Attachments coming soon"
+                >
+                  <PaperclipIcon size={20} />
+                </button>
+                <label className="sr-only" htmlFor={composerId}>
+                  Message
+                </label>
+                <textarea
+                  id={composerId}
+                  className="chat-composer-input"
+                  rows={hasThread ? 1 : 3}
+                  placeholder="Describe the kind of movies you want…"
+                  value={message}
+                  disabled={chatLoading}
+                  onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={onComposerKeyDown}
+                />
+                <button
+                  type="button"
+                  className="chat-send-btn"
+                  aria-label={chatLoading ? "Thinking" : "Send"}
+                  disabled={!sendEnabled}
+                  onClick={() => void sendMessage()}
+                >
+                  <PaperPlaneIcon size={18} />
+                  {chatLoading ? <span className="sr-only">Thinking…</span> : null}
+                </button>
+              </div>
+              {!hasThread && (
+                <GenreChipsRow
+                  genres={genres}
+                  selected={selectedGenres}
+                  loading={genresLoading}
+                  disabled={chatLoading}
+                  onToggle={toggleGenre}
+                />
               )}
             </div>
           </div>

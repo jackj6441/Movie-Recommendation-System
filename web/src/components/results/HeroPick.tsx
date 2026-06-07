@@ -1,6 +1,7 @@
 import { useState } from "react"
 import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
+import { PosterFrame } from "./PosterFrame"
 
 type HeroPickProps = {
   item: RecommendationItem
@@ -22,14 +23,14 @@ function HeroPoster({
   if (showPoster && posterUrl) {
     return (
       <img
-        className="hero-pick__poster"
+        className="poster-frame__art"
         src={posterUrl}
         alt=""
         onError={onPosterError}
       />
     )
   }
-  return <div className="hero-pick__fallback" aria-hidden="true" />
+  return <div className="poster-frame__fallback" aria-hidden="true" />
 }
 
 function HeroCaption({
@@ -64,40 +65,28 @@ export function HeroPick({
     isInSeeds ? " is-in-seeds" : ""
   }`
   const onPosterError = () => setPosterHidden(true)
-
-  const frame = onAddSeed && !isInSeeds ? (
-    <button
-      type="button"
-      className={`hero-pick__frame hero-pick--interactive${
-        seedSetFull ? " is-at-limit" : ""
-      }`}
-      disabled={addSeedDisabled || seedSetFull}
-      title={seedSetFull ? "Seed set full (max 5)" : undefined}
-      aria-label={`Add ${label} to starting movies`}
-      onClick={onAddSeed}
-    >
-      <HeroPoster
-        showPoster={showPoster}
-        posterUrl={item.poster_url}
-        onPosterError={onPosterError}
-      />
-    </button>
-  ) : (
-    <div className="hero-pick__frame">
-      <HeroPoster
-        showPoster={showPoster}
-        posterUrl={item.poster_url}
-        onPosterError={onPosterError}
-      />
-    </div>
-  )
+  const canAddSeed = Boolean(onAddSeed) && !isInSeeds
 
   return (
     <article
       className={shelfClass}
       aria-label={isInSeeds ? `${label} is in your starting movies` : undefined}
     >
-      {frame}
+      <PosterFrame
+        variant="hero"
+        className={`hero-pick__frame${seedSetFull ? " is-at-limit" : ""}`}
+        interactive={canAddSeed}
+        disabled={addSeedDisabled || seedSetFull}
+        title={seedSetFull ? "Seed set full (max 5)" : undefined}
+        ariaLabel={canAddSeed ? `Add ${label} to starting movies` : undefined}
+        onClick={canAddSeed ? onAddSeed : undefined}
+      >
+        <HeroPoster
+          showPoster={showPoster}
+          posterUrl={item.poster_url}
+          onPosterError={onPosterError}
+        />
+      </PosterFrame>
       <HeroCaption label={label} isInSeeds={isInSeeds} />
     </article>
   )

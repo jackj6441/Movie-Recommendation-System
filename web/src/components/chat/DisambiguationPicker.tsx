@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { PosterFrame } from "../results/PosterFrame"
 import type { DisambiguationCandidate } from "../../types"
 import { formatTitle } from "../../utils/format"
 
@@ -34,19 +35,20 @@ function DisambiguationFrame({
 
   return (
     <div className="disambiguation-shelf-item">
-      <button
-        type="button"
+      <PosterFrame
+        variant="strip"
         className={`disambiguation-frame${isSelected ? " is-selected" : ""}${
           showPoster ? " has-poster" : ""
         }`}
-        aria-pressed={isSelected}
-        aria-label={`${label}${yearSuffix}`}
+        interactive
+        ariaPressed={isSelected}
+        ariaLabel={`${label}${yearSuffix}`}
         disabled={disabled || atLimit}
         onClick={onToggle}
       >
         {showPoster && posterUrl ? (
           <img
-            className="disambiguation-frame__poster"
+            className="poster-frame__art"
             src={posterUrl}
             alt=""
             loading="lazy"
@@ -54,9 +56,9 @@ function DisambiguationFrame({
             onError={() => setPosterHidden(true)}
           />
         ) : (
-          <div className="disambiguation-frame__fallback" aria-hidden="true" />
+          <div className="poster-frame__fallback" aria-hidden="true" />
         )}
-      </button>
+      </PosterFrame>
       <p className="disambiguation-shelf-caption">
         <span className="disambiguation-shelf-title">
           {label}
