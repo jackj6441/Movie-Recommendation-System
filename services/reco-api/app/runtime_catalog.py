@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from app import posters
+from app import movie_details, posters
 from app.rag_resolve import GenreSeedIdsFn, GetTitleFn, SearchMoviesFn
 
 _YEAR_RE = re.compile(r"\((\d{4})\)")
@@ -99,22 +99,26 @@ class RuntimeCatalog:
         self,
         movie_id: int,
         poster_lookup: dict[int, dict[str, str]],
+        details_lookup: dict[int, dict[str, Any]] | None = None,
         **fields: Any,
     ) -> dict[str, Any]:
         payload: dict[str, Any] = {"movie_id": movie_id, "title": self.get_title(movie_id), **fields}
-        return posters.enrich_movie(movie_id, payload, poster_lookup)
+        genres = self.movie_genres.get(movie_id)
+        if genres:
+            payload["genres"] = list(genres)
+        payload = posters.enrich_movie(movie_id, payload, poster_lookup)
+        if details_lookup:
+            payload = movie_details.enrich_movie(movie_id, payload, details_lookup)
+        return payload
 
     def search_payloads(
         self,
         query: str,
         poster_lookup: dict[int, dict[str, str]],
+        details_lookup: dict[int, dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
         return [
-            posters.enrich_movie(
-                hit.movie_id,
-                {"movie_id": hit.movie_id, "title": hit.title},
-                poster_lookup,
-            )
+            self.movie_payload(hit.movie_id, poster_lookup, details_lookup, title=hit.title)
             for hit in self.search_movies(query)
         ]
 

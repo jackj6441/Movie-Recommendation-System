@@ -9,10 +9,11 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import content, metrics, posters, seed_ranker
+from app import content, metrics, movie_details, posters, seed_ranker
 from app import rag_chat_sse as rag_chat_service
 from app.artifact_bundle import get_default_bundle
 from app.rag_session import GLOBAL_SESSION_STORE
+from app.rag_resolve import MAX_SEEDS
 from app.runtime_catalog import load_runtime_catalog_from_env
 
 DEFAULT_CORS_ORIGINS = [
@@ -55,6 +56,8 @@ async def record_http_metrics(request, call_next):
 model_version = os.getenv("MODEL_VERSION", "dev")
 poster_urls_path = os.getenv("POSTER_URLS_PATH", "models/poster_urls.json")
 poster_meta_path = os.getenv("POSTER_META_PATH", "models/poster_meta.json")
+movie_details_path = os.getenv("MOVIE_DETAILS_PATH", "models/movie_details.json")
+movie_details_meta_path = os.getenv("MOVIE_DETAILS_META_PATH", "models/movie_details_meta.json")
 default_system_evidence_path = Path(__file__).resolve().parents[1] / "evidence" / "system_evidence.json"
 system_evidence_path = os.getenv("SYSTEM_EVIDENCE_PATH", str(default_system_evidence_path))
 
@@ -69,10 +72,16 @@ runtime_catalog = load_runtime_catalog_from_env()
 
 poster_lookup = posters.load_poster_lookup(poster_urls_path)
 poster_meta = posters.load_poster_meta(poster_meta_path)
+details_lookup = movie_details.load_details_lookup(movie_details_path)
+details_meta = movie_details.load_details_meta(movie_details_meta_path)
 if not poster_lookup and os.path.exists(poster_urls_path):
     print(f"Warning: poster lookup at {poster_urls_path} is empty or unreadable")
 elif not os.path.exists(poster_urls_path):
     print(f"Warning: poster lookup not found at {poster_urls_path}")
+if not details_lookup and os.path.exists(movie_details_path):
+    print(f"Warning: movie details at {movie_details_path} is empty or unreadable")
+elif not os.path.exists(movie_details_path):
+    print(f"Warning: movie details not found at {movie_details_path}")
 
 
 def get_title(movie_id: int) -> str:
@@ -80,7 +89,7 @@ def get_title(movie_id: int) -> str:
 
 
 def movie_payload(movie_id: int, **fields) -> dict:
-    return runtime_catalog.movie_payload(movie_id, poster_lookup, **fields)
+    return runtime_catalog.movie_payload(movie_id, poster_lookup, details_lookup, **fields)
 
 
 def serving_status() -> dict:
@@ -94,6 +103,11 @@ def serving_status() -> dict:
     status.update(get_default_bundle().health())
     status.update(
         posters.poster_health_fields(poster_lookup, poster_meta, len(runtime_catalog.movie_titles))
+    )
+    status.update(
+        movie_details.details_health_fields(
+            details_lookup, details_meta, len(runtime_catalog.movie_titles)
+        )
     )
     return status
 
@@ -159,7 +173,7 @@ def genre_seeds(genre: str, limit: int = 20):
 
 @app.get("/movies/search")
 def movie_search(q: str = ""):
-    return runtime_catalog.search_payloads(q, poster_lookup)
+    return runtime_catalog.search_payloads(q, poster_lookup, details_lookup)
 
 
 class SeedsRequest(BaseModel):
@@ -186,8 +200,11 @@ class RagChatRequest(BaseModel):
 
 @app.post("/recommendations")
 def recommendations(request: SeedsRequest):
-    if not request.seeds or len(request.seeds) > 5:
-        return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
+    if not request.seeds or len(request.seeds) > MAX_SEEDS:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": f"seeds must be 1 to {MAX_SEEDS} items"},
+        )
 
     try:
         result = seed_ranker.rank_seed_set(
@@ -223,8 +240,11 @@ def recommendations(request: SeedsRequest):
 
 @app.post("/explanations")
 def explanations(request: SeedsRequest):
-    if not request.seeds or len(request.seeds) > 5:
-        return JSONResponse(status_code=400, content={"detail": "seeds must be 1 to 5 items"})
+    if not request.seeds or len(request.seeds) > MAX_SEEDS:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": f"seeds must be 1 to {MAX_SEEDS} items"},
+        )
 
     try:
         result = seed_ranker.rank_seed_set(

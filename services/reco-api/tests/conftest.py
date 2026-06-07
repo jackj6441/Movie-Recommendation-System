@@ -18,6 +18,7 @@ _APP_MODULES = [
     "app.seed_ranker",
     "app.metrics",
     "app.posters",
+    "app.movie_details",
     "app.artifacts",
     "app.fusion",
     "app.ltr",
@@ -89,5 +90,7 @@ def poster_load_app(monkeypatch, repo_root: Path, api_root: Path):
         repo_root,
         api_root,
         POSTER_URLS_PATH=str(fixtures / "poster_urls.sample.json"),
+        MOVIE_DETAILS_PATH=str(fixtures / "movie_details.sample.json"),
+        MOVIE_DETAILS_META_PATH=str(fixtures / "movie_details_meta.sample.json"),
     )
     return _reload_app(api_root)

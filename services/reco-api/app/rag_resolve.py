@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Protocol
 
 MAX_GENRES = 3
-MAX_SEEDS = 5
+MAX_SEEDS = 10
 DEFAULT_GENRE_BOOTSTRAP_PER_GENRE = 3
 DEFAULT_RECENCY_YEAR_MIN = 2005
 

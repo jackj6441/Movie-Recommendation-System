@@ -1,7 +1,8 @@
-"""Build offline TMDB poster URLs for the served movie catalog.
+"""Build offline TMDB poster URLs and movie details for the served catalog.
 
-Reads MovieLens links (movieId -> tmdbId), fetches poster_path from TMDB, and
-writes poster_urls.json plus poster_meta.json for reco-api serving.
+Reads MovieLens links (movieId -> tmdbId), fetches poster_path and overview from
+TMDB, and writes poster_urls.json, movie_details.json, and meta files for
+reco-api serving.
 
 Requires TMDB_API_KEY in the environment. Run locally; commit the outputs.
 """
@@ -15,6 +16,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import requests
@@ -48,7 +50,7 @@ def load_local_env() -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build TMDB poster lookup artifact")
+    parser = argparse.ArgumentParser(description="Build TMDB poster and details lookup artifacts")
     parser.add_argument(
         "--catalog",
         type=str,
@@ -64,6 +66,16 @@ def parse_args() -> argparse.Namespace:
         "--meta-output",
         type=str,
         default=os.path.join("services", "reco-api", "models", "poster_meta.json"),
+    )
+    parser.add_argument(
+        "--details-output",
+        type=str,
+        default=os.path.join("services", "reco-api", "models", "movie_details.json"),
+    )
+    parser.add_argument(
+        "--details-meta-output",
+        type=str,
+        default=os.path.join("services", "reco-api", "models", "movie_details_meta.json"),
     )
     parser.add_argument("--sleep", type=float, default=0.25, help="seconds between TMDB calls")
     parser.add_argument("--max-retries", type=int, default=3)
@@ -88,12 +100,19 @@ def poster_urls_from_path(poster_path: str) -> dict[str, str]:
     }
 
 
-def fetch_poster_path(
+def details_entry_from_tmdb(tmdb_id: int, overview: Any) -> dict[str, Any]:
+    entry: dict[str, Any] = {"tmdb_id": tmdb_id}
+    if isinstance(overview, str) and overview.strip():
+        entry["overview"] = overview.strip()
+    return entry
+
+
+def fetch_tmdb_movie(
     session: requests.Session,
     tmdb_id: int,
     *,
     max_retries: int,
-) -> str | None:
+) -> dict[str, Any] | None:
     url = TMDB_MOVIE_URL.format(tmdb_id=tmdb_id)
     for attempt in range(max_retries):
         try:
@@ -123,10 +142,14 @@ def fetch_poster_path(
             time.sleep(2 ** attempt)
             continue
 
+        if not isinstance(payload, dict):
+            return None
+
+        result: dict[str, Any] = {"overview": payload.get("overview")}
         poster_path = payload.get("poster_path")
         if poster_path:
-            return str(poster_path)
-        return None
+            result["poster_path"] = str(poster_path)
+        return result
     return None
 
 
@@ -156,12 +179,19 @@ def main() -> None:
     links = links[links["tmdbId"] > 0].drop_duplicates(subset=["movieId"])
 
     output_path = Path(args.output)
+    details_output_path = Path(args.details_output)
     existing: dict[str, dict[str, str]] = {}
+    existing_details: dict[str, dict[str, Any]] = {}
     if args.resume and output_path.is_file():
         with output_path.open(encoding="utf-8") as output_file:
             raw = json.load(output_file)
             if isinstance(raw, dict):
                 existing = {str(k): v for k, v in raw.items() if isinstance(v, dict)}
+    if args.resume and details_output_path.is_file():
+        with details_output_path.open(encoding="utf-8") as details_file:
+            raw = json.load(details_file)
+            if isinstance(raw, dict):
+                existing_details = {str(k): v for k, v in raw.items() if isinstance(v, dict)}
 
     session = requests.Session()
     session.headers["Authorization"] = f"Bearer {api_key}"
@@ -175,6 +205,8 @@ def main() -> None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as output_file:
             json.dump(existing, output_file, ensure_ascii=False, indent=2)
+        with details_output_path.open("w", encoding="utf-8") as details_file:
+            json.dump(existing_details, details_file, ensure_ascii=False, indent=2)
 
     fetched = 0
     api_calls = 0
@@ -183,10 +215,13 @@ def main() -> None:
         if args.resume and key in existing:
             continue
 
-        poster_path = fetch_poster_path(session, tmdb_id, max_retries=args.max_retries)
+        tmdb_payload = fetch_tmdb_movie(session, tmdb_id, max_retries=args.max_retries)
         api_calls += 1
-        if poster_path:
-            existing[key] = poster_urls_from_path(poster_path)
+        if tmdb_payload is not None:
+            existing_details[key] = details_entry_from_tmdb(tmdb_id, tmdb_payload.get("overview"))
+            poster_path = tmdb_payload.get("poster_path")
+            if poster_path:
+                existing[key] = poster_urls_from_path(str(poster_path))
 
         fetched += 1
         if args.sleep > 0:
@@ -196,7 +231,7 @@ def main() -> None:
             write_artifacts()
             print(
                 f"checkpoint: api_calls={api_calls} processed={fetched}/{len(candidates)} "
-                f"posters={len(existing)}",
+                f"posters={len(existing)} details={len(existing_details)}",
                 flush=True,
             )
 
@@ -205,26 +240,44 @@ def main() -> None:
     catalog_movies = len(catalog_ids)
     linked_movies = len(links)
     poster_count = len(existing)
-    coverage = poster_count / catalog_movies if catalog_movies else 0.0
-    meta = {
+    details_count = len(existing_details)
+    poster_coverage = poster_count / catalog_movies if catalog_movies else 0.0
+    details_coverage = details_count / catalog_movies if catalog_movies else 0.0
+    built_at = datetime.now(timezone.utc).isoformat()
+    poster_meta = {
         "catalog_movies": catalog_movies,
         "linked_movies": int(linked_movies),
         "poster_count": poster_count,
-        "poster_coverage": round(coverage, 6),
-        "built_at": datetime.now(timezone.utc).isoformat(),
+        "poster_coverage": round(poster_coverage, 6),
+        "built_at": built_at,
+        "links_path": str(links_path),
+    }
+    details_meta = {
+        "catalog_movies": catalog_movies,
+        "linked_movies": int(linked_movies),
+        "details_count": details_count,
+        "details_coverage": round(details_coverage, 6),
+        "built_at": built_at,
         "links_path": str(links_path),
     }
     meta_path = Path(args.meta_output)
     meta_path.parent.mkdir(parents=True, exist_ok=True)
     with meta_path.open("w", encoding="utf-8") as meta_file:
-        json.dump(meta, meta_file, ensure_ascii=False, indent=2)
+        json.dump(poster_meta, meta_file, ensure_ascii=False, indent=2)
+    details_meta_path = Path(args.details_meta_output)
+    with details_meta_path.open("w", encoding="utf-8") as details_meta_file:
+        json.dump(details_meta, details_meta_file, ensure_ascii=False, indent=2)
 
     print(f"catalog_movies: {catalog_movies}")
     print(f"linked_movies: {linked_movies}")
     print(f"poster_count: {poster_count}")
-    print(f"poster_coverage: {coverage:.4f}")
+    print(f"poster_coverage: {poster_coverage:.4f}")
+    print(f"details_count: {details_count}")
+    print(f"details_coverage: {details_coverage:.4f}")
     print(f"output: {output_path}")
     print(f"meta: {meta_path}")
+    print(f"details_output: {details_output_path}")
+    print(f"details_meta: {details_meta_path}")
 
 
 if __name__ == "__main__":

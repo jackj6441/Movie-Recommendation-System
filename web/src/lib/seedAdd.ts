@@ -6,6 +6,10 @@ export type SeedAddState = {
   canAdd: boolean
 }
 
+export function seedSetFullTitle(maxSeeds = MAX_SEEDS): string {
+  return `Seed set full (max ${maxSeeds})`
+}
+
 export function seedAddState(
   movieId: number,
   seedMovieIds: number[],

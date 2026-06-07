@@ -1,9 +1,8 @@
 import { useState } from "react"
+import { MAX_SEEDS } from "../../config"
 import { PosterFrame } from "../results/PosterFrame"
 import type { DisambiguationCandidate } from "../../types"
 import { formatTitle } from "../../utils/format"
-
-const MAX_PICKS = 5
 
 type DisambiguationPickerProps = {
   candidates: DisambiguationCandidate[]
@@ -86,7 +85,7 @@ export function DisambiguationPicker({
       if (prev.includes(movieId)) {
         return prev.filter((id) => id !== movieId)
       }
-      if (prev.length >= MAX_PICKS) {
+      if (prev.length >= MAX_SEEDS) {
         return prev
       }
       return [...prev, movieId]
@@ -113,7 +112,7 @@ export function DisambiguationPicker({
       <div className="disambiguation-picker-grid">
         {candidates.map((candidate) => {
           const isSelected = selected.includes(candidate.movie_id)
-          const atLimit = !isSelected && selected.length >= MAX_PICKS
+          const atLimit = !isSelected && selected.length >= MAX_SEEDS
 
           return (
             <DisambiguationFrame

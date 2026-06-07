@@ -98,6 +98,7 @@ Desktop ≥1024px:
 Shared `PosterFrame` component: 9-slice wood `border-image` + CSS mat padding + directional shadow.
 
 - Hero: `--frame-outer-hero` 12px, `--frame-mat-hero` 14px, slice 48
+- Hero details (desktop): two-column grid — framed poster left, synopsis + genre pills + «Where to watch» CTA right; stacks on narrow screens
 - Strip: `--frame-outer-strip` 6px, `--frame-mat-strip` 8px, slice 24
 - Captions: Playfair Display on hero, strip, disambiguation titles
 - Strip: horizontal scroll (no show-more toggle); frames + captions in aligned rows

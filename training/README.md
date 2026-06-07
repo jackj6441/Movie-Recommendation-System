@@ -76,7 +76,7 @@ python evaluation/eval_ltr.py --max-users 100 --compare-fusion
 
 On macOS, LightGBM may require OpenMP: `brew install libomp` if import fails.
 
-## Build poster lookup (local only)
+## Build poster and movie details lookup (local only)
 
 Extract MovieLens 32M `links.csv` (not committed) and set a TMDB API key:
 
@@ -91,5 +91,7 @@ Outputs:
 
 - `services/reco-api/models/poster_urls.json`
 - `services/reco-api/models/poster_meta.json`
+- `services/reco-api/models/movie_details.json` (overview + `tmdb_id` for watch links)
+- `services/reco-api/models/movie_details_meta.json`
 
-Commit both artifacts after a successful run. Use `--resume` to continue a partial build, or `--limit 50` for a smoke test.
+Commit all artifacts after a successful run. Use `--resume` to continue a partial build, or `--limit 50` for a smoke test.

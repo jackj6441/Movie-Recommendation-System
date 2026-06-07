@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { seedSetFullTitle } from "../../lib/seedAdd"
 import type { RecommendationItem } from "../../types"
 import { formatTitle } from "../../utils/format"
 import { PosterFrame } from "./PosterFrame"
@@ -72,7 +73,7 @@ export function PosterTile({
       className={frameClass}
       interactive={canAddSeed}
       disabled={addSeedDisabled || seedSetFull}
-      title={seedSetFull ? "Seed set full (max 5)" : undefined}
+      title={seedSetFull ? seedSetFullTitle() : undefined}
       ariaLabel={
         canAddSeed
           ? `Add ${label} to starting movies`

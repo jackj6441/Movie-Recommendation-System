@@ -5,6 +5,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App"
+import { MAX_SEEDS } from "./config"
+import { seedSetFullTitle } from "./lib/seedAdd"
 import { buildSseBody, createFetchMock, jsonResponse, sseResponse } from "./test/chatFetchMock"
 import { stubLocalStorage } from "./test/localStorageMock"
 
@@ -291,13 +293,10 @@ describe("App conversational RAG chat", () => {
         return sseResponse(
           buildSseBody({
             assistantMessage: "Full seeds.",
-            contextSeeds: [
-              { movie_id: 1, title: "Toy Story (1995)" },
-              { movie_id: 2, title: "Jumanji (1995)" },
-              { movie_id: 3, title: "Grumpier Old Men (1995)" },
-              { movie_id: 4, title: "Waiting to Exhale (1995)" },
-              { movie_id: 5, title: "Father of the Bride Part II (1995)" },
-            ],
+            contextSeeds: Array.from({ length: MAX_SEEDS }, (_, index) => ({
+              movie_id: index + 1,
+              title: `Seed Movie ${index + 1} (1995)`,
+            })),
             items: [
               { movie_id: 239, title: "Some Movie (1999)", score: 0.9 },
               { movie_id: 240, title: "Strip Movie (2001)", score: 0.85 },
@@ -321,8 +320,8 @@ describe("App conversational RAG chat", () => {
     })
     expect(heroButton).toBeDisabled()
     expect(stripButton).toBeDisabled()
-    expect(heroButton).toHaveAttribute("title", "Seed set full (max 5)")
-    expect(stripButton).toHaveAttribute("title", "Seed set full (max 5)")
+    expect(heroButton).toHaveAttribute("title", seedSetFullTitle())
+    expect(stripButton).toHaveAttribute("title", seedSetFullTitle())
 
     const chatCallsBefore = fetchMock.mock.calls.filter((call) =>
       String(call[0]).endsWith("/rag/chat")
@@ -1173,6 +1172,33 @@ describe("App conversational RAG chat", () => {
   it("renders the TMDB attribution footer", () => {
     render(<App />)
     expect(screen.getByText(/not endorsed or certified by TMDB/i)).toBeInTheDocument()
+  })
+
+  it("renders hero details with overview, genres, and watch link", async () => {
+    chatConfig.items = [
+      {
+        movie_id: 239,
+        title: "Iron Man 3 (2013)",
+        score: 0.9,
+        genres: ["Action", "Adventure"],
+        overview: "Tony Stark faces a powerful enemy.",
+        watch_url: "https://www.themoviedb.org/movie/68721",
+      },
+    ]
+    vi.stubGlobal("fetch", createFetchMock(chatConfig))
+
+    const user = userEvent.setup()
+    render(<App />)
+    await sendChat(user, "action picks")
+
+    expect(await screen.findByText("Tony Stark faces a powerful enemy.")).toBeInTheDocument()
+    expect(screen.getByText("Action")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Where to watch/i })).toHaveAttribute(
+      "href",
+      "https://www.themoviedb.org/movie/68721"
+    )
+    const hero = screen.getByRole("heading", { name: "Iron Man 3 (2013)" }).closest(".hero-pick")
+    expect(hero?.querySelector(".hero-details")).toBeInTheDocument()
   })
 
   it("renders featured hero with poster styling when poster_url is present", async () => {

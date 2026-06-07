@@ -9,6 +9,9 @@ export type RecommendationItem = MoviePosters & {
   movie_id: number
   title: string
   score: number
+  genres?: string[]
+  overview?: string
+  watch_url?: string
 }
 
 export type RecommendationResponse = {

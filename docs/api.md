@@ -31,6 +31,8 @@ Response:
 
 `poster_ok`, `poster_count`, and `poster_coverage` come from the offline `poster_urls.json` / `poster_meta.json` artifacts (no TMDB calls at runtime).
 
+`details_ok`, `details_count`, and `details_coverage` come from the offline `movie_details.json` / `movie_details_meta.json` artifacts (overview and TMDB watch URLs).
+
 ## Observability
 
 ### GET /metrics
@@ -126,6 +128,9 @@ Response:
       "movie_id": 186,
       "title": "Nine Months (1995)",
       "score": 0.74,
+      "genres": ["Comedy", "Romance"],
+      "overview": "Optional TMDB synopsis when offline details exist.",
+      "watch_url": "https://www.themoviedb.org/movie/11462",
       "poster_url": "https://image.tmdb.org/t/p/w500/...",
       "poster_thumb_url": "https://image.tmdb.org/t/p/w185/..."
     }

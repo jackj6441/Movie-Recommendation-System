@@ -110,13 +110,16 @@
   opacity: 0.55;
 }
 
-/* ── Hero Shelf (#1 framed poster) ── */
+/* ── Hero Shelf (#1 framed poster + details) ── */
 .hero-pick {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  max-width: var(--hero-max-width);
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: minmax(0, var(--hero-max-width)) minmax(0, 1fr);
+  width: 100%;
+}
+
+.hero-pick__poster {
   width: 100%;
 }
 
@@ -124,35 +127,105 @@
   animation: fade-in-up 320ms var(--ease-out) both;
 }
 
-.hero-pick__caption {
+.hero-details {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  max-width: 100%;
+  gap: var(--space-sm);
+  max-width: 52ch;
+  min-width: 0;
+  padding-top: 0.15rem;
 }
 
-.hero-pick__label {
+.hero-details__label {
   color: var(--color-muted);
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
-.hero-pick__title {
+.hero-details__title {
+  color: var(--color-text);
   font-family: var(--font-display);
   font-size: 1.35rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
   margin: 0;
-  color: var(--color-text);
   text-wrap: balance;
 }
 
-.hero-pick__status {
+.hero-details__status {
   color: var(--color-primary);
   font-size: 0.8125rem;
   font-weight: 500;
+}
+
+.hero-details__overview {
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+
+.hero-details__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hero-details__genre-pill {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  padding: 0.35rem 0.85rem;
+}
+
+.hero-details__watch {
+  align-items: center;
+  align-self: flex-start;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 16px var(--color-primary-glow);
+  color: var(--color-on-primary);
+  display: inline-flex;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  gap: 0.4rem;
+  margin-top: var(--space-xs);
+  min-height: 44px;
+  padding: 0.55rem 1.1rem;
+  text-decoration: none;
+  transition:
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.hero-details__watch:hover {
+  box-shadow: 0 8px 20px var(--color-primary-glow);
+  transform: translateY(-1px);
+}
+
+.hero-details__watch:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.hero-details__watch-icon {
+  flex-shrink: 0;
 }
 
 .chat-rec-block .hero-pick__frame.is-at-limit,
@@ -309,10 +382,15 @@
   }
 
   .hero-pick {
+    grid-template-columns: 1fr;
     max-width: min(100%, var(--hero-max-width));
   }
 
-  .hero-pick__title {
+  .hero-details {
+    max-width: 100%;
+  }
+
+  .hero-details__title {
     font-size: 1.1rem;
   }
 

@@ -1,0 +1,8 @@
+{
+  "catalog_movies": 9742,
+  "linked_movies": 1,
+  "details_count": 1,
+  "details_coverage": 0.0001,
+  "built_at": "2026-06-02T00:00:00+00:00",
+  "links_path": "tests/fixtures/movie_details.sample.json"
+}
