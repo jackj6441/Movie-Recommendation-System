@@ -1,7 +1,6 @@
 import csv
 import json
 import os
-import re
 import time
 from pathlib import Path
 
@@ -13,8 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import content, metrics, posters, seed_ranker
 from app import rag_chat as rag_chat_service
 from app.artifact_bundle import get_default_bundle
-from app.rag_catalog import CatalogServices
 from app.rag_session import GLOBAL_SESSION_STORE
+from app.runtime_catalog import load_runtime_catalog_from_env
 
 DEFAULT_CORS_ORIGINS = [
     "http://localhost:3000",
@@ -54,17 +53,10 @@ async def record_http_metrics(request, call_next):
 
 
 model_version = os.getenv("MODEL_VERSION", "dev")
-movies_csv_path = os.getenv("MOVIES_CSV_PATH", "models/catalog_movies.csv")
-ratings_csv_path = os.getenv("RATINGS_CSV_PATH", "ml-latest-small/ratings.csv")
-serving_stats_path = os.getenv("SERVING_STATS_PATH", "models/serving_stats.json")
 poster_urls_path = os.getenv("POSTER_URLS_PATH", "models/poster_urls.json")
 poster_meta_path = os.getenv("POSTER_META_PATH", "models/poster_meta.json")
 default_system_evidence_path = Path(__file__).resolve().parents[1] / "evidence" / "system_evidence.json"
 system_evidence_path = os.getenv("SYSTEM_EVIDENCE_PATH", str(default_system_evidence_path))
-candidate_pool = int(os.getenv("CANDIDATE_POOL", "500"))
-
-num_users = int(os.getenv("NUM_USERS", "0"))
-num_items = int(os.getenv("NUM_ITEMS", "0"))
 
 content_ok = False
 try:
@@ -73,35 +65,9 @@ try:
 except Exception:
     print("Warning: content embeddings unavailable at startup")
 
-_YEAR_RE = re.compile(r"\((\d{4})\)")
-
-
-def parse_year(title: str) -> int | None:
-    matches = _YEAR_RE.findall(title)
-    return int(matches[-1]) if matches else None
-
-
-movie_titles: dict[int, str] = {}
-movie_genres: dict[int, list[str]] = {}
-movie_years: dict[int, int] = {}
-all_genres: set[str] = set()
-try:
-    with open(movies_csv_path, newline="", encoding="utf-8") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            movie_id = int(row.get("movieId", "0"))
-            title = row.get("title", "").strip()
-            genres_value = row.get("genres", "")
-            if movie_id and title:
-                movie_titles[movie_id] = title
-                genre_list = [g for g in genres_value.split("|") if g and g != "(no genres listed)"]
-                movie_genres[movie_id] = genre_list
-                all_genres.update(genre_list)
-                year = parse_year(title)
-                if year is not None:
-                    movie_years[movie_id] = year
-except OSError:
-    print(f"Warning: failed to load movies CSV at {movies_csv_path}")
+runtime_catalog = load_runtime_catalog_from_env()
+# Ranking view kept for seed_ranker callers and legacy tests (app_main.catalog).
+catalog = runtime_catalog.for_ranking()
 
 poster_lookup = posters.load_poster_lookup(poster_urls_path)
 poster_meta = posters.load_poster_meta(poster_meta_path)
@@ -110,99 +76,26 @@ if not poster_lookup and os.path.exists(poster_urls_path):
 elif not os.path.exists(poster_urls_path):
     print(f"Warning: poster lookup not found at {poster_urls_path}")
 
-movie_popularity: dict[int, int] = {}
-popular_movie_ids: list[int] = []
-serving_stats_loaded = False
-if os.path.exists(serving_stats_path):
-    try:
-        with open(serving_stats_path, encoding="utf-8") as stats_file:
-            stats = json.load(stats_file)
-        movie_popularity = {
-            int(key): int(value)
-            for key, value in stats.get("movie_popularity", {}).items()
-        }
-        popular_movie_ids = [int(mid) for mid in stats.get("popular_movie_ids", [])]
-        num_users = int(stats.get("num_users", num_users))
-        num_items = int(stats.get("num_items", num_items))
-        serving_stats_loaded = True
-    except (OSError, ValueError):
-        print(f"Warning: failed to load serving stats at {serving_stats_path}")
-
-if not serving_stats_loaded:
-    ratings_user_ids: set[int] = set()
-    ratings_movie_ids: set[int] = set()
-    try:
-        with open(ratings_csv_path, newline="", encoding="utf-8") as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                user_id = int(row.get("userId", "0"))
-                movie_id = int(row.get("movieId", "0"))
-                if user_id:
-                    ratings_user_ids.add(user_id)
-                if movie_id:
-                    ratings_movie_ids.add(movie_id)
-                    movie_popularity[movie_id] = movie_popularity.get(movie_id, 0) + 1
-    except OSError:
-        print(f"Warning: failed to load ratings CSV at {ratings_csv_path}")
-
-    if ratings_user_ids:
-        num_users = len(ratings_user_ids)
-    if ratings_movie_ids:
-        num_items = len(ratings_movie_ids)
-
-    popular_movie_ids = [
-        movie_id
-        for movie_id, _ in sorted(movie_popularity.items(), key=lambda item: item[1], reverse=True)
-    ]
-
-catalog = seed_ranker.Catalog(
-    movie_titles=movie_titles,
-    popular_movie_ids=popular_movie_ids,
-    candidate_pool=candidate_pool,
-    movie_genres=movie_genres,
-    movie_years=movie_years,
-    movie_popularity=movie_popularity,
-)
-
-
-def get_popular_movies(movie_ids: list[int], limit: int) -> list[int]:
-    ranked = sorted(movie_ids, key=lambda mid: movie_popularity.get(mid, 0), reverse=True)
-    return ranked[:limit]
-
-
-catalog_services = CatalogServices(
-    movie_titles=movie_titles,
-    movie_genres=movie_genres,
-    movie_popularity=movie_popularity,
-    get_popular_movies=get_popular_movies,
-    movie_years=movie_years,
-    known_genres=all_genres,
-)
-
 
 def get_title(movie_id: int) -> str:
-    return movie_titles.get(movie_id, f"Movie {movie_id}")
+    return runtime_catalog.get_title(movie_id)
 
 
 def movie_payload(movie_id: int, **fields) -> dict:
-    payload = {"movie_id": movie_id, "title": get_title(movie_id), **fields}
-    return posters.enrich_movie(movie_id, payload, poster_lookup)
+    return runtime_catalog.movie_payload(movie_id, poster_lookup, **fields)
 
 
 def serving_status() -> dict:
     status = {
         "status": "ok",
         "content_ok": content_ok,
-        "catalog_ok": bool(movie_titles),
-        "num_users": num_users,
-        "num_items": num_items,
         "model_version": model_version,
-        "candidate_pool": candidate_pool,
         "ranking_mode": seed_ranker.active_ranking_mode_label(),
     }
+    status.update(runtime_catalog.health_fields())
     status.update(get_default_bundle().health())
     status.update(
-        posters.poster_health_fields(poster_lookup, poster_meta, len(movie_titles))
+        posters.poster_health_fields(poster_lookup, poster_meta, len(runtime_catalog.movie_titles))
     )
     return status
 
@@ -257,42 +150,18 @@ def metrics_endpoint() -> Response:
 
 @app.get("/genres")
 def list_genres():
-    return [{"name": genre} for genre in sorted(all_genres)]
+    return [{"name": genre} for genre in sorted(runtime_catalog.known_genres)]
 
 
 @app.get("/genres/{genre}/seeds")
 def genre_seeds(genre: str, limit: int = 20):
-    genre_key = genre.strip().lower()
-    if not genre_key:
-        return {"seeds": []}
-
-    if genre_key == "all":
-        movie_ids = list(movie_titles.keys())
-    else:
-        movie_ids = [
-            movie_id
-            for movie_id, genres in movie_genres.items()
-            if any(g.lower() == genre_key for g in genres)
-        ]
-
-    movie_ids = get_popular_movies(movie_ids, limit)
-    return {
-        "seeds": [movie_payload(movie_id) for movie_id in movie_ids]
-    }
+    movie_ids = runtime_catalog.genre_seed_ids(genre, limit)
+    return {"seeds": [movie_payload(movie_id) for movie_id in movie_ids]}
 
 
 @app.get("/movies/search")
 def movie_search(q: str = ""):
-    query = q.strip().lower()
-    if not query:
-        return []
-    results = []
-    for movie_id, title in movie_titles.items():
-        if query in title.lower():
-            results.append(posters.enrich_movie(movie_id, {"movie_id": movie_id, "title": title}, poster_lookup))
-            if len(results) >= 20:
-                break
-    return results
+    return runtime_catalog.search_payloads(q, poster_lookup)
 
 
 class SeedsRequest(BaseModel):
@@ -408,8 +277,7 @@ def explanations(request: SeedsRequest):
 def rag_chat(request: RagChatRequest):
     stream = rag_chat_service.run_chat_turn_sse(
         session_store=GLOBAL_SESSION_STORE,
-        catalog_services=catalog_services,
-        catalog=catalog,
+        catalog=runtime_catalog,
         model_version=os.getenv("MODEL_VERSION", model_version),
         movie_payload_fn=movie_payload,
         message=request.message,

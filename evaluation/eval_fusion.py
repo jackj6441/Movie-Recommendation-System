@@ -12,7 +12,7 @@ import pandas as pd
 
 from fusion_ranking import (
     MODELS_DIR,
-    EvalCatalog,
+    RuntimeCatalog,
     configure_artifact_paths,
     load_eval_catalog,
     rank_seed_set,
@@ -78,7 +78,7 @@ def popularity_baseline(
 
 def run_evaluation(
     ratings: pd.DataFrame,
-    catalog: EvalCatalog,
+    catalog: RuntimeCatalog,
     *,
     fusion_weights: dict[str, float] | None,
     max_users: int,

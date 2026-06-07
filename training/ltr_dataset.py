@@ -23,16 +23,6 @@ from app.fusion import CHANNELS, feature_rows, merge_candidate_ids  # noqa: E402
 from app.ltr import rating_to_relevance  # noqa: E402
 from app.seed_ranker import collect_channel_hits  # noqa: E402
 from app import content  # noqa: E402
-from app.seed_ranker import Catalog as ServingCatalog  # noqa: E402
-
-
-def build_serving_catalog(eval_catalog) -> ServingCatalog:
-    return ServingCatalog(
-        movie_titles=eval_catalog.movie_titles,
-        popular_movie_ids=eval_catalog.popular_movie_ids,
-        candidate_pool=500,
-        movie_popularity=eval_catalog.movie_popularity,
-    )
 
 
 def relevance_for_candidate(
@@ -63,7 +53,7 @@ def build_training_arrays(
     ratings = ratings.sort_values(sort_cols)
 
     eval_catalog = load_eval_catalog(movies_csv, serving_stats_json, ratings_csv)
-    serving_catalog = build_serving_catalog(eval_catalog)
+    serving_catalog = eval_catalog.for_ranking()
 
     feature_rows_list: list[list[float]] = []
     labels: list[int] = []

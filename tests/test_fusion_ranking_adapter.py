@@ -22,12 +22,8 @@ def isolate_serving_modules():
     from fusion_ranking import _reload_ranking_modules
 
     _reload_ranking_modules()
-    artifact_bundle = importlib.import_module("app.artifact_bundle")
-    artifact_bundle.reset_default_bundle()
     yield
     _reload_ranking_modules()
-    artifact_bundle = importlib.import_module("app.artifact_bundle")
-    artifact_bundle.reset_default_bundle()
 
 
 def test_configure_artifact_paths_installs_bundle_without_artifact_env(monkeypatch):

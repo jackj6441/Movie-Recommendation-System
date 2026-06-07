@@ -11,8 +11,8 @@ from collections.abc import Iterator
 from typing import Any, Callable
 
 from app import metrics, seed_ranker
-from app.rag_catalog import CatalogServices
 from app.rag_evidence import RAG_CHAT_VERSION, build_evidence
+from app.runtime_catalog import RuntimeCatalog
 from app.rag_resolve import (
     ChatContext,
     ResolveClarify,
@@ -154,13 +154,13 @@ def recommendations_payload(
 def disambiguation_candidates_payload(
     resolved: ResolveDisambiguate,
     *,
-    catalog_services: CatalogServices,
+    catalog: RuntimeCatalog,
     movie_payload_fn: Callable[..., dict[str, Any]],
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for candidate in resolved.candidates:
         payload = movie_payload_fn(candidate.movie_id)
-        genres = catalog_services.movie_genres.get(candidate.movie_id)
+        genres = catalog.movie_genres.get(candidate.movie_id)
         if genres:
             payload["genres"] = list(genres)
         rows.append(payload)
@@ -169,7 +169,7 @@ def disambiguation_candidates_payload(
 
 def visible_context_payload(
     context: ChatContext,
-    services: CatalogServices | None = None,
+    catalog: RuntimeCatalog | None = None,
     *,
     ready: ResolveReady | None = None,
 ) -> dict[str, Any]:
@@ -178,9 +178,9 @@ def visible_context_payload(
             {"movie_id": seed.movie_id, "title": seed.title}
             for seed in ready.seed_movies
         ]
-    elif services is not None:
+    elif catalog is not None:
         seeds = [
-            {"movie_id": mid, "title": services.get_title(mid)}
+            {"movie_id": mid, "title": catalog.get_title(mid)}
             for mid in context.explicit_seed_ids
         ]
     else:
@@ -194,8 +194,8 @@ def visible_context_payload(
     }
 
 
-def context_from_chat_context(context: ChatContext, services: CatalogServices) -> dict[str, Any]:
-    return visible_context_payload(context, services)
+def context_from_chat_context(context: ChatContext, catalog: RuntimeCatalog) -> dict[str, Any]:
+    return visible_context_payload(context, catalog)
 
 
 def context_payload(ready: ResolveReady) -> dict[str, Any]:
@@ -205,8 +205,7 @@ def context_payload(ready: ResolveReady) -> dict[str, Any]:
 def run_chat_turn_sse(
     *,
     session_store: SessionStore,
-    catalog_services: CatalogServices,
-    catalog: seed_ranker.Catalog,
+    catalog: RuntimeCatalog,
     model_version: str,
     movie_payload_fn: Callable[..., dict[str, Any]],
     message: str,
@@ -249,9 +248,9 @@ def run_chat_turn_sse(
         )
 
     session_store.append_message(session, "user", message, turn_id=turn_id)
-    search_fn, genre_fn, title_fn = catalog_services.as_resolve_hooks()
-    known_genres = catalog_services.known_genres or None
-    genre_seed_ids_for_year = lambda genre, limit, year_min=None: catalog_services.genre_seed_ids(
+    search_fn, genre_fn, title_fn = catalog.as_resolve_hooks()
+    known_genres = catalog.known_genres or None
+    genre_seed_ids_for_year = lambda genre, limit, year_min=None: catalog.genre_seed_ids(
         genre,
         limit,
         year_min=year_min,
@@ -276,14 +275,14 @@ def run_chat_turn_sse(
             search_movies=search_fn,
             genre_seed_ids=genre_fn,
             get_title=title_fn,
-            known_movie_ids=catalog_services.known_movie_ids(),
+            known_movie_ids=catalog.known_movie_ids(),
             seed_movie_ids=seed_movie_ids,
             seed_update_mode=seed_update_mode,
-            popular_movie_ids=catalog_services.popular_movie_ids,
+            popular_movie_ids=catalog.popular_movie_ids_limited,
             known_genres=known_genres,
             genre_seed_ids_for_year=genre_seed_ids_for_year,
         )
-    warnings = collect_seed_warnings(seed_movie_ids, catalog_services.known_movie_ids())
+    warnings = collect_seed_warnings(seed_movie_ids, catalog.known_movie_ids())
 
     if isinstance(resolved, ResolveDisambiguate):
         assistant_message = disambiguation_copy(resolved.reason)
@@ -302,10 +301,10 @@ def run_chat_turn_sse(
         final_payload.update({
             "disambiguation_candidates": disambiguation_candidates_payload(
                 resolved,
-                catalog_services=catalog_services,
+                catalog=catalog,
                 movie_payload_fn=movie_payload_fn,
             ),
-            "context": context_from_chat_context(session.context, catalog_services),
+            "context": context_from_chat_context(session.context, catalog),
             "recommendations": None,
             "assistant_message": assistant_message,
         })
@@ -350,7 +349,7 @@ def run_chat_turn_sse(
             clarification_reason=resolved.reason,
         )
         final_payload.update({
-            "context": session_context_api(session, catalog_services),
+            "context": session_context_api(session, catalog),
             "recommendations": None,
             "assistant_message": assistant_message,
         })
@@ -408,7 +407,7 @@ def run_chat_turn_sse(
         return
 
     if rank_result is not None and rank_result.items:
-        seed_titles = {mid: catalog_services.get_title(mid) for mid in rank_result.seed_movie_ids}
+        seed_titles = {mid: catalog.get_title(mid) for mid in rank_result.seed_movie_ids}
         evidence = build_evidence(rank_result, seed_titles=seed_titles)
         recommendations = recommendations_payload(
             rank_result,
@@ -521,14 +520,15 @@ def try_rank(
     context: ChatContext,
     *,
     shuffle: bool,
-    catalog: seed_ranker.Catalog,
+    catalog: RuntimeCatalog,
 ) -> tuple[RankedList | None, str | None]:
     del shuffle
+    ranking_catalog = catalog.for_ranking()
     try:
         result = seed_ranker.rank_seed_set(
             seed_ranker.RankRequest(
                 seed_movie_ids=ranking_seed_ids,
-                catalog=catalog,
+                catalog=ranking_catalog,
                 filters=seed_ranker.RankFilters(
                     genres=context.genres or None,
                     year_min=context.year_min,
@@ -557,8 +557,8 @@ def normalize_session_genres(
     return list(prior.genres)
 
 
-def session_context_api(session: ChatSession, services: CatalogServices) -> dict[str, Any]:
-    return visible_context_payload(session.context, services)
+def session_context_api(session: ChatSession, catalog: RuntimeCatalog) -> dict[str, Any]:
+    return visible_context_payload(session.context, catalog)
 
 
 def chat_prompt_version() -> str:

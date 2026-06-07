@@ -104,7 +104,7 @@ OpenAI / external provider wiring remains **out of scope** for this PRD (determi
 | **Disambiguation Builder** | Build ≤10 candidate rows with metadata | `build_candidates(context, message, services) -> list[CandidateMovie]` |
 | **Chat Turn Orchestrator** | SSE tokens + final; session updates; rank; warnings | `run_chat_turn_sse(...)` |
 | **Session Store** | TTL sessions; context; reset | `create`, `get`, `save`, `reset` |
-| **Catalog Services** | Search, genre seeds, titles, posters, popularity | Existing hooks + enrich candidate payload |
+| **Runtime Catalog** | Search, genre seeds, titles, popularity; ranking slice for ranker | `RuntimeCatalog` + `for_ranking()` / `as_resolve_hooks()` |
 
 ### Resolver priority (locked from design review)
 

@@ -7,11 +7,11 @@ import pytest
 _APP_MODULES = [
     "app.main",
     "app.artifact_bundle",
+    "app.runtime_catalog",
     "app.content",
     "app.rag_chat",
     "app.rag_session",
     "app.rag_resolve",
-    "app.rag_catalog",
     "app.rag_evidence",
     "app.seed_ranker",
     "app.metrics",

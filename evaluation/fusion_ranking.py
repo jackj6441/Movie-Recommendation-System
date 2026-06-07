@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import csv
 import importlib
-import json
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -16,9 +13,11 @@ MODELS_DIR = RECO_API_ROOT / "models"
 
 if TYPE_CHECKING:
     from app.artifact_bundle import ArtifactBundle
+    from app.runtime_catalog import RuntimeCatalog
 
 _APP_MODULES = (
     "app.artifact_bundle",
+    "app.runtime_catalog",
     "app.content",
     "app.artifacts",
     "app.ltr",
@@ -41,6 +40,7 @@ def _reload_ranking_modules() -> None:
     _ensure_api_on_path()
     for module_name in _APP_MODULES:
         sys.modules.pop(module_name, None)
+    sys.modules.pop("app.retrievers", None)
 
 
 def configure_artifact_paths(
@@ -70,67 +70,33 @@ def configure_artifact_paths(
     return bundle
 
 
-@dataclass(frozen=True)
-class EvalCatalog:
-    movie_titles: dict[int, str]
-    popular_movie_ids: list[int]
-    movie_popularity: dict[int, int]
+def __getattr__(name: str):
+    if name in ("EvalCatalog", "RuntimeCatalog"):
+        _ensure_api_on_path()
+        return importlib.import_module("app.runtime_catalog").RuntimeCatalog
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def load_eval_catalog(
     movies_csv: str | Path,
     serving_stats_json: str | Path | None = None,
     ratings_csv: str | Path | None = None,
-) -> EvalCatalog:
+) -> RuntimeCatalog:
     """Build catalog metadata aligned with the served movie id set."""
-    movie_titles: dict[int, str] = {}
-    with open(movies_csv, newline="", encoding="utf-8") as csvfile:
-        for row in csv.DictReader(csvfile):
-            movie_id = int(row.get("movieId", "0"))
-            title = (row.get("title") or "").strip()
-            if movie_id and title:
-                movie_titles[movie_id] = title
-
-    popular_movie_ids: list[int] = []
-    movie_popularity: dict[int, int] = {}
-    stats_path = Path(serving_stats_json) if serving_stats_json else None
-    if stats_path and stats_path.exists():
-        with open(stats_path, encoding="utf-8") as stats_file:
-            stats = json.load(stats_file)
-        movie_popularity = {
-            int(key): int(value) for key, value in stats.get("movie_popularity", {}).items()
-        }
-        popular_movie_ids = [int(mid) for mid in stats.get("popular_movie_ids", [])]
-
-    if not popular_movie_ids and ratings_csv:
-        import pandas as pd
-
-        counts = pd.read_csv(ratings_csv, usecols=["movieId"])["movieId"].astype(int).value_counts()
-        catalog_ids = set(movie_titles)
-        movie_popularity = {
-            int(mid): int(cnt) for mid, cnt in counts.items() if int(mid) in catalog_ids
-        }
-        popular_movie_ids = [
-            int(mid) for mid in counts.sort_values(ascending=False).index if int(mid) in catalog_ids
-        ]
-
-    if not popular_movie_ids:
-        popular_movie_ids = sorted(
-            movie_popularity,
-            key=lambda movie_id: movie_popularity[movie_id],
-            reverse=True,
-        )
-
-    return EvalCatalog(
-        movie_titles=movie_titles,
-        popular_movie_ids=popular_movie_ids,
-        movie_popularity=movie_popularity,
+    _ensure_api_on_path()
+    runtime_catalog_mod = importlib.import_module("app.runtime_catalog")
+    missing = Path("__missing_eval_artifact__")
+    return runtime_catalog_mod.load_runtime_catalog(
+        movies_csv_path=movies_csv,
+        serving_stats_path=serving_stats_json if serving_stats_json is not None else missing,
+        ratings_csv_path=ratings_csv if ratings_csv is not None else missing,
+        candidate_pool=500,
     )
 
 
 def rank_seed_set(
     seed_ids: list[int],
-    catalog: EvalCatalog,
+    catalog: RuntimeCatalog,
     *,
     fusion_weights: dict[str, float] | None = None,
     top_k: int = 24,
@@ -138,17 +104,11 @@ def rank_seed_set(
     """Return ranked movie ids for a seed set using the serving fusion pipeline."""
     _ensure_api_on_path()
     seed_ranker = importlib.import_module("app.seed_ranker")
-    serving_catalog = seed_ranker.Catalog(
-        movie_titles=catalog.movie_titles,
-        popular_movie_ids=catalog.popular_movie_ids,
-        candidate_pool=500,
-        movie_popularity=catalog.movie_popularity,
-    )
     try:
         result = seed_ranker.rank(
             seed_ids,
             shuffle=False,
-            catalog=serving_catalog,
+            catalog=catalog.for_ranking(),
             fusion_weights=fusion_weights,
             top_k=top_k,
         )

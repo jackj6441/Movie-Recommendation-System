@@ -88,9 +88,9 @@ _Avoid_: RAG failure, backup ranking, silent failure
 The module that owns the shared pipeline for turning a **Seed Set** into a ranked **Recommendation List** using content embeddings. It validates seeds, builds the **Anchor Vector**, scores candidates, and returns a `RankedList` together with **Similar Movies** for the **Anchor Movie**. Both the recommendations endpoint and the explanations endpoint delegate to the Seed Ranker rather than duplicating this logic.
 _Avoid_: Recommendation service, ranking handler, scoring util
 
-**Catalog**:
-An immutable snapshot of the movie catalog data (movie titles, popularity-ordered IDs, and candidate pool size) passed to the **Seed Ranker** at request time. It is built once at startup from the CSV data loaded by the API.
-_Avoid_: Database, data store, global state
+**Catalog** / **Runtime Catalog**:
+The single module that loads movie metadata once at startup (titles, genres, years, popularity) and exposes focused views: search and resolver hooks for RAG chat, a ranking slice for the **Seed Ranker**, and payload helpers for HTTP responses. Serving, evaluation, and training share the same loader; `seed_ranker.Catalog` remains the ranker's typed ranking slice, not a second data source.
+_Avoid_: Database, data store, CatalogServices, duplicate CSV loaders
 
 **Ranked List**:
 The structured result produced by the **Seed Ranker**: an ordered list of `RankedItem` values plus the validated **Seed Set**, the **Anchor Movie** ID, and **Similar Movies**. Callers format this into endpoint-specific responses.
